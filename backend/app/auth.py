@@ -12,30 +12,30 @@ from app.database import get_db
 from app.models import User
 from app.schemas import TokenData
 
-# Cấu hình Secret Key và Thuật toán mã hóa JWT
+# Secret Key and JWT algorithm configuration
 SECRET_KEY = os.getenv("SECRET_KEY", "philobiblus_super_secret_jwt_key_change_in_production_2026")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # Mặc định 24 giờ
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # Default: 24 hours
 
-# Cấu hình Passlib context cho bcrypt hashing
+# Passlib context configuration for bcrypt password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Khai báo OAuth2 Password Bearer trỏ vào endpoint login
+# OAuth2 Password Bearer pointing to login endpoint
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """So sánh mật khẩu dạng raw với mật khẩu đã hash."""
+    """Verify a plain-text password against a hashed password."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Mã hóa mật khẩu dạng raw thành chuỗi hash bcrypt."""
+    """Hash a plain-text password using bcrypt."""
     return pwd_context.hash(password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Tạo chuỗi JWT token chứa payload và thời gian hết hạn."""
+    """Create an encoded JWT access token with payload and expiry time."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -51,7 +51,7 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
-    """Dependency trích xuất và xác thực User từ Bearer Token trong Header."""
+    """Dependency to extract and authenticate current user from Bearer Token."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

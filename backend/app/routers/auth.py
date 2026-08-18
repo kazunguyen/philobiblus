@@ -22,24 +22,24 @@ router = APIRouter(
     "/register",
     response_model=UserOut,
     status_code=status.HTTP_201_CREATED,
-    summary="Đăng ký tài khoản mới",
+    summary="Register a new user account",
 )
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    """Kiểm tra trùng lặp username/email, mã hóa mật khẩu và tạo User mới."""
-    # Kiểm tra trùng lặp username
+    """Check duplicate username/email, hash password, and create a new user."""
+    # Check duplicate username
     if db.query(User).filter(User.username == user_in.username).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered",
         )
-    # Kiểm tra trùng lặp email
+    # Check duplicate email
     if db.query(User).filter(User.email == user_in.email).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
 
-    # Hash mật khẩu và lưu vào Database
+    # Hash password and save to database
     hashed_pwd = get_password_hash(user_in.password)
     new_user = User(
         username=user_in.username,
@@ -55,13 +55,13 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 @router.post(
     "/login",
     response_model=Token,
-    summary="Đăng nhập và nhận JWT Access Token",
+    summary="Login to obtain JWT access token",
 )
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    """Xác thực thông tin đăng nhập và trả về Bearer Token."""
+    """Authenticate user credentials and return Bearer token."""
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -85,8 +85,8 @@ def login(
 @router.get(
     "/me",
     response_model=UserOut,
-    summary="Lấy thông tin User đang đăng nhập",
+    summary="Get current authenticated user info",
 )
 def read_current_user(current_user: User = Depends(get_current_user)):
-    """Trả về thông tin chi tiết của User sở hữu Token hiện tại."""
+    """Return profile details of the authenticated user."""
     return current_user

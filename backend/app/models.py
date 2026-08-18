@@ -34,7 +34,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # Quan hệ 1-N với bảng books
+    # One-to-many relationship with books table
     books = relationship("Book", back_populates="owner", cascade="all, delete-orphan")
 
 
@@ -64,5 +64,5 @@ class Book(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # Quan hệ N-1 với bảng users
+    # Many-to-one relationship with users table
     owner = relationship("User", back_populates="books")
