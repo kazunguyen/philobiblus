@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  # ---------------------------------------------
+  # 1. PostgreSQL Database Service
+  # ---------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: philobiblus-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: philobiblus_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d philobiblus_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - philobiblus-net
+
+  # ---------------------------------------------
+  # 2. FastAPI Backend Service
+  # ---------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: philobiblus-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgrespassword@db:5432/philobiblus_db
+      SECRET_KEY: dev_secret_jwt_key_for_local_environment_only
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost:80
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount app directory for local development hot-reloading
+      - ./backend/app:/app/app
+    networks:
+      - philobiblus-net
+
+# ---------------------------------------------
+# Volumes & Networks
+# ---------------------------------------------
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  philobiblus-net:
+    driver: bridge
