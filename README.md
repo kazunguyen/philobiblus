@@ -49,15 +49,23 @@ Mục tiêu: có một ứng dụng chạy được ở local bằng docker-comp
 
 #### Giai đoạn 1A — Backend (FastAPI + PostgreSQL)
 - [ ] Khởi tạo repo, cấu trúc folder, `.gitignore`
-- [ ] Viết FastAPI app với các endpoint:
-  - `GET /api/books` — lấy danh sách sách
+- [ ] Thiết kế schema database gồm 2 bảng:
+  - `users`: `id`, `username`, `email`, `hashed_password`, `created_at`
+  - `books`: `id`, `user_id` (FK → users), `title`, `author`, `genre`, `status` (want_to_read / reading / completed), `rating`, `date_started`, `date_finished`, `notes`, `created_at`
+- [ ] Kết nối PostgreSQL qua SQLAlchemy ORM
+- [ ] Viết các Auth endpoint:
+  - `POST /api/auth/register` — đăng ký tài khoản
+  - `POST /api/auth/login` — đăng nhập, trả về JWT token
+  - `GET /api/auth/me` — lấy thông tin user hiện tại
+- [ ] Viết các Book endpoint (yêu cầu xác thực):
+  - `GET /api/books` — lấy danh sách sách của user hiện tại
   - `GET /api/books/{id}` — lấy chi tiết 1 cuốn
   - `POST /api/books` — thêm sách mới
   - `PUT /api/books/{id}` — cập nhật thông tin
   - `DELETE /api/books/{id}` — xóa sách
-- [ ] Kết nối PostgreSQL qua SQLAlchemy ORM
+- [ ] Cài đặt JWT authentication với `python-jose` và bcrypt password hashing
 - [ ] Viết Dockerfile multi-stage cho backend
-- [ ] Viết `init.sql` tạo bảng `books` khi container khởi động
+- [ ] Viết `init.sql` khởi tạo database khi container khởi động
 
 #### Giai đoạn 1B — Frontend (React)
 - [ ] Khởi tạo project React bằng Vite
@@ -184,10 +192,15 @@ philobiblus/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py
-│   │   ├── models.py
-│   │   ├── schemas.py
-│   │   └── database.py
+│   │   ├── database.py
+│   │   ├── models.py          # User + Book ORM models
+│   │   ├── schemas.py         # Pydantic schemas cho User + Book + Token
+│   │   ├── auth.py            # JWT tạo/xác thực token, bcrypt hashing
+│   │   └── routers/
+│   │       ├── auth.py        # /api/auth/*
+│   │       └── books.py       # /api/books/*
 │   ├── tests/
+│   │   ├── test_auth.py
 │   │   └── test_books.py
 │   ├── Dockerfile
 │   └── requirements.txt
