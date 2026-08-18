@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # Retrieve DATABASE_URL from environment variable, default to localhost for local dev
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/philobiblus_db",
+    "postgresql://postgres:postgrespassword@localhost:5432/philobiblus_db",
 )
 
 engine = create_engine(DATABASE_URL)

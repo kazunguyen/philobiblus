@@ -10,7 +10,11 @@ from app.routers import auth, books
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Automatically create database tables on startup if they do not exist
+    # Automatically create database tables on startup if they do not exist, try if database reachable
+    # try: 
+    #     Base.metadata.create_all(bind=engine)
+    # except Exception:
+    #     pass
     Base.metadata.create_all(bind=engine)
     yield
 
