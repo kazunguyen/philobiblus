@@ -228,3 +228,44 @@ philobiblus/
 ├── setup.sh
 └── README.md
 ```
+
+## Usage Guide (Local Development)
+
+### 1. Start the System
+The project is fully dockerized using Docker Compose. To start the Frontend (React/Vite), Backend (FastAPI), and Database (PostgreSQL) simultaneously, run the following command in the root directory:
+
+`ash
+docker compose up -d --build
+`
+
+- **Frontend** will be available at: http://localhost:3000
+- **Backend API Docs** will be available at: http://localhost:8000/docs
+
+### 2. View Logs
+When encountering issues (e.g., 500 errors, connection failures), use the following commands to monitor real-time logs:
+
+- **All logs:** docker compose logs -f
+- **Backend logs:** docker compose logs -f backend
+- **Frontend logs:** docker compose logs -f frontend
+- **Database logs:** docker compose logs -f db
+
+*(Press Ctrl + C to exit log view)*
+
+### 3. Access the Database
+To verify saved data (e.g., viewing registered Users) without installing third-party GUI software, connect directly to the Database container via Terminal:
+
+`ash
+# 1. Access PostgreSQL CLI (user: postgres, db: philobiblus_db)
+docker exec -it philobiblus-db psql -U postgres -d philobiblus_db
+
+# 2. List all available tables
+\dt
+
+# 3. Query all data from the users table
+SELECT * FROM users;
+
+# 4. Exit to Terminal
+\q
+`
+
+> **Note:** For a more visual approach, you can install tools like DBeaver or the "Database Client" Extension in VS Code. Simply configure the connection to localhost:5432 with username: postgres and password: postgrespassword.

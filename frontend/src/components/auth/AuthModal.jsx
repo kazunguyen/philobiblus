@@ -1,38 +1,94 @@
 import React, { useState } from 'react';
+import { authService } from '../../services/authService';
 
 const AuthModal = ({ isOpen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
 
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const data = await authService.login(username, password);
+        localStorage.setItem('token', data.access_token);
+        alert('Login successful!');
+        onClose();
+      } else {
+        await authService.register(username, email, password);
+        alert('Registration successful! You can now log in.');
+        setIsLogin(true);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setError(null);
+  };
 
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
         <h2>{isLogin ? 'Login' : 'Register'}</h2>
-        <form onSubmit={(e) => e.preventDefault()} style={styles.form}>
-          <input type="text" placeholder="Username" style={styles.input} />
-          
+
+        {/* Hiển thị box thông báo lỗi nếu có */}
+        {error && <div style={styles.error}>{error}</div>}
+
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <input
+            type="text"
+            placeholder="Username"
+            style={styles.input}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+
           {!isLogin && (
-            <input type="email" placeholder="Email" style={styles.input} />
+            <input
+              type="email"
+              placeholder="Email"
+              style={styles.input}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           )}
-          
-          <input type="password" placeholder="Password" style={styles.input} />
-          
-          <button type="submit" style={styles.button}>
-            {isLogin ? 'Login' : 'Register'}
+
+          <input
+            type="password"
+            placeholder="Password"
+            style={styles.input}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? 'Processing...' : (isLogin ? 'Login' : 'Register')}
           </button>
         </form>
-        
+
         <p style={styles.toggleText}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <span
-            style={styles.toggleLink}
-            onClick={() => setIsLogin(!isLogin)}
-          >
+          <span style={styles.toggleLink} onClick={toggleMode}>
             {isLogin ? 'Register here' : 'Login here'}
           </span>
         </p>
-        
+
         <button onClick={onClose} style={styles.closeButton}>Close</button>
       </div>
     </div>
@@ -61,15 +117,19 @@ const styles = {
     padding: '10px', backgroundColor: '#007BFF', color: 'white',
     border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold'
   },
-  toggleText: { 
-    fontSize: '14px', margin: '10px 0' 
+  toggleText: {
+    fontSize: '14px', margin: '10px 0'
   },
-  toggleLink: { 
-    color: '#007BFF', cursor: 'pointer', textDecoration: 'underline' 
+  toggleLink: {
+    color: '#007BFF', cursor: 'pointer', textDecoration: 'underline'
   },
   closeButton: {
-    marginTop: '15px', padding: '8px 16px', cursor: 'pointer', 
+    marginTop: '15px', padding: '8px 16px', cursor: 'pointer',
     border: '1px solid #ccc', backgroundColor: '#f9f9f9', borderRadius: '4px'
+  },
+  error: {
+    color: 'red', backgroundColor: '#ffe6e6', padding: '10px',
+    borderRadius: '4px', fontSize: '14px'
   }
 };
 
