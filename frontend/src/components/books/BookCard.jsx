@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const BookCard = ({ book, onDelete, onEdit }) => {
+    const navigate = useNavigate();
     // Calculate completion percentage for visual tracking
     const progressPercent = book.pages_total
         ? Math.round((book.pages_read / book.pages_total) * 100)
@@ -24,6 +26,7 @@ const BookCard = ({ book, onDelete, onEdit }) => {
             )}
 
             <div style={styles.actionRow}>
+                <button onClick={() => navigate(`/books/${book.id}`)} style={styles.viewBtn}>View</button>
                 <button onClick={onEdit} style={styles.editBtn}>Edit</button>
                 <button onClick={onDelete} style={styles.deleteBtn}>Delete</button>
             </div>
@@ -52,6 +55,10 @@ const styles = {
     actionRow: { display: 'flex', gap: '8px', marginTop: '12px' },
     editBtn: {
         padding: '6px 12px', backgroundColor: '#ffc107', color: '#212529',
+        border: 'none', borderRadius: '4px', cursor: 'pointer'
+    },
+    viewBtn: {
+        padding: '6px 12px', backgroundColor: '#17a2b8', color: 'white',
         border: 'none', borderRadius: '4px', cursor: 'pointer'
     },
 };

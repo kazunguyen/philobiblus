@@ -4,8 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
-
-const DummyBookDetail = () => <div style={{ padding: 24 }}><h2>Book Detail (Coming Soon)</h2></div>;
+import BookDetailPage from './pages/BookDetailPage';
 
 function App() {
   return (
@@ -25,7 +24,7 @@ function App() {
             path="/books/:id"
             element={
               <ProtectedRoute>
-                <DummyBookDetail />
+                <BookDetailPage />
               </ProtectedRoute>
             }
           />
