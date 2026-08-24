@@ -2,26 +2,32 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
-const DummyDashboard = () => <div style={{padding: 20}}><h2>Dashboard (Coming Soon)</h2></div>;
+const DummyBookDetail = () => <div style={{ padding: 24 }}><h2>Book Detail (Coming Soon)</h2></div>;
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Homepage for everyone */}
           <Route path="/" element={<HomePage />} />
-          
-	  {/* Dashboard for logged in user */}
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
-                <DummyDashboard />
+                <DashboardPage />
               </ProtectedRoute>
-            } 
+            }
+          />
+          <Route
+            path="/books/:id"
+            element={
+              <ProtectedRoute>
+                <DummyBookDetail />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </BrowserRouter>

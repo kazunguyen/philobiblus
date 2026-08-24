@@ -19,10 +19,9 @@ const AuthModal = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       if (isLogin) {
-        const data = await authService.login(username, password);
-        localStorage.setItem('token', data.access_token);
-        alert('Login successful!');
-        onClose();
+        await login(username, password);
+	onClose();
+	navigate('/dashboard');
       } else {
         await authService.register(username, email, password);
         alert('Registration successful! You can now log in.');
