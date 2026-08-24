@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { authService } from '../../services/authService';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const AuthModal = ({ isOpen, onClose }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,6 +13,9 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
@@ -20,8 +25,8 @@ const AuthModal = ({ isOpen, onClose }) => {
     try {
       if (isLogin) {
         await login(username, password);
-	onClose();
-	navigate('/dashboard');
+        onClose();
+        navigate('/dashboard');
       } else {
         await authService.register(username, email, password);
         alert('Registration successful! You can now log in.');
