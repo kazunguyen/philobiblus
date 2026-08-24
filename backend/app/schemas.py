@@ -43,6 +43,8 @@ class BookBase(BaseModel):
     genre: str = Field(..., max_length=100)
     status: BookStatus = BookStatus.WANT_TO_READ
     rating: Optional[int] = Field(None, ge=1, le=5)
+    volume: Optional[int] = Field(None, ge=1)
+    cover_url: Optional[str] = Field(None, max_length=500)
     pages_total: Optional[int] = Field(None, ge=0)
     pages_read: int = Field(0, ge=0)
     date_started: Optional[date] = None
@@ -60,6 +62,8 @@ class BookUpdate(BaseModel):
     genre: Optional[str] = Field(None, max_length=100)
     status: Optional[BookStatus] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
+    volume: Optional[int] = Field(None, ge=1)
+    cover_url: Optional[str] = Field(None, max_length=500)
     pages_total: Optional[int] = Field(None, ge=0)
     pages_read: Optional[int] = Field(None, ge=0)
     date_started: Optional[date] = None

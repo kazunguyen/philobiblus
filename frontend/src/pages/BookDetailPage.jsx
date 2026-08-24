@@ -59,7 +59,7 @@ const BookDetailPage = () => {
                 <div style={styles.header}>
                     <h2>{book.title}</h2>
                     <div style={styles.actionGroup}>
-                        <button onClick={() => setIsFormOpen(true)} style={styles.editBtn}>Edit</button>
+                        <button onClick={() => navigate(`/books/${id}/edit`)} style={styles.editBtn}>Edit</button>
                         <button onClick={handleDelete} style={styles.deleteBtn}>Delete</button>
                     </div>
                 </div>

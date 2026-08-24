@@ -18,14 +18,14 @@ const Navbar = ({ onOpenAuth }) => {
       </h2>
       <div>
         {isAuthenticated ? (
-          <>
-            <button onClick={() => navigate('/dashboard')} style={styles.navBtn}>
-              My Library
-            </button>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button onClick={() => navigate('/dashboard')} style={styles.navBtn}>Dashboard</button>
+            <button onClick={() => navigate('/books')} style={styles.navBtn}>Books</button>
+
             <button onClick={handleLogout} style={{ ...styles.navBtn, ...styles.logoutBtn }}>
               Logout
             </button>
-          </>
+          </div>
         ) : (
           <button onClick={onOpenAuth} style={styles.loginBtn}>
             Login / Register
