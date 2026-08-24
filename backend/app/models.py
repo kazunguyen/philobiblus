@@ -54,12 +54,14 @@ class Book(Base):
         nullable=False,
     )
     rating = Column(Integer, nullable=True)
+    volume = Column(Integer, nullable=True)
     pages_total = Column(Integer, nullable=True)
     pages_read = Column(Integer, default=0, nullable=False)
     
     date_started = Column(Date, nullable=True)
     date_finished = Column(Date, nullable=True)
     notes = Column(Text, nullable=True)
+    cover_url = Column(String(500), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

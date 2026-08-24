@@ -57,7 +57,7 @@ def test_get_book_by_id(client, auth_headers):
     """Test retrieving a specific book by ID."""
     create_res = client.post(
         "/api/books",
-        json={"title": "Atomic Habits", "author": "James Clear", "status": "completed"},
+        json={"title": "Atomic Habits", "author": "James Clear", "genre": "Tech", "status": "completed"},
         headers=auth_headers,
     )
     book_id = create_res.json()["id"]
@@ -78,7 +78,7 @@ def test_update_book(client, auth_headers):
     """Test updating book reading progress and rating."""
     create_res = client.post(
         "/api/books",
-        json={"title": "Deep Work", "author": "Cal Newport", "status": "want_to_read", "pages_total": 300, "pages_read": 0},
+        json={"title": "Deep Work", "author": "Cal Newport", "genre": "Tech", "status": "want_to_read", "pages_total": 300, "pages_read": 0},
         headers=auth_headers,
     )
     book_id = create_res.json()["id"]
@@ -101,7 +101,7 @@ def test_delete_book(client, auth_headers):
     """Test deleting a book record."""
     create_res = client.post(
         "/api/books",
-        json={"title": "To Delete Book", "author": "Unknown Author"},
+        json={"title": "To Delete Book", "author": "Unknown Author", "genre": "Tech"},
         headers=auth_headers,
     )
     book_id = create_res.json()["id"]
@@ -119,7 +119,7 @@ def test_user_cannot_access_other_users_book(client, auth_headers, second_auth_h
     # User 1 creates a book
     create_res = client.post(
         "/api/books",
-        json={"title": "Private Diary Book", "author": "User One"},
+        json={"title": "Private Diary Book", "author": "User One", "genre": "Tech"},
         headers=auth_headers,
     )
     book_id = create_res.json()["id"]

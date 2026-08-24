@@ -40,7 +40,7 @@ class TokenData(BaseModel):
 class BookBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     author: str = Field(..., min_length=1, max_length=255)
-    genre: Optional[str] = Field(None, max_length=100)
+    genre: str = Field(..., max_length=100)
     status: BookStatus = BookStatus.WANT_TO_READ
     rating: Optional[int] = Field(None, ge=1, le=5)
     pages_total: Optional[int] = Field(None, ge=0)
