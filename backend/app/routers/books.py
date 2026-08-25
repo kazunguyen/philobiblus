@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import Book, BookStatus, User
-from app.schemas import BookCreate, BookOut, BookUpdate
+from app.schemas import BookCreate, BookOut, BookPublicOut, BookUpdate
 
 router = APIRouter(
     prefix="/api/books",
@@ -162,7 +162,7 @@ def delete_book(
 
 @router.get(
     "/public",
-    response_model=List[BookOut],
+    response_model=List[BookPublicOut],
     summary="Get public book list with filtering and search",
 )
 def get_public_books(

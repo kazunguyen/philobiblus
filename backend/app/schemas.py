@@ -85,3 +85,6 @@ class BookOut(BookBase):
     user_id: int
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+class BookPublicOut(BookOut):
+    owner: UserPublicOut

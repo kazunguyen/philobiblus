@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const BookCard = ({ book, onDelete, onEdit }) => {
+const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
     const navigate = useNavigate();
 
     // Calculate completion percentage for visual tracking
@@ -38,9 +38,18 @@ const BookCard = ({ book, onDelete, onEdit }) => {
             )}
 
             <div style={styles.actionRow}>
-                <button onClick={() => navigate(`/books/${book.id}`)} style={styles.viewBtn}>View</button>
-                <button onClick={onEdit} style={styles.editBtn}>Edit</button>
-                <button onClick={onDelete} style={styles.deleteBtn}>Delete</button>
+                {!isReadOnly && (
+                    <>
+                        <button onClick={() => navigate(`/books/${book.id}`)} style={styles.viewBtn}>View</button>
+                        <button onClick={onEdit} style={styles.editBtn}>Edit</button>
+                        <button onClick={onDelete} style={styles.deleteBtn}>Delete</button>
+                    </>
+                )}
+                {isReadOnly && book.owner?.username && (
+                    <button onClick={() => navigate(`/users/${book.owner.username}`)} style={styles.viewBtn}>
+                        View Profile
+                    </button>
+                )}
             </div>
         </div>
     );
