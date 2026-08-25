@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import auth, books
+from app.routers import auth, books, users
 
 
 @asynccontextmanager
@@ -43,6 +43,7 @@ app.add_middleware(
 # Include API routers
 app.include_router(auth.router)
 app.include_router(books.router)
+app.include_router(users.router)
 
 
 @app.get("/", tags=["General"])
