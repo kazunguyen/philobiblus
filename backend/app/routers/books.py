@@ -76,6 +76,35 @@ def create_book(
     db.refresh(new_book)
     return new_book
 
+@router.get(
+    "/public",
+    response_model=List[BookPublicOut],
+    summary="Get public book list with filtering and search",
+)
+def get_public_books(
+    genre: Optional[str] = Query(None, description="Filter by genre"),
+    search: Optional[str] = Query(None, description="Search by title or author"),
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(50, ge=1, le=100, description="Maximum records to retrieve"),
+    db: Session = Depends(get_db),
+):
+    """Query books from all users for the public dashboard."""
+    query = db.query(Book)
+
+    if genre:
+        query = query.filter(Book.genre.ilike(f"%{genre}%"))
+
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                Book.title.ilike(search_term),
+                Book.author.ilike(search_term),
+            )
+        )
+
+    return query.order_by(Book.created_at.desc()).offset(skip).limit(limit).all()
+
 
 @router.get(
     "/{book_id}",
@@ -159,32 +188,3 @@ def delete_book(
     db.delete(book)
     db.commit()
     return None
-
-@router.get(
-    "/public",
-    response_model=List[BookPublicOut],
-    summary="Get public book list with filtering and search",
-)
-def get_public_books(
-    genre: Optional[str] = Query(None, description="Filter by genre"),
-    search: Optional[str] = Query(None, description="Search by title or author"),
-    skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum records to retrieve"),
-    db: Session = Depends(get_db),
-):
-    """Query books from all users for the public dashboard."""
-    query = db.query(Book)
-
-    if genre:
-        query = query.filter(Book.genre.ilike(f"%{genre}%"))
-
-    if search:
-        search_term = f"%{search}%"
-        query = query.filter(
-            or_(
-                Book.title.ilike(search_term),
-                Book.author.ilike(search_term),
-            )
-        )
-
-    return query.order_by(Book.created_at.desc()).offset(skip).limit(limit).all()
