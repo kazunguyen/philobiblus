@@ -23,6 +23,7 @@ class UserOut(UserBase):
     is_active: bool
     created_at: Optional[datetime] = None
 
+
 class UserPublicOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -85,6 +86,7 @@ class BookOut(BookBase):
     user_id: int
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
 
 class BookPublicOut(BookOut):
     owner: UserPublicOut
