@@ -135,3 +135,72 @@ def test_user_cannot_access_other_users_book(client, auth_headers, second_auth_h
     # User 2 tries to DELETE User 1's book -> 404
     del_res = client.delete(f"/api/books/{book_id}", headers=second_auth_headers)
     assert del_res.status_code == 404
+
+def test_get_public_books_returns_books_from_all_users(
+    client,
+    auth_headers,
+    second_auth_headers,
+):
+    """Test public book list includes books from multiple users."""
+    client.post(
+        "/api/books",
+        json={
+            "title": "Clean Architecture",
+            "author": "Robert C. Martin",
+            "genre": "Tech",
+        },
+        headers=auth_headers,
+    )
+    client.post(
+        "/api/books",
+        json={
+            "title": "Dune",
+            "author": "Frank Herbert",
+            "genre": "Science Fiction",
+        },
+        headers=second_auth_headers,
+    )
+
+    response = client.get("/api/books/public")
+
+    assert response.status_code == 200
+    titles = {book["title"] for book in response.json()}
+    assert "Clean Architecture" in titles
+    assert "Dune" in titles
+
+
+def test_get_public_books_with_filters_and_search(
+    client,
+    auth_headers,
+    second_auth_headers,
+):
+    """Test public book list supports genre filtering and title/author search."""
+    client.post(
+        "/api/books",
+        json={
+            "title": "The Pragmatic Programmer",
+            "author": "Andy Hunt",
+            "genre": "Tech",
+        },
+        headers=auth_headers,
+    )
+    client.post(
+        "/api/books",
+        json={
+            "title": "Dune Messiah",
+            "author": "Frank Herbert",
+            "genre": "Science Fiction",
+        },
+        headers=second_auth_headers,
+    )
+
+    genre_response = client.get("/api/books/public?genre=Science")
+    search_response = client.get("/api/books/public?search=Herbert")
+
+    assert genre_response.status_code == 200
+    assert len(genre_response.json()) == 1
+    assert genre_response.json()[0]["title"] == "Dune Messiah"
+
+    assert search_response.status_code == 200
+    assert len(search_response.json()) == 1
+    assert search_response.json()[0]["author"] == "Frank Herbert"
