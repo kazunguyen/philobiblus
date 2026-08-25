@@ -23,6 +23,13 @@ class UserOut(UserBase):
     is_active: bool
     created_at: Optional[datetime] = None
 
+class UserPublicOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    username: str
+    created_at: Optional[datetime] = None
+
 
 # --- Token Schemas (JWT) ---
 
