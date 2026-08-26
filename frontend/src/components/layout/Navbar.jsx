@@ -1,10 +1,10 @@
 import React from 'react';
-import { BookOpen, LayoutDashboard, Library, LogOut } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Library, LogIn, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../../context/AuthContext';
 
-const Navbar = ({ onOpenAuth }) => {
+const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -41,7 +41,10 @@ const Navbar = ({ onOpenAuth }) => {
             </Button>
           </div>
         ) : (
-          <Button onClick={onOpenAuth}>Login / Register</Button>
+          <Button onClick={() => navigate('/login')}>
+            <LogIn />
+            Login
+          </Button>
         )}
       </nav>
     </header>
