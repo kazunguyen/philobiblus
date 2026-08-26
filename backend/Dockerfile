@@ -39,6 +39,9 @@ COPY --from=builder /root/.local /home/appuser/.local
 # Copy application source code
 COPY ./app /app/app
 
+# Copy utility scripts used by one-off Docker Compose jobs
+COPY ./scripts /app/scripts
+
 # Set ownership of app directory to non-root user
 RUN chown -R appuser:appuser /app
 
