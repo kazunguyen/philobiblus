@@ -1,79 +1,129 @@
 import React from 'react';
+import { BookOpen, Eye, Pencil, Trash2, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+
+const STATUS_LABELS = {
+    want_to_read: 'Want to Read',
+    reading: 'Reading',
+    completed: 'Completed',
+    dropped: 'Dropped',
+};
 
 const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
     const navigate = useNavigate();
 
-    // Calculate completion percentage for visual tracking
     const progress = book.pages_total
-        ? (book.pages_read / book.pages_total) * 100
+        ? Math.min((book.pages_read / book.pages_total) * 100, 100)
         : 0;
 
+    const statusLabel = STATUS_LABELS[book.status] || book.status.replace(/_/g, ' ');
+
     return (
-        <div style={styles.card}>
-            {/* Render cover image if the URL is provided */}
-            {book.cover_url && (
-                <div style={styles.coverWrapper}>
-                    <img src={book.cover_url} alt={`${book.title} cover`} style={styles.coverImage} />
-                </div>
-            )}
-
-            <h3 style={styles.title}>{book.title}</h3>
-            <p><strong>Author:</strong> {book.author}</p>
-            <p><strong>Status:</strong> {book.status.replace(/_/g, ' ')}</p>
-            {book.genre && <p><strong>Genre:</strong> {book.genre}</p>}
-
-            {/* Display volume information */}
-            {book.volume && <p><strong>Volume:</strong> {book.volume}</p>}
-
-            {book.rating && <p><strong>Rating:</strong> {'⭐'.repeat(book.rating)}</p>}
-
-            {book.pages_total > 0 && (
-                <>
-                    <div style={styles.progressContainer}>
-                        <div style={{ ...styles.progressBar, width: `${progress}%` }} />
+        <Card className="flex h-full w-[280px] flex-col overflow-hidden">
+            <div className="flex h-56 w-full items-center justify-center border-b bg-muted/40">
+                {book.cover_url ? (
+                    <img
+                        src={book.cover_url}
+                        alt={`${book.title} cover`}
+                        className="h-full w-full object-contain p-3"
+                    />
+                ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                        <BookOpen className="size-10" />
+                        <span className="text-sm font-medium">No cover</span>
                     </div>
-                    <p style={styles.progressText}>{book.pages_read} / {book.pages_total} pages ({Math.round(progress)}%)</p>
-                </>
-            )}
-
-            <div style={styles.actionRow}>
-                {!isReadOnly && (
-                    <>
-                        <button onClick={() => navigate(`/books/${book.id}`)} style={styles.viewBtn}>View</button>
-                        <button onClick={onEdit} style={styles.editBtn}>Edit</button>
-                        <button onClick={onDelete} style={styles.deleteBtn}>Delete</button>
-                    </>
-                )}
-                {isReadOnly && book.owner?.username && (
-                    <button onClick={() => navigate(`/users/${book.owner.username}`)} style={styles.viewBtn}>
-                        View Profile
-                    </button>
                 )}
             </div>
-        </div>
-    );
-};
 
-const styles = {
-    card: {
-        border: '1px solid #dee2e6', borderRadius: '8px', padding: '16px',
-        width: '260px', backgroundColor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-        fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', gap: '4px'
-    },
-    coverWrapper: { width: '100%', height: '200px', display: 'flex', justifyContent: 'center', marginBottom: '8px' },
-    coverImage: { maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', borderRadius: '4px' },
-    title: { margin: '0 0 8px', fontSize: '16px', color: '#212529' },
-    progressContainer: {
-        height: '8px', width: '100%', backgroundColor: '#e9ecef',
-        borderRadius: '4px', marginTop: '8px'
-    },
-    progressBar: { height: '100%', backgroundColor: '#28a745', borderRadius: '4px' },
-    progressText: { fontSize: '12px', color: '#6c757d', margin: '4px 0 0' },
-    actionRow: { display: 'flex', gap: '8px', marginTop: '12px' },
-    viewBtn: { padding: '6px 12px', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' },
-    editBtn: { padding: '6px 12px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '4px', cursor: 'pointer' },
-    deleteBtn: { padding: '6px 12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }
+            <CardHeader className="space-y-2">
+                <CardTitle className="line-clamp-2 min-h-12 text-base">
+                    {book.title}
+                </CardTitle>
+
+                <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">{statusLabel}</Badge>
+                    {book.genre && <Badge variant="outline">{book.genre}</Badge>}
+                </div>
+            </CardHeader>
+
+            <CardContent className="flex flex-1 flex-col gap-3">
+                <div className="space-y-1 text-sm">
+                    <p className="line-clamp-1 text-muted-foreground">
+                        <span className="font-medium text-foreground">Author:</span> {book.author}
+                    </p>
+
+                    {book.volume && (
+                        <p className="text-muted-foreground">
+                            <span className="font-medium text-foreground">Volume:</span> {book.volume}
+                        </p>
+                    )}
+
+                    {book.rating && (
+                        <p className="text-muted-foreground">
+                            <span className="font-medium text-foreground">Rating:</span>{' '}
+                            {'★'.repeat(book.rating)}
+                        </p>
+                    )}
+                </div>
+
+                <div className="mt-auto space-y-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Progress</span>
+                        <span>{Math.round(progress)}%</span>
+                    </div>
+                    <Progress value={progress} />
+                    <p className="text-xs text-muted-foreground">
+                        {book.pages_read || 0} / {book.pages_total || '?'} pages
+                    </p>
+                </div>
+            </CardContent>
+
+            <CardFooter className="gap-2">
+                {!isReadOnly ? (
+                    <>
+                        <Button
+                            className="flex-1"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/books/${book.id}`)}
+                        >
+                            <Eye />
+                            View
+                        </Button>
+                        <Button className="flex-1" variant="secondary" size="sm" onClick={onEdit}>
+                            <Pencil />
+                            Edit
+                        </Button>
+                        <Button variant="destructive" size="icon-sm" onClick={onDelete}>
+                            <Trash2 />
+                        </Button>
+                    </>
+                ) : (
+                    book.owner?.username && (
+                        <Button
+                            className="w-full"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/users/${book.owner.username}`)}
+                        >
+                            <UserRound />
+                            View Profile
+                        </Button>
+                    )
+                )}
+            </CardFooter>
+        </Card>
+    );
 };
 
 export default BookCard;
