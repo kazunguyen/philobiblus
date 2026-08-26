@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { bookService } from '../services/bookServices';
 import BookCard from '../components/books/BookCard';
-import BookForm from '../components/books/BookForm';
 import Navbar from '../components/layout/Navbar';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 const BookListPage = () => {
     const navigate = useNavigate();
@@ -11,9 +13,7 @@ const BookListPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Retain modal for quick edits without breaking the user's scroll position on the list
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingBook, setEditingBook] = useState(null);
+
 
     useEffect(() => {
         fetchBooks();
@@ -47,22 +47,45 @@ const BookListPage = () => {
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-muted/30">
             <Navbar />
-            <div style={{ padding: '24px 32px', fontFamily: 'sans-serif' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2>All Books</h2>
-                    <button onClick={() => navigate('/books/add')} style={styles.addBtn}>+ Add Book</button>
+
+            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-semibold">My Library</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Manage your personal reading collection.
+                        </p>
+                    </div>
+
+                    <Button onClick={() => navigate('/books/add')}>
+                        <Plus />
+                        Add Book
+                    </Button>
                 </div>
 
-                {error && <div style={styles.error}>{error}</div>}
+                {error && (
+                    <div
+                        className="mb-6 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                        role="alert"
+                    >
+                        {error}
+                    </div>
+                )}
 
                 {isLoading ? (
-                    <p>Loading books...</p>
+                    <p className="py-10 text-center text-sm text-muted-foreground">
+                        Loading books...
+                    </p>
                 ) : books.length === 0 ? (
-                    <p style={styles.empty}>No books found. Click "+ Add Book" to get started.</p>
+                    <Card>
+                        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                            No books found. Add your first book to start your library.
+                        </CardContent>
+                    </Card>
                 ) : (
-                    <div style={styles.grid}>
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {books.map((book) => (
                             <BookCard
                                 key={book.id}
@@ -73,23 +96,9 @@ const BookListPage = () => {
                         ))}
                     </div>
                 )}
-
-                <BookForm
-                    isOpen={isFormOpen}
-                    onClose={() => setIsFormOpen(false)}
-                    bookToEdit={editingBook}
-                    onSaveSuccess={fetchBooks}
-                />
-            </div>
+            </main>
         </div>
     );
-};
-
-const styles = {
-    addBtn: { padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
-    grid: { display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '16px' },
-    error: { color: '#721c24', backgroundColor: '#f8d7da', padding: '10px 16px', borderRadius: '4px', marginBottom: '16px' },
-    empty: { color: '#6c757d', marginTop: '32px' }
 };
 
 export default BookListPage;
