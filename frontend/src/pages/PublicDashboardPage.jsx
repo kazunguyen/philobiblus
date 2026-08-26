@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import BookCard from '../components/books/BookCard';
 import { bookService } from '../services/bookServices';
+import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 const PublicDashboardPage = () => {
     const [books, setBooks] = useState([]);
@@ -37,55 +41,68 @@ const PublicDashboardPage = () => {
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-muted/30">
             <Navbar />
-            <div style={styles.container}>
-                <h2>Public Dashboard</h2>
+            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="mb-6 space-y-2">
+                    <h1 className="text-3xl font-semibold tracking-tight">Public Dashboard</h1>
+                    <p className="text-muted-foreground">
+                        Explore books shared by readers across Philobiblus.
+                    </p>
+                </div>
 
-                <form onSubmit={handleSubmit} style={styles.filters}>
-                    <input
-                        name="search"
-                        placeholder="Search by title or author"
-                        value={filters.search}
-                        onChange={handleChange}
-                        style={styles.input}
-                    />
-                    <input
-                        name="genre"
-                        placeholder="Filter by genre"
-                        value={filters.genre}
-                        onChange={handleChange}
-                        style={styles.input}
-                    />
-                    <button type="submit" style={styles.searchBtn}>Search</button>
-                </form>
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle>Find books</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form
+                            className="grid gap-3 md:grid-cols-[1fr_240px_auto]"
+                            onSubmit={handleSubmit}
+                        >
+                            <Input
+                                name="search"
+                                placeholder="Search by title or author"
+                                value={filters.search}
+                                onChange={handleChange}
+                            />
+                            <Input
+                                name="genre"
+                                placeholder="Filter by genre"
+                                value={filters.genre}
+                                onChange={handleChange}
+                            />
+                            <Button type="submit">
+                                <Search />
+                                Search
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
 
-                {error && <div style={styles.error}>{error}</div>}
+                {error && (
+                    <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        {error}
+                    </div>
+                )}
 
                 {isLoading ? (
-                    <p>Loading public books...</p>
+                    <p className="text-muted-foreground">Loading public books...</p>
                 ) : books.length === 0 ? (
-                    <p style={styles.empty}>No public books found.</p>
+                    <p className="text-muted-foreground">No public books found.</p>
                 ) : (
-                    <div style={styles.grid}>
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {books.map((book) => (
                             <BookCard key={book.id} book={book} isReadOnly />
                         ))}
                     </div>
                 )}
-            </div>
+            </main>
         </div>
+
     );
 };
 
-const styles = {
-    container: { padding: '24px 32px', fontFamily: 'sans-serif' },
-    filters: { display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' },
-    input: { padding: '8px', borderRadius: '4px', border: '1px solid #ccc' },
-    searchBtn: { padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' },
-    grid: { display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '16px' },
-    error: { color: '#721c24', backgroundColor: '#f8d7da', padding: '10px 16px', borderRadius: '4px', marginBottom: '16px' },
-    empty: { color: '#6c757d', marginTop: '32px' }
-};
+
 
 export default PublicDashboardPage;
