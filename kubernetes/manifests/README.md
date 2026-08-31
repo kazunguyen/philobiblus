@@ -204,10 +204,19 @@ http://localhost
 Các endpoint kiểm tra nhanh:
 
 ```text
-Frontend:   http://localhost
-API health: http://localhost/api/health
-API docs:   http://localhost/api/docs
+Frontend:          http://localhost
+Public books API:  http://localhost/api/books/public
+Backend health:    http://localhost:8000/health (sau khi port-forward)
+Backend docs:      http://localhost:8000/docs (sau khi port-forward)
 ```
+
+Endpoint `/health` và `/docs` của backend không có prefix `/api`, vì vậy cần port-forward service backend để kiểm tra trực tiếp:
+
+```bash
+kubectl port-forward -n philobiblus service/backend 8000:8000
+```
+
+Sau đó mở `http://localhost:8000/health` hoặc `http://localhost:8000/docs`.
 
 Ingress định tuyến:
 
