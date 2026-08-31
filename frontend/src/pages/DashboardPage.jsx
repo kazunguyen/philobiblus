@@ -1,102 +1,109 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { bookService } from '../services/bookServices';
 import BookCard from '../components/books/BookCard';
-import BookForm from '../components/books/BookForm';
-import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 const DashboardPage = () => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+
     const [books, setBooks] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // State for managing the BookForm modal
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingBook, setEditingBook] = useState(null);
-
     useEffect(() => {
+        const fetchBooks = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const data = await bookService.getBooks();
+                setBooks(data);
+            } catch (fetchError) {
+                setError(fetchError.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         fetchBooks();
     }, []);
 
-    const fetchBooks = async () => {
-        try {
-            setIsLoading(true);
-            const data = await bookService.getBooks();
-            setBooks(data);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this book?')) return;
+        if (!window.confirm('Are you sure you want to delete this book?')) {
+            return;
+        }
+
         try {
             await bookService.deleteBook(id);
-            setBooks((prev) => prev.filter((book) => book.id !== id));
-        } catch (err) {
-            alert(`Failed to delete: ${err.message}`);
+            setBooks((previous) =>
+                previous.filter((book) => book.id !== id)
+            );
+        } catch (deleteError) {
+            window.alert(`Failed to delete: ${deleteError.message}`);
         }
-    };
-
-    // UI Handlers for the form modal
-    const handleAddNew = () => {
-        navigate(`/books/add`);
-    };
-
-    const handleEdit = (book) => {
-        navigate(`/books/${book.id}/edit`);
     };
 
     return (
-        <div>
+        <div className="min-h-screen bg-muted/30">
             <Navbar />
-            <div style={styles.container}>
-                <div style={styles.header}>
-                    <h2>My Library</h2>
-                    <button onClick={handleAddNew} style={styles.addBtn}>+ Add Book</button>
+
+            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-semibold">
+                            My Library
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Manage your personal reading collection.
+                        </p>
+                    </div>
+
+                    <Button onClick={() => navigate('/books/add')}>
+                        <Plus />
+                        Add Book
+                    </Button>
                 </div>
 
-                {error && <div style={styles.error}>{error}</div>}
+                {error && (
+                    <div
+                        className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                        role="alert"
+                    >
+                        {error}
+                    </div>
+                )}
 
                 {isLoading ? (
-                    <p>Loading books...</p>
+                    <p className="py-10 text-center text-sm text-muted-foreground">
+                        Loading books...
+                    </p>
                 ) : books.length === 0 ? (
-                    <p style={styles.empty}>No books yet. Start by adding one!</p>
+                    <Card>
+                        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                            No books found. Add your first book to start your
+                            library.
+                        </CardContent>
+                    </Card>
                 ) : (
-                    <div style={styles.grid}>
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {books.map((book) => (
                             <BookCard
                                 key={book.id}
                                 book={book}
                                 onDelete={() => handleDelete(book.id)}
-                                onEdit={() => handleEdit(book)}
+                                onEdit={() =>
+                                    navigate(`/books/${book.id}/edit`)
+                                }
                             />
                         ))}
                     </div>
                 )}
-
-                {/* Render the modal for creating and updating books */}
-                <BookForm
-                    isOpen={isFormOpen}
-                    onClose={() => setIsFormOpen(false)}
-                    bookToEdit={editingBook}
-                    onSaveSuccess={fetchBooks}
-                />
-            </div>
+            </main>
         </div>
     );
-};
-
-const styles = {
-    container: { padding: '24px 32px', fontFamily: 'sans-serif' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    addBtn: { padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
-    grid: { display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '16px' },
-    error: { color: '#721c24', backgroundColor: '#f8d7da', padding: '10px 16px', borderRadius: '4px', marginBottom: '16px' },
-    empty: { color: '#6c757d', marginTop: '32px' }
 };
 
 export default DashboardPage;
