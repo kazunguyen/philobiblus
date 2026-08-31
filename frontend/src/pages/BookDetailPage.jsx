@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import {
+    ArrowLeft,
+    MessageSquare,
+    Pencil,
+    Send,
+    Trash2,
+} from 'lucide-react';
 import { bookService } from '../services/bookServices';
 import Navbar from '../components/layout/Navbar';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +18,11 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '../context/AuthContext';
+import { reviewService } from '../services/reviewServices';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const BookDetailPage = () => {
     const { id } = useParams();
@@ -20,22 +31,42 @@ const BookDetailPage = () => {
     const [book, setBook] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { isAuthenticated, currentUser } = useAuth();
+    const [deletingReviewId, setDeletingReviewId] = useState(null);
+
+    const [reviews, setReviews] = useState([]);
+    const [reviewForm, setReviewForm] = useState({
+        rating: '',
+        comment: '',
+    });
+    const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewError, setReviewError] = useState(null);
 
     useEffect(() => {
-        const fetchBookDetails = async () => {
+        const loadBookPage = async () => {
             try {
                 setIsLoading(true);
+                setIsLoadingReviews(true);
                 setError(null);
-                const data = await bookService.getBookById(id);
-                setBook(data);
-            } catch (fetchError) {
-                setError(fetchError.message);
+                setReviewError(null);
+
+                const [bookData, reviewData] = await Promise.all([
+                    bookService.getBookById(id),
+                    reviewService.getReviews(id),
+                ]);
+
+                setBook(bookData);
+                setReviews(reviewData);
+            } catch (loadError) {
+                setError(loadError.message);
             } finally {
                 setIsLoading(false);
+                setIsLoadingReviews(false);
             }
         };
 
-        fetchBookDetails();
+        loadBookPage();
     }, [id]);
 
     const handleDelete = async () => {
@@ -48,6 +79,59 @@ const BookDetailPage = () => {
             navigate('/books');
         } catch (deleteError) {
             window.alert(`Failed to delete: ${deleteError.message}`);
+        }
+    };
+
+    const handleReviewChange = (event) => {
+        const { name, value } = event.target;
+
+        setReviewForm((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
+    };
+
+    const handleReviewSubmit = async (event) => {
+        event.preventDefault();
+        setIsSubmittingReview(true);
+        setReviewError(null);
+
+        try {
+            const createdReview = await reviewService.createReview(id, {
+                rating: Number(reviewForm.rating),
+                comment: reviewForm.comment || null,
+            });
+
+            setReviews((previous) => [createdReview, ...previous]);
+            setReviewForm({
+                rating: '',
+                comment: '',
+            });
+        } catch (submitError) {
+            setReviewError(submitError.message);
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm('Are you sure you want to delete this review?')) {
+            return;
+        }
+
+        setDeletingReviewId(reviewId);
+        setReviewError(null);
+
+        try {
+            await reviewService.deleteReview(reviewId);
+
+            setReviews((previous) =>
+                previous.filter((review) => review.id !== reviewId),
+            );
+        } catch (deleteError) {
+            setReviewError(deleteError.message);
+        } finally {
+            setDeletingReviewId(null);
         }
     };
 
@@ -193,6 +277,119 @@ const BookDetailPage = () => {
                         </section>
                     </CardContent>
                 </Card>
+
+                <section className="mt-6 space-y-4">
+                    <div className="flex items-center gap-2">
+                        <MessageSquare className="size-5 text-primary" />
+                        <h2 className="text-xl font-semibold">Reviews</h2>
+                    </div>
+
+                    {isAuthenticated && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">
+                                    Write a review
+                                </CardTitle>
+                            </CardHeader>
+
+                            <CardContent>
+                                {reviewError && (
+                                    <div
+                                        className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                                        role="alert"
+                                    >
+                                        {reviewError}
+                                    </div>
+                                )}
+
+                                <form className="space-y-4" onSubmit={handleReviewSubmit}>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="review-rating">Rating</Label>
+                                        <Input
+                                            id="review-rating"
+                                            name="rating"
+                                            type="number"
+                                            min="1"
+                                            max="5"
+                                            value={reviewForm.rating}
+                                            onChange={handleReviewChange}
+                                            placeholder="1 to 5"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="review-comment">Comment</Label>
+                                        <Textarea
+                                            id="review-comment"
+                                            name="comment"
+                                            value={reviewForm.comment}
+                                            onChange={handleReviewChange}
+                                            placeholder="Share your thoughts about this book"
+                                        />
+                                    </div>
+
+                                    <Button type="submit" disabled={isSubmittingReview}>
+                                        <Send />
+                                        {isSubmittingReview ? 'Submitting...' : 'Submit review'}
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {isLoadingReviews ? (
+                        <p className="py-6 text-center text-sm text-muted-foreground">
+                            Loading reviews...
+                        </p>
+                    ) : reviews.length === 0 ? (
+                        <Card>
+                            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                                No reviews yet.
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="space-y-3">
+                            {reviews.map((review) => (
+                                <Card key={review.id}>
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between gap-4">
+                                            <CardTitle className="text-base">
+                                                {review.reviewer?.username || 'Anonymous'}
+                                            </CardTitle>
+
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="secondary">
+                                                    {'⭐'.repeat(review.rating)}
+                                                </Badge>
+
+                                                {currentUser?.username === review.reviewer?.username && (
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() => handleDeleteReview(review.id)}
+                                                        disabled={deletingReviewId === review.id}
+                                                    >
+                                                        <Trash2 />
+                                                        {deletingReviewId === review.id
+                                                            ? 'Deleting...'
+                                                            : 'Delete'}
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+
+                                    <CardContent>
+                                        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                                            {review.comment || 'No comment provided.'}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </section>
             </main>
         </div>
     );

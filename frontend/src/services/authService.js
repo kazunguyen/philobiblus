@@ -46,5 +46,18 @@ export const authService = {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: formData,
     }, 'Login failed');
+  },
+
+  async getCurrentUser(token) {
+    return fetchWithHandling(
+      `${AUTH_URL}/me`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+      'Failed to fetch current user',
+    );
   }
 };
+
