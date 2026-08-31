@@ -36,6 +36,11 @@ class User(Base):
 
     # One-to-many relationship with books table
     books = relationship("Book", back_populates="owner", cascade="all, delete-orphan")
+    reviews = relationship(
+        "Review",
+        back_populates="reviewer",
+        cascade="all, delete-orphan",
+    )
 
 
 class Book(Base):
@@ -68,3 +73,33 @@ class Book(Base):
 
     # Many-to-one relationship with users table
     owner = relationship("User", back_populates="books")
+
+    reviews = relationship(
+        "Review",
+        back_populates="book",
+        cascade="all, delete-orphan",
+    )
+
+
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    book_id = Column(
+        Integer,
+        ForeignKey("books.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    rating = Column(Integer, nullable=False)
+    comment = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    book = relationship("Book", back_populates="reviews")
+    reviewer = relationship("User", back_populates="reviews")

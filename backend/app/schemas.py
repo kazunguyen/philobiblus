@@ -90,3 +90,22 @@ class BookOut(BookBase):
 
 class BookPublicOut(BookOut):
     owner: UserPublicOut
+
+
+# --- Review Schemas ---
+
+class ReviewCreate(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    comment: Optional[str] = Field(None, max_length=2000)
+
+
+class ReviewOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    book_id: int
+    user_id: int
+    rating: int
+    comment: Optional[str] = None
+    created_at: Optional[datetime] = None
+    reviewer: UserPublicOut
