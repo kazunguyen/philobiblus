@@ -1,11 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { bookService } from '../services/bookServices';
-import BookForm from '../components/books/BookForm';
 import Navbar from '../components/layout/Navbar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 
 const BookDetailPage = () => {
-    // Extract book ID from the URL parameters
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -13,99 +21,181 @@ const BookDetailPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // State to manage the edit modal
-    const [isFormOpen, setIsFormOpen] = useState(false);
-
     useEffect(() => {
+        const fetchBookDetails = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const data = await bookService.getBookById(id);
+                setBook(data);
+            } catch (fetchError) {
+                setError(fetchError.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         fetchBookDetails();
     }, [id]);
 
-    const fetchBookDetails = async () => {
-        try {
-            setIsLoading(true);
-            const data = await bookService.getBookById(id);
-            setBook(data);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const handleDelete = async () => {
-        if (!window.confirm('Are you sure you want to delete this book?')) return;
+        if (!window.confirm('Are you sure you want to delete this book?')) {
+            return;
+        }
 
         try {
             await bookService.deleteBook(id);
-            // Navigate back to the library after successful deletion to avoid showing a 404 page
-            navigate('/dashboard');
-        } catch (err) {
-            alert(`Failed to delete: ${err.message}`);
+            navigate('/books');
+        } catch (deleteError) {
+            window.alert(`Failed to delete: ${deleteError.message}`);
         }
     };
 
-    if (isLoading) return <div style={styles.message}>Loading book details...</div>;
-    if (error) return <div style={styles.error}>Error: {error}</div>;
-    if (!book) return <div style={styles.message}>Book not found.</div>;
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-muted/30">
+                <Navbar />
+                <p className="py-12 text-center text-sm text-muted-foreground">
+                    Loading book details...
+                </p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-muted/30">
+                <Navbar />
+                <div
+                    className="mx-auto max-w-3xl px-4 py-12 text-center text-sm text-destructive"
+                    role="alert"
+                >
+                    Error: {error}
+                </div>
+            </div>
+        );
+    }
+
+    if (!book) {
+        return (
+            <div className="min-h-screen bg-muted/30">
+                <Navbar />
+                <p className="py-12 text-center text-sm text-muted-foreground">
+                    Book not found.
+                </p>
+            </div>
+        );
+    }
+
+    const progress =
+        book.pages_total > 0
+            ? Math.min((book.pages_read / book.pages_total) * 100, 100)
+            : 0;
 
     return (
-        <div>
+        <div className="min-h-screen bg-muted/30">
             <Navbar />
-            <div style={styles.container}>
-                <button onClick={() => navigate('/dashboard')} style={styles.backBtn}>
-                    &larr; Back to Library
-                </button>
 
-                <div style={styles.header}>
-                    <h2>{book.title}</h2>
-                    <div style={styles.actionGroup}>
-                        <button onClick={() => navigate(`/books/${id}/edit`)} style={styles.editBtn}>Edit</button>
-                        <button onClick={handleDelete} style={styles.deleteBtn}>Delete</button>
-                    </div>
-                </div>
+            <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+                <Button
+                    variant="ghost"
+                    className="mb-4"
+                    onClick={() => navigate('/books')}
+                >
+                    <ArrowLeft />
+                    Back to library
+                </Button>
 
-                <div style={styles.detailsCard}>
-                    <p><strong>Author:</strong> {book.author}</p>
-                    <p><strong>Genre:</strong> {book.genre || 'N/A'}</p>
-                    <p><strong>Status:</strong> {book.status.replace(/_/g, ' ')}</p>
-                    <p><strong>Rating:</strong> {book.rating ? '⭐'.repeat(book.rating) : 'Unrated'}</p>
+                <Card>
+                    <CardHeader className="border-b">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <CardTitle className="text-2xl">
+                                    {book.title}
+                                </CardTitle>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    by {book.author}
+                                </p>
+                            </div>
 
-                    <div style={styles.progressSection}>
-                        <p><strong>Reading Progress:</strong></p>
-                        <p>{book.pages_read} out of {book.pages_total || '?'} pages read</p>
-                    </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        navigate(`/books/${id}/edit`)
+                                    }
+                                >
+                                    <Pencil />
+                                    Edit
+                                </Button>
 
-                    <div style={styles.notesSection}>
-                        <p><strong>Notes:</strong></p>
-                        <p style={styles.notesText}>{book.notes || 'No notes added yet.'}</p>
-                    </div>
-                </div>
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleDelete}
+                                >
+                                    <Trash2 />
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
 
-                {/* Reuse the BookForm for editing the current book directly from details page */}
-                <BookForm
-                    isOpen={isFormOpen}
-                    onClose={() => setIsFormOpen(false)}
-                    bookToEdit={book}
-                    onSaveSuccess={fetchBookDetails}
-                />
-            </div>
+                    <CardContent className="space-y-6 pt-6">
+                        <div className="flex flex-wrap gap-2">
+                            <Badge variant="secondary">
+                                {book.genre || 'No genre'}
+                            </Badge>
+                            <Badge variant="outline">
+                                {book.status.replace(/_/g, ' ')}
+                            </Badge>
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <p className="text-sm text-muted-foreground">
+                                    Volume
+                                </p>
+                                <p className="font-medium">
+                                    {book.volume || 'N/A'}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-sm text-muted-foreground">
+                                    Rating
+                                </p>
+                                <p className="font-medium">
+                                    {book.rating
+                                        ? '⭐'.repeat(book.rating)
+                                        : 'Unrated'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <section className="space-y-3 rounded-lg bg-muted/50 p-4">
+                            <div className="flex items-center justify-between">
+                                <p className="font-medium">
+                                    Reading progress
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    {book.pages_read} /{' '}
+                                    {book.pages_total || '?'} pages
+                                </p>
+                            </div>
+                            <Progress value={progress} />
+                        </section>
+
+                        <section className="space-y-2">
+                            <h2 className="font-medium">Notes</h2>
+                            <p className="whitespace-pre-wrap rounded-lg border bg-background p-4 text-sm text-muted-foreground">
+                                {book.notes || 'No notes added yet.'}
+                            </p>
+                        </section>
+                    </CardContent>
+                </Card>
+            </main>
         </div>
     );
-};
-
-const styles = {
-    container: { padding: '24px 32px', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' },
-    message: { padding: '32px', textAlign: 'center', fontFamily: 'sans-serif' },
-    error: { color: '#721c24', padding: '32px', textAlign: 'center', fontFamily: 'sans-serif' },
-    backBtn: { background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', marginBottom: '16px', fontSize: '14px', padding: 0 },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #eee', paddingBottom: '16px', marginBottom: '24px' },
-    actionGroup: { display: 'flex', gap: '8px' },
-    editBtn: { padding: '8px 16px', backgroundColor: '#ffc107', color: '#212529', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
-    deleteBtn: { padding: '8px 16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
-    detailsCard: { backgroundColor: '#f8f9fa', padding: '24px', borderRadius: '8px', border: '1px solid #dee2e6' },
-    progressSection: { marginTop: '16px', padding: '12px', backgroundColor: '#e9ecef', borderRadius: '4px' },
-    notesSection: { marginTop: '24px' },
-    notesText: { whiteSpace: 'pre-wrap', backgroundColor: '#fff', padding: '16px', border: '1px solid #dee2e6', borderRadius: '4px', marginTop: '8px' }
 };
 
 export default BookDetailPage;
