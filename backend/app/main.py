@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import auth, books, reviews, users
+from app.routers import auth, books, reviews, social, users
 
 
 @asynccontextmanager
@@ -45,6 +45,7 @@ app.include_router(auth.router)
 app.include_router(books.router)
 app.include_router(users.router)
 app.include_router(reviews.router)
+app.include_router(social.router)
 
 
 @app.get("/", tags=["General"])

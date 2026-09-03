@@ -10,6 +10,8 @@ from sqlalchemy import (
     String,
     Text,
     func,
+    CheckConstraint,
+    UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 
@@ -39,6 +41,18 @@ class User(Base):
     reviews = relationship(
         "Review",
         back_populates="reviewer",
+        cascade="all, delete-orphan",
+    )
+    followers = relationship(
+        "Follow",
+        foreign_keys="Follow.following_id",
+        back_populates="following",
+        cascade="all, delete-orphan",
+    )
+    following = relationship(
+        "Follow",
+        foreign_keys="Follow.follower_id",
+        back_populates="follower",
         cascade="all, delete-orphan",
     )
 
@@ -103,3 +117,101 @@ class Review(Base):
 
     book = relationship("Book", back_populates="reviews")
     reviewer = relationship("User", back_populates="reviews")
+
+class FriendshipStatus(str, enum.Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+
+class Follow(Base):
+    __tablename__ = "follows"
+    __table_args__ = (
+        CheckConstraint(
+            "follower_id != following_id",
+            name="check_follow_users_are_different",
+        ),
+        UniqueConstraint(
+            "follower_id",
+            "following_id",
+            name="unique_follow_relationship",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    follower_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    following_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    follower = relationship(
+        "User",
+        foreign_keys=[follower_id],
+        back_populates="following",
+    )
+    following = relationship(
+        "User",
+        foreign_keys=[following_id],
+        back_populates="followers",
+    )
+
+
+class Friendship(Base):
+    __tablename__ = "friendships"
+    __table_args__ = (
+        CheckConstraint(
+            "user_one_id < user_two_id",
+            name="check_friendship_user_order",
+        ),
+        CheckConstraint(
+            "requested_by_id = user_one_id OR requested_by_id = user_two_id",
+            name="check_requester_is_friendship_member",
+        ),
+        UniqueConstraint(
+            "user_one_id",
+            "user_two_id",
+            name="unique_friendship_pair",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_one_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_two_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    requested_by_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    status = Column(
+        Enum(
+            FriendshipStatus,
+            name="friendship_status_enum",
+            native_enum=False,
+        ),
+        default=FriendshipStatus.PENDING,
+        nullable=False,
+    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    user_one = relationship("User", foreign_keys=[user_one_id])
+    user_two = relationship("User", foreign_keys=[user_two_id])
+    requested_by = relationship("User", foreign_keys=[requested_by_id])

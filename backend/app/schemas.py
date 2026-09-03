@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models import BookStatus
+from app.models import BookStatus, FriendshipStatus
 
 
 # --- User Schemas ---
@@ -109,3 +109,29 @@ class ReviewOut(BaseModel):
     comment: Optional[str] = None
     created_at: Optional[datetime] = None
     reviewer: UserPublicOut
+
+class FollowOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    follower_id: int
+    following_id: int
+    created_at: Optional[datetime] = None
+
+
+class FriendshipOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    status: FriendshipStatus
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    requested_by: UserPublicOut
+    user_one: UserPublicOut
+    user_two: UserPublicOut
+
+
+class RelationshipOut(BaseModel):
+    target_user: UserPublicOut
+    is_following: bool
+    friendship: Optional[FriendshipOut] = None
