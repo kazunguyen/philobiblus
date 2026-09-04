@@ -177,6 +177,13 @@ const BookDetailPage = () => {
             ? Math.min((book.pages_read / book.pages_total) * 100, 100)
             : 0;
 
+    const bookTags =
+        Array.isArray(book.tags) && book.tags.length > 0
+            ? book.tags
+            : book.genre
+                ? [book.genre]
+                : [];
+
     return (
         <div className="min-h-screen bg-muted/30">
 
@@ -226,9 +233,15 @@ const BookDetailPage = () => {
 
                     <CardContent className="space-y-6 pt-6">
                         <div className="flex flex-wrap gap-2">
-                            <Badge variant="secondary">
-                                {book.genre || 'No genre'}
-                            </Badge>
+                            {bookTags.length > 0 ? (
+                                bookTags.map((tag) => (
+                                    <Badge key={tag} variant="outline">
+                                        {tag}
+                                    </Badge>
+                                ))
+                            ) : (
+                                <Badge variant="outline">No tags</Badge>
+                            )}
                             <Badge variant="outline">
                                 {book.status.replace(/_/g, ' ')}
                             </Badge>

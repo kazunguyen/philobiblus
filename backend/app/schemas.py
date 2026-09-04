@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models import BookStatus, FriendshipStatus
@@ -58,6 +58,7 @@ class BookBase(BaseModel):
     date_started: Optional[date] = None
     date_finished: Optional[date] = None
     notes: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
 
 
 class BookCreate(BookBase):
@@ -77,7 +78,7 @@ class BookUpdate(BaseModel):
     date_started: Optional[date] = None
     date_finished: Optional[date] = None
     notes: Optional[str] = None
-
+    tags: Optional[List[str]] = Field(None, max_length=20)
 
 class BookOut(BookBase):
     model_config = ConfigDict(from_attributes=True)

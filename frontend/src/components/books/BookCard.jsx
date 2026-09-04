@@ -26,6 +26,13 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
         ? Math.min((book.pages_read / book.pages_total) * 100, 100)
         : 0;
 
+    const bookTags =
+        Array.isArray(book.tags) && book.tags.length > 0
+            ? book.tags
+            : book.genre
+                ? [book.genre]
+                : [];
+
     const statusLabel = STATUS_LABELS[book.status] || book.status.replace(/_/g, ' ');
 
     return (
@@ -52,7 +59,11 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
 
                 <div className="flex flex-wrap gap-2">
                     <Badge variant="secondary">{statusLabel}</Badge>
-                    {book.genre && <Badge variant="outline">{book.genre}</Badge>}
+                    {bookTags.map((tag) => (
+                        <Badge key={tag} variant="outline">
+                            {tag}
+                        </Badge>
+                    ))}
                 </div>
             </CardHeader>
 

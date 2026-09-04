@@ -20,23 +20,9 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import StarRating from '../components/ui/StarRating';
-
-const GENRES = [
-    'Action',
-    'Adventure',
-    'Comedy',
-    'Drama',
-    'Fantasy',
-    'Horror',
-    'Mystery',
-    'Romance',
-    'Science Fiction',
-    'Slice of Life',
-    'Sports',
-    'Supernatural',
-    'Thriller',
-    'Other',
-];
+import TagSelector, {
+    TAG_OPTIONS,
+} from '../components/ui/TagSelector';
 
 const BookAddPage = () => {
     const navigate = useNavigate();
@@ -44,7 +30,8 @@ const BookAddPage = () => {
     const [formData, setFormData] = useState({
         title: '',
         author: '',
-        genre: GENRES[0],
+        genre: TAG_OPTIONS[0],
+        tags: [TAG_OPTIONS[0]],
         status: 'want_to_read',
         rating: '',
         volume: '',
@@ -79,12 +66,26 @@ const BookAddPage = () => {
         }));
     };
 
+    const handleTagsChange = (tags) => {
+        setFormData((previous) => ({
+            ...previous,
+            tags,
+            genre: tags[0] || TAG_OPTIONS[0],
+        }));
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
+        if (!formData.tags.length) {
+            setError('Please select at least one tag.');
+            return;
+        }
         setIsLoading(true);
         setError(null);
 
         const payload = { ...formData };
+
+        payload.genre = payload.tags[0];
 
         if (payload.rating === '') payload.rating = null;
         if (payload.volume === '') payload.volume = null;
@@ -166,27 +167,11 @@ const BookAddPage = () => {
                                 />
                             </div>
 
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label>Genre</Label>
-                                    <Select
-                                        value={formData.genre}
-                                        onValueChange={(value) =>
-                                            handleSelectChange('genre', value)
-                                        }
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select genre" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {GENRES.map((genre) => (
-                                                <SelectItem key={genre} value={genre}>
-                                                    {genre}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            <div className="space-y-5">
+                                <TagSelector
+                                    value={formData.tags}
+                                    onChange={handleTagsChange}
+                                />
 
                                 <div className="space-y-2">
                                     <Label>Status</Label>

@@ -11,7 +11,8 @@ from sqlalchemy import (
     Text,
     func,
     CheckConstraint,
-    UniqueConstraint
+    UniqueConstraint,
+    JSON
 )
 from sqlalchemy.orm import relationship
 
@@ -66,6 +67,12 @@ class Book(Base):
     title = Column(String(255), nullable=False, index=True)
     author = Column(String(255), nullable=False, index=True)
     genre = Column(String(100), nullable=True)
+    tags = Column(
+        JSON,
+        nullable=False,
+        default=list,
+        server_default="[]",
+    )
     
     status = Column(
         Enum(BookStatus, name="book_status_enum", native_enum=False),
