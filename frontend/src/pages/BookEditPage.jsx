@@ -23,6 +23,7 @@ import StarRating from '../components/ui/StarRating';
 import TagSelector, {
     TAG_OPTIONS,
 } from '../components/ui/TagSelector';
+import { getBookStatusLabel } from '@/lib/bookStatus';
 
 const BookEditPage = () => {
     const { id } = useParams();
@@ -226,7 +227,9 @@ const BookEditPage = () => {
                                         }
                                     >
                                         <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select status" />
+                                            <SelectValue>
+                                                {getBookStatusLabel(formData.status)}
+                                            </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="want_to_read">

@@ -23,6 +23,7 @@ import StarRating from '../ui/StarRating';
 import TagSelector, {
     TAG_OPTIONS,
 } from '../ui/TagSelector';
+import { getBookStatusLabel } from '@/lib/bookStatus';
 
 const EMPTY_FORM = {
     title: '',
@@ -215,7 +216,9 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                                 }
                             >
                                 <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select status" />
+                                    <SelectValue>
+                                        {getBookStatusLabel(formData.status)}
+                                    </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="want_to_read">

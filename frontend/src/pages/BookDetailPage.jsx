@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import StarRating from '../components/ui/StarRating';
+import { getBookStatusLabel } from '@/lib/bookStatus';
 
 const BookDetailPage = () => {
     const { id } = useParams();
@@ -243,7 +244,7 @@ const BookDetailPage = () => {
                                 <Badge variant="outline">No tags</Badge>
                             )}
                             <Badge variant="outline">
-                                {book.status.replace(/_/g, ' ')}
+                                {getBookStatusLabel(book.status)}
                             </Badge>
                         </div>
 

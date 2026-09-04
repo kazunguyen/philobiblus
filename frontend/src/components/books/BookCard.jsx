@@ -11,13 +11,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-
-const STATUS_LABELS = {
-    want_to_read: 'Want to Read',
-    reading: 'Reading',
-    completed: 'Completed',
-    dropped: 'Dropped',
-};
+import { getBookStatusLabel } from '@/lib/bookStatus';
 
 const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
     const navigate = useNavigate();
@@ -33,7 +27,7 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                 ? [book.genre]
                 : [];
 
-    const statusLabel = STATUS_LABELS[book.status] || book.status.replace(/_/g, ' ');
+    const statusLabel = getBookStatusLabel(book.status);
 
     return (
         <Card className="flex h-full w-[280px] flex-col overflow-hidden">
