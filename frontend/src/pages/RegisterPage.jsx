@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Navbar from '../components/layout/Navbar';
 import { useAuth } from '../context/AuthContext';
 
 const RegisterPage = () => {
@@ -56,7 +55,6 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <Navbar />
       <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-7xl items-center justify-center px-4 py-10">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-3 text-center">

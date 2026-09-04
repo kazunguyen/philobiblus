@@ -2,14 +2,12 @@ import React from 'react';
 import { ArrowRight, Library } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import Navbar from '../components/layout/Navbar';
 
 const HomePage = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <Navbar />
       <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-7xl items-center px-4 py-12 sm:px-6 lg:px-8">
         <section className="max-w-2xl space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-sm text-muted-foreground">

@@ -7,7 +7,6 @@ import {
     UserPlus,
     UserRound,
 } from 'lucide-react';
-import Navbar from '../components/layout/Navbar';
 import BookCard from '../components/books/BookCard';
 import { useAuth } from '../context/AuthContext';
 import { socialService } from '../services/socialServices';
@@ -173,7 +172,6 @@ const UserProfilePage = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-muted/30">
-                <Navbar />
                 <p className="py-12 text-center text-sm text-muted-foreground">
                     Loading user profile...
                 </p>
@@ -184,7 +182,6 @@ const UserProfilePage = () => {
     if (error) {
         return (
             <div className="min-h-screen bg-muted/30">
-                <Navbar />
                 <div
                     className="mx-auto max-w-7xl px-4 py-12 text-center text-sm text-destructive"
                     role="alert"
@@ -197,7 +194,6 @@ const UserProfilePage = () => {
 
     return (
         <div className="min-h-screen bg-muted/30">
-            <Navbar />
 
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <Card className="mb-6">

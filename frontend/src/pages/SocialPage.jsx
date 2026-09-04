@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, UserMinus, Users } from 'lucide-react';
-import Navbar from '../components/layout/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { socialService } from '../services/socialServices';
 import { Button } from '@/components/ui/button';
@@ -202,7 +201,6 @@ const SocialPage = () => {
 
     return (
         <div className="min-h-screen bg-muted/30">
-            <Navbar />
 
             <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-6">

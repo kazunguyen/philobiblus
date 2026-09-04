@@ -8,7 +8,6 @@ import {
     Trash2,
 } from 'lucide-react';
 import { bookService } from '../services/bookServices';
-import Navbar from '../components/layout/Navbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -138,7 +137,6 @@ const BookDetailPage = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-muted/30">
-                <Navbar />
                 <p className="py-12 text-center text-sm text-muted-foreground">
                     Loading book details...
                 </p>
@@ -149,7 +147,6 @@ const BookDetailPage = () => {
     if (error) {
         return (
             <div className="min-h-screen bg-muted/30">
-                <Navbar />
                 <div
                     className="mx-auto max-w-3xl px-4 py-12 text-center text-sm text-destructive"
                     role="alert"
@@ -163,7 +160,6 @@ const BookDetailPage = () => {
     if (!book) {
         return (
             <div className="min-h-screen bg-muted/30">
-                <Navbar />
                 <p className="py-12 text-center text-sm text-muted-foreground">
                     Book not found.
                 </p>
@@ -178,7 +174,6 @@ const BookDetailPage = () => {
 
     return (
         <div className="min-h-screen bg-muted/30">
-            <Navbar />
 
             <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
                 <Button

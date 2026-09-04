@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { bookService } from '../services/bookServices';
-import Navbar from '../components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -135,7 +134,6 @@ const BookEditPage = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-muted/30">
-                <Navbar />
                 <p className="py-12 text-center text-sm text-muted-foreground">
                     Loading book data...
                 </p>
@@ -145,7 +143,6 @@ const BookEditPage = () => {
 
     return (
         <div className="min-h-screen bg-muted/30">
-            <Navbar />
 
             <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
                 <Button

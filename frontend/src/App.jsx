@@ -12,11 +12,14 @@ import BookDetailPage from './pages/BookDetailPage';
 import BookListPage from './pages/BookListPage';
 import BookAddPage from './pages/BookAddPage';
 import BookEditPage from './pages/BookEditPage';
+import SocialPage from './pages/SocialPage';
+import Navbar from './components/layout/Navbar';
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -52,6 +55,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <BookEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/social"
+            element={
+              <ProtectedRoute>
+                <SocialPage />
               </ProtectedRoute>
             }
           />

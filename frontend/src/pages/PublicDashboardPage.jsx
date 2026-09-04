@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Navbar from '../components/layout/Navbar';
 import BookCard from '../components/books/BookCard';
 import { bookService } from '../services/bookServices';
 import { Search } from 'lucide-react';
@@ -42,7 +41,6 @@ const PublicDashboardPage = () => {
 
     return (
         <div className="min-h-screen bg-muted/30">
-            <Navbar />
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-6 space-y-2">
                     <h1 className="text-3xl font-semibold tracking-tight">Public Dashboard</h1>
