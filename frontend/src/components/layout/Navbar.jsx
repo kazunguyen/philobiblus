@@ -1,6 +1,13 @@
 import React from 'react';
-import { BookOpen, LayoutDashboard, Library, LogIn, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import {
+  BookOpen,
+  LayoutDashboard,
+  Library,
+  LogIn,
+  LogOut,
+  Users,
+} from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../../context/AuthContext';
 
@@ -11,6 +18,20 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const { pathname } = useLocation();
+
+  const isActive = (route) => {
+    if (route === '/books') {
+      return pathname.startsWith('/books');
+    }
+
+    if (route === '/social') {
+      return pathname.startsWith('/social');
+    }
+
+    return pathname === route;
   };
 
   return (
@@ -27,13 +48,31 @@ const Navbar = () => {
 
         {isAuthenticated ? (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+            <Button
+              variant={isActive('/dashboard') ? 'secondary' : 'ghost'}
+              aria-current={isActive('/dashboard') ? 'page' : undefined}
+              onClick={() => navigate('/dashboard')}
+            >
               <LayoutDashboard />
               Dashboard
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/books')}>
+
+            <Button
+              variant={isActive('/books') ? 'secondary' : 'ghost'}
+              aria-current={isActive('/books') ? 'page' : undefined}
+              onClick={() => navigate('/books')}
+            >
               <Library />
               Books
+            </Button>
+
+            <Button
+              variant={isActive('/social') ? 'secondary' : 'ghost'}
+              aria-current={isActive('/social') ? 'page' : undefined}
+              onClick={() => navigate('/social')}
+            >
+              <Users />
+              Social
             </Button>
             <Button variant="destructive" onClick={handleLogout}>
               <LogOut />
