@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import StarRating from '../components/ui/StarRating';
 
 const GENRES = [
     'Action',
@@ -230,19 +231,15 @@ const BookAddPage = () => {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="rating">Rating</Label>
-                                    <Input
-                                        id="rating"
-                                        name="rating"
-                                        type="number"
-                                        min="1"
-                                        max="5"
-                                        value={formData.rating}
-                                        onChange={handleChange}
-                                        placeholder="1 to 5"
-                                    />
-                                </div>
+                                <StarRating
+                                    value={formData.rating}
+                                    onChange={(rating) =>
+                                        setFormData((previous) => ({
+                                            ...previous,
+                                            rating,
+                                        }))
+                                    }
+                                />
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-2">

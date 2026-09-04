@@ -22,6 +22,7 @@ import { reviewService } from '../services/reviewServices';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import StarRating from '../components/ui/StarRating';
 
 const BookDetailPage = () => {
     const { id } = useParams();
@@ -92,6 +93,10 @@ const BookDetailPage = () => {
 
     const handleReviewSubmit = async (event) => {
         event.preventDefault();
+        if (!reviewForm.rating) {
+            setReviewError('Please select a rating.');
+            return;
+        }
         setIsSubmittingReview(true);
         setReviewError(null);
 
@@ -298,20 +303,15 @@ const BookDetailPage = () => {
                                 )}
 
                                 <form className="space-y-4" onSubmit={handleReviewSubmit}>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="review-rating">Rating</Label>
-                                        <Input
-                                            id="review-rating"
-                                            name="rating"
-                                            type="number"
-                                            min="1"
-                                            max="5"
-                                            value={reviewForm.rating}
-                                            onChange={handleReviewChange}
-                                            placeholder="1 to 5"
-                                            required
-                                        />
-                                    </div>
+                                    <StarRating
+                                        value={reviewForm.rating}
+                                        onChange={(rating) =>
+                                            setReviewForm((previous) => ({
+                                                ...previous,
+                                                rating,
+                                            }))
+                                        }
+                                    />
 
                                     <div className="space-y-2">
                                         <Label htmlFor="review-comment">Comment</Label>
