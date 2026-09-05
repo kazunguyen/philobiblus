@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Book, User
+from app.models import Book, BookVisibility, User
 from app.schemas import BookOut, UserPublicOut
 
 
@@ -24,7 +24,7 @@ def get_user_profile(username: str, db: Session = Depends(get_db)):
 
     books = (
         db.query(Book)
-        .filter(Book.user_id == user.id)
+        .filter(Book.user_id == user.id, Book.visibility == BookVisibility.PUBLIC)
         .order_by(Book.created_at.desc())
         .all()
     )

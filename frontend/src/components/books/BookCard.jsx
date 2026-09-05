@@ -93,7 +93,7 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                 </div>
             </CardContent>
 
-            <CardFooter className="gap-2">
+            <CardFooter className="flex-wrap gap-2">
                 {!isReadOnly ? (
                     <>
                         <Button
@@ -114,17 +114,28 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                         </Button>
                     </>
                 ) : (
-                    book.owner?.username && (
+                    <>
                         <Button
-                            className="w-full"
+                            className="flex-1"
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate(`/users/${book.owner.username}`)}
+                            onClick={() => navigate(`/public/books/${book.id}`)}
                         >
-                            <UserRound />
-                            View Profile
+                            <Eye />
+                            View details
                         </Button>
-                    )
+                        {book.owner?.username && (
+                            <Button
+                                className="flex-1"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => navigate(`/users/${book.owner.username}`)}
+                            >
+                                <UserRound />
+                                View profile
+                            </Button>
+                        )}
+                    </>
                 )}
             </CardFooter>
         </Card>

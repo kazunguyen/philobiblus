@@ -24,6 +24,7 @@ import TagSelector, {
     TAG_OPTIONS,
 } from '../ui/TagSelector';
 import { getBookStatusLabel } from '@/lib/bookStatus';
+import { BOOK_VISIBILITY_OPTIONS } from '@/lib/bookVisibility';
 
 const EMPTY_FORM = {
     title: '',
@@ -37,6 +38,7 @@ const EMPTY_FORM = {
     pages_read: 0,
     notes: '',
     cover_url: '',
+    visibility: 'public',
 };
 
 const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
@@ -64,6 +66,7 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                 pages_read: bookToEdit.pages_read || 0,
                 notes: bookToEdit.notes || '',
                 cover_url: bookToEdit.cover_url || '',
+                visibility: bookToEdit.visibility || 'public',
             });
         } else {
             setFormData(EMPTY_FORM);
@@ -235,6 +238,32 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Visibility</Label>
+                            <Select
+                                value={formData.visibility}
+                                onValueChange={(value) =>
+                                    handleSelectChange('visibility', value)
+                                }
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {BOOK_VISIBILITY_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                                {BOOK_VISIBILITY_OPTIONS.find(
+                                    (option) => option.value === formData.visibility,
+                                )?.description}
+                            </p>
                         </div>
                     </div>
 

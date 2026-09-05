@@ -1,3 +1,4 @@
+import secrets
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -6,10 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import Book, BookStatus, User
+from app.models import Book, BookStatus, BookVisibility, User
 from app.schemas import (
     BookCreate,
-    BookOut,
+    BookOwnerOut,
     BookPublicOut,
     BookStatsOut,
     BookUpdate,
@@ -23,7 +24,7 @@ router = APIRouter(
 
 @router.get(
     "",
-    response_model=List[BookOut],
+    response_model=List[BookOwnerOut],
     summary="Get book list of current user with filtering and search",
 )
 def get_books(
@@ -63,7 +64,7 @@ def get_books(
 
 @router.post(
     "",
-    response_model=BookOut,
+    response_model=BookOwnerOut,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new book",
 )
@@ -73,10 +74,10 @@ def create_book(
     db: Session = Depends(get_db),
 ):
     """Create a new book record assigned to current user."""
-    new_book = Book(
-        **book_in.model_dump(),
-        user_id=current_user.id,
-    )
+    book_data = book_in.model_dump()
+    visibility = book_data.get("visibility", BookVisibility.PUBLIC)
+    share_token = secrets.token_urlsafe(32) if visibility == BookVisibility.RESTRICTED else None
+    new_book = Book(**book_data, share_token=share_token, user_id=current_user.id)
     db.add(new_book)
     db.commit()
     db.refresh(new_book)
@@ -95,7 +96,7 @@ def get_public_books(
     db: Session = Depends(get_db),
 ):
     """Query books from all users for the public dashboard."""
-    query = db.query(Book)
+    query = db.query(Book).filter(Book.visibility == BookVisibility.PUBLIC)
 
     if genre:
         query = query.filter(Book.genre.ilike(f"%{genre}%"))
@@ -110,6 +111,43 @@ def get_public_books(
         )
 
     return query.order_by(Book.created_at.desc()).offset(skip).limit(limit).all()
+
+
+@router.get(
+    "/shared/{share_token}",
+    response_model=BookPublicOut,
+    summary="Get a restricted book through its share link",
+)
+def get_shared_book(share_token: str, db: Session = Depends(get_db)):
+    """Retrieve a restricted book only when its unguessable share token is supplied."""
+    book = (
+        db.query(Book)
+        .filter(
+            Book.share_token == share_token,
+            Book.visibility == BookVisibility.RESTRICTED,
+        )
+        .first()
+    )
+    if not book:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    return book
+
+
+@router.get(
+    "/public/{book_id}",
+    response_model=BookPublicOut,
+    summary="Get a public book by ID",
+)
+def get_public_book(book_id: int, db: Session = Depends(get_db)):
+    """Retrieve details only for books explicitly marked public."""
+    book = (
+        db.query(Book)
+        .filter(Book.id == book_id, Book.visibility == BookVisibility.PUBLIC)
+        .first()
+    )
+    if not book:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    return book
 
 
 @router.get(
@@ -175,7 +213,7 @@ def get_book_stats(
 
 @router.get(
     "/{book_id}",
-    response_model=BookOut,
+    response_model=BookOwnerOut,
     summary="Get book details by ID",
 )
 def get_book(
@@ -199,7 +237,7 @@ def get_book(
 
 @router.put(
     "/{book_id}",
-    response_model=BookOut,
+    response_model=BookOwnerOut,
     summary="Update book details or reading progress",
 )
 def update_book(
@@ -222,6 +260,12 @@ def update_book(
 
     # Update only provided non-None fields
     update_data = book_in.model_dump(exclude_unset=True)
+    if "visibility" in update_data:
+        visibility = update_data["visibility"]
+        if visibility == BookVisibility.RESTRICTED:
+            update_data["share_token"] = book.share_token or secrets.token_urlsafe(32)
+        else:
+            update_data["share_token"] = None
     for field, value in update_data.items():
         setattr(book, field, value)
 

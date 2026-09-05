@@ -26,6 +26,12 @@ class BookStatus(str, enum.Enum):
     DROPPED = "dropped"
 
 
+class BookVisibility(str, enum.Enum):
+    PUBLIC = "public"
+    RESTRICTED = "restricted"
+    PRIVATE = "private"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -73,6 +79,18 @@ class Book(Base):
         default=list,
         server_default="[]",
     )
+    visibility = Column(
+        Enum(
+            BookVisibility,
+            name="book_visibility_enum",
+            native_enum=False,
+            values_callable=lambda values: [member.value for member in values],
+        ),
+        default=BookVisibility.PUBLIC,
+        server_default="public",
+        nullable=False,
+    )
+    share_token = Column(String(64), unique=True, nullable=True, index=True)
     
     status = Column(
         Enum(BookStatus, name="book_status_enum", native_enum=False),

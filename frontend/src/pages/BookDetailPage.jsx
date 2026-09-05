@@ -184,6 +184,9 @@ const BookDetailPage = () => {
             : book.genre
                 ? [book.genre]
                 : [];
+    const shareUrl = book.share_token
+        ? `${window.location.origin}/shared/books/${book.share_token}`
+        : '';
 
     return (
         <div className="min-h-screen bg-muted/30">
@@ -289,6 +292,28 @@ const BookDetailPage = () => {
                                 {book.notes || 'No notes added yet.'}
                             </p>
                         </section>
+
+                        {book.visibility === 'restricted' && book.share_token && (
+                            <section className="space-y-2 rounded-lg border bg-background p-4">
+                                <h2 className="font-medium">Restricted share link</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    This book is hidden from public listings and can only be opened with this link.
+                                </p>
+                                <div className="flex flex-col gap-2 sm:flex-row">
+                                    <Input value={shareUrl} readOnly aria-label="Restricted book share link" />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={async () => {
+                                            await navigator.clipboard.writeText(shareUrl);
+                                            window.alert('Share link copied.');
+                                        }}
+                                    >
+                                        Copy link
+                                    </Button>
+                                </div>
+                            </section>
+                        )}
                     </CardContent>
                 </Card>
 

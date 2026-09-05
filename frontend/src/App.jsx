@@ -13,6 +13,7 @@ import BookListPage from './pages/BookListPage';
 import BookAddPage from './pages/BookAddPage';
 import BookEditPage from './pages/BookEditPage';
 import SocialPage from './pages/SocialPage';
+import SharedBookPage from './pages/SharedBookPage';
 import Navbar from './components/layout/Navbar';
 
 function App() {
@@ -33,6 +34,8 @@ function App() {
             }
           />
           <Route path="/dashboard" element={<PublicDashboardPage />} />
+          <Route path="/public/books/:id" element={<SharedBookPage />} />
+          <Route path="/shared/books/:shareToken" element={<SharedBookPage />} />
           <Route path="/users/:username" element={<UserProfilePage />} />
           <Route
             path="/books/:id"

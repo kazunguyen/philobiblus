@@ -3,9 +3,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
-from app.auth import get_current_user
+from app.auth import get_current_user, get_optional_current_user
 from app.database import get_db
-from app.models import Book, Review, User
+from app.models import Book, BookVisibility, Review, User
 from app.schemas import ReviewCreate, ReviewOut
 
 router = APIRouter(
@@ -34,6 +34,9 @@ def create_review(
             detail="Book not found",
         )
 
+    if book.visibility != BookVisibility.PUBLIC and book.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+
     review = Review(
         book_id=book_id,
         user_id=current_user.id,
@@ -54,6 +57,7 @@ def create_review(
 )
 def get_book_reviews(
     book_id: int,
+    current_user: User | None = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Return public reviews for a book."""
@@ -64,6 +68,11 @@ def get_book_reviews(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Book not found",
         )
+
+    if book.visibility != BookVisibility.PUBLIC and (
+        current_user is None or book.user_id != current_user.id
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
 
     return (
         db.query(Review)

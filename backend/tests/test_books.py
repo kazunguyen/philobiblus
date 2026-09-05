@@ -251,3 +251,70 @@ def test_get_public_books_with_filters_and_search(
     assert search_response.status_code == 200
     assert len(search_response.json()) == 1
     assert search_response.json()[0]["author"] == "Frank Herbert"
+
+
+def test_book_visibility_controls_public_and_shared_access(client, auth_headers):
+    """Test public, restricted, and private visibility boundaries."""
+    public_response = client.post(
+        "/api/books",
+        json={"title": "Public Book", "author": "Author", "genre": "Tech", "visibility": "public"},
+        headers=auth_headers,
+    )
+    restricted_response = client.post(
+        "/api/books",
+        json={"title": "Restricted Book", "author": "Author", "genre": "Tech", "visibility": "restricted"},
+        headers=auth_headers,
+    )
+    private_response = client.post(
+        "/api/books",
+        json={"title": "Private Book", "author": "Author", "genre": "Tech", "visibility": "private"},
+        headers=auth_headers,
+    )
+
+    assert public_response.status_code == 201
+    assert restricted_response.status_code == 201
+    assert private_response.status_code == 201
+    restricted = restricted_response.json()
+    assert restricted["share_token"]
+    assert public_response.json()["share_token"] is None
+    assert private_response.json()["share_token"] is None
+
+    public_books = client.get("/api/books/public")
+    public_titles = {book["title"] for book in public_books.json()}
+    assert "Public Book" in public_titles
+    assert "Restricted Book" not in public_titles
+    assert "Private Book" not in public_titles
+
+    shared_response = client.get(f"/api/books/shared/{restricted['share_token']}")
+    assert shared_response.status_code == 200
+    assert shared_response.json()["title"] == "Restricted Book"
+    assert "share_token" not in shared_response.json()
+
+    private_id = private_response.json()["id"]
+    assert client.get(f"/api/books/public/{private_id}").status_code == 404
+
+
+def test_restricted_share_token_is_created_and_revoked_on_update(client, auth_headers):
+    """Test share token lifecycle when changing visibility."""
+    create_response = client.post(
+        "/api/books",
+        json={"title": "Visibility Changes", "author": "Author", "genre": "Tech"},
+        headers=auth_headers,
+    )
+    book_id = create_response.json()["id"]
+
+    restricted_response = client.put(
+        f"/api/books/{book_id}",
+        json={"visibility": "restricted"},
+        headers=auth_headers,
+    )
+    token = restricted_response.json()["share_token"]
+    assert token
+
+    private_response = client.put(
+        f"/api/books/{book_id}",
+        json={"visibility": "private"},
+        headers=auth_headers,
+    )
+    assert private_response.json()["share_token"] is None
+    assert client.get(f"/api/books/shared/{token}").status_code == 404

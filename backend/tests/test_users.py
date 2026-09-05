@@ -30,3 +30,17 @@ def test_get_user_profile_not_found(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
+
+
+def test_user_profile_hides_restricted_and_private_books(client, auth_headers):
+    """Test profile libraries contain public books only."""
+    for title, visibility in (("Visible", "public"), ("Link only", "restricted"), ("Hidden", "private")):
+        client.post(
+            "/api/books",
+            json={"title": title, "author": "Author", "genre": "Tech", "visibility": visibility},
+            headers=auth_headers,
+        )
+
+    response = client.get("/api/users/testuser")
+    assert response.status_code == 200
+    assert [book["title"] for book in response.json()["books"]] == ["Visible"]

@@ -87,5 +87,13 @@ export const bookService = {
       : `${BOOKS_URL}/public`;
 
     return fetchWithAuth(url);
+  },
+
+  async getPublicBookById(id) {
+    return fetchWithAuth(`${BOOKS_URL}/public/${id}`);
+  },
+
+  async getSharedBook(shareToken) {
+    return fetchWithAuth(`${BOOKS_URL}/shared/${encodeURIComponent(shareToken)}`);
   }
 };

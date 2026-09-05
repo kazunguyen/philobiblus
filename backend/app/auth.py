@@ -22,6 +22,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 Password Bearer pointing to login endpoint
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_optional_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/auth/login",
+    auto_error=False,
+)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -75,3 +79,21 @@ def get_current_user(
             detail="Inactive user account",
         )
     return user
+
+
+def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_optional_scheme),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """Return the authenticated user when a valid bearer token is supplied."""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: Optional[str] = payload.get("sub")
+    except (JWTError, AttributeError, TypeError):
+        return None
+    if not username:
+        return None
+    user = db.query(User).filter(User.username == username).first()
+    return user if user and user.is_active else None

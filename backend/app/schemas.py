@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models import BookStatus, FriendshipStatus
+from app.models import BookStatus, BookVisibility, FriendshipStatus
 
 
 # --- User Schemas ---
@@ -59,6 +59,7 @@ class BookBase(BaseModel):
     date_finished: Optional[date] = None
     notes: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
+    visibility: BookVisibility = BookVisibility.PUBLIC
 
 
 class BookCreate(BookBase):
@@ -79,6 +80,7 @@ class BookUpdate(BaseModel):
     date_finished: Optional[date] = None
     notes: Optional[str] = None
     tags: Optional[List[str]] = Field(None, max_length=20)
+    visibility: Optional[BookVisibility] = None
 
 class BookOut(BookBase):
     model_config = ConfigDict(from_attributes=True)
@@ -87,6 +89,10 @@ class BookOut(BookBase):
     user_id: int
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+
+class BookOwnerOut(BookOut):
+    share_token: Optional[str] = None
 
 
 class BookStatsOut(BaseModel):
