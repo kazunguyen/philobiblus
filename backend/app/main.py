@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.database import Base, engine
 from app.routers import auth, books, reviews, social, users
@@ -39,6 +40,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Metrics remain reachable only through the backend ClusterIP Service. The
+# instrumentator uses FastAPI route templates, avoiding labels with user IDs or
+# usernames that would create unbounded Prometheus time-series cardinality.
+Instrumentator(
+    should_group_status_codes=False,
+    should_ignore_untemplated=True,
+    excluded_handlers=["/metrics"],
+).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 
 # Include API routers
 app.include_router(auth.router)
