@@ -24,7 +24,10 @@ import TagSelector, {
     TAG_OPTIONS,
 } from '../ui/TagSelector';
 import { getBookStatusLabel } from '@/lib/bookStatus';
-import { BOOK_VISIBILITY_OPTIONS } from '@/lib/bookVisibility';
+import {
+    BOOK_VISIBILITY_OPTIONS,
+    getBookVisibilityLabel,
+} from '@/lib/bookVisibility';
 
 const EMPTY_FORM = {
     title: '',
@@ -249,7 +252,9 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                                 }
                             >
                                 <SelectTrigger className="w-full">
-                                    <SelectValue />
+                                    <SelectValue>
+                                        {getBookVisibilityLabel(formData.visibility)}
+                                    </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
                                     {BOOK_VISIBILITY_OPTIONS.map((option) => (
