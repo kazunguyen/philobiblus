@@ -97,6 +97,15 @@ const Navbar = () => {
             </Button>
 
             <Button
+              variant={isActive('/dashboard') ? 'secondary' : 'ghost'}
+              aria-current={isActive('/dashboard') ? 'page' : undefined}
+              onClick={() => navigate('/dashboard')}
+            >
+              <BookOpen />
+              Dashboard
+            </Button>
+
+            <Button
               variant={isActive('/books') ? 'secondary' : 'ghost'}
               aria-current={isActive('/books') ? 'page' : undefined}
               onClick={() => navigate('/books')}
@@ -158,6 +167,16 @@ const Navbar = () => {
                     >
                       <LayoutDashboard className="size-4" />
                       Reading statistics
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => navigateFromMenu('/dashboard')}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                    >
+                      <BookOpen className="size-4" />
+                      Public dashboard
                     </button>
 
                     <button
