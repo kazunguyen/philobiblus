@@ -71,4 +71,29 @@ export const socialService = {
             { method: 'DELETE' },
         );
     },
+
+    async getFollowers(username, token, skip = 0, limit = 20) {
+        const encodedUsername = encodeURIComponent(username);
+
+        return request(
+            `${API_URL}/users/${encodedUsername}/followers?skip=${skip}&limit=${limit}`,
+            token,
+        );
+    },
+
+    async getFollowing(username, token, skip = 0, limit = 20) {
+        const encodedUsername = encodeURIComponent(username);
+
+        return request(
+            `${API_URL}/users/${encodedUsername}/following?skip=${skip}&limit=${limit}`,
+            token,
+        );
+    },
+
+    async getFriendRequests(token, direction = 'incoming') {
+        return request(
+            `${API_URL}/users/me/friend-requests?direction=${direction}`,
+            token,
+        );
+    },
 };
