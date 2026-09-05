@@ -49,6 +49,10 @@ export const bookService = {
     return fetchWithAuth(url);
   },
 
+  async getBookStats() {
+    return fetchWithAuth(`${BOOKS_URL}/stats`);
+  },
+
   async createBook(bookData) {
     return fetchWithAuth(BOOKS_URL, {
       method: 'POST',

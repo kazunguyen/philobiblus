@@ -89,6 +89,18 @@ class BookOut(BookBase):
     updated_at: Optional[datetime] = None
 
 
+class BookStatsOut(BaseModel):
+    total_books: int
+    want_to_read: int
+    reading: int
+    completed: int
+    dropped: int
+    total_pages: int
+    total_pages_read: int
+    average_rating: float
+    reading_progress: float
+
+
 class BookPublicOut(BookOut):
     owner: UserPublicOut
 

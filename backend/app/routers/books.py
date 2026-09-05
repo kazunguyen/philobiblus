@@ -7,7 +7,13 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import Book, BookStatus, User
-from app.schemas import BookCreate, BookOut, BookPublicOut, BookUpdate
+from app.schemas import (
+    BookCreate,
+    BookOut,
+    BookPublicOut,
+    BookStatsOut,
+    BookUpdate,
+)
 
 router = APIRouter(
     prefix="/api/books",
@@ -104,6 +110,67 @@ def get_public_books(
         )
 
     return query.order_by(Book.created_at.desc()).offset(skip).limit(limit).all()
+
+
+@router.get(
+    "/stats",
+    response_model=BookStatsOut,
+    summary="Get reading statistics for current user",
+)
+def get_book_stats(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> BookStatsOut:
+    """Return aggregated reading statistics for the authenticated user."""
+    books = (
+        db.query(Book)
+        .filter(Book.user_id == current_user.id)
+        .all()
+    )
+
+    status_counts = {
+        book_status.value: 0
+        for book_status in BookStatus
+    }
+
+    for book in books:
+        status_value = (
+            book.status.value
+            if isinstance(book.status, BookStatus)
+            else book.status
+        )
+        status_counts[status_value] = status_counts.get(status_value, 0) + 1
+
+    total_pages = sum(book.pages_total or 0 for book in books)
+    total_pages_read = sum(book.pages_read or 0 for book in books)
+    ratings = [
+        book.rating
+        for book in books
+        if book.rating is not None
+    ]
+
+    average_rating = (
+        round(sum(ratings) / len(ratings), 2)
+        if ratings
+        else 0.0
+    )
+    reading_progress = (
+        round(min(total_pages_read / total_pages, 1) * 100, 2)
+        if total_pages
+        else 0.0
+    )
+
+    return BookStatsOut(
+        total_books=len(books),
+        want_to_read=status_counts[BookStatus.WANT_TO_READ.value],
+        reading=status_counts[BookStatus.READING.value],
+        completed=status_counts[BookStatus.COMPLETED.value],
+        dropped=status_counts[BookStatus.DROPPED.value],
+        total_pages=total_pages,
+        total_pages_read=total_pages_read,
+        average_rating=average_rating,
+        reading_progress=reading_progress,
+    )
 
 
 @router.get(

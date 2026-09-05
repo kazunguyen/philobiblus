@@ -88,12 +88,12 @@ const Navbar = () => {
         {isAuthenticated ? (
           <div className="flex items-center gap-2">
             <Button
-              variant={isActive('/dashboard') ? 'secondary' : 'ghost'}
-              aria-current={isActive('/dashboard') ? 'page' : undefined}
-              onClick={() => navigate('/dashboard')}
+              variant={isActive('/statistics') ? 'secondary' : 'ghost'}
+              aria-current={isActive('/statistics') ? 'page' : undefined}
+              onClick={() => navigate('/statistics')}
             >
               <LayoutDashboard />
-              Dashboard
+              Statistics
             </Button>
 
             <Button
@@ -150,6 +150,16 @@ const Navbar = () => {
                   </div>
 
                   <div className="p-2">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => navigateFromMenu('/statistics')}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                    >
+                      <LayoutDashboard className="size-4" />
+                      Reading statistics
+                    </button>
+
                     <button
                       type="button"
                       role="menuitem"

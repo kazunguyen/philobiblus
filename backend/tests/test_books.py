@@ -28,6 +28,53 @@ def test_get_books_empty(client, auth_headers):
     assert response.json() == []
 
 
+def test_get_book_stats(client, auth_headers):
+    """Test aggregated reading statistics for the current user."""
+    client.post(
+        "/api/books",
+        json={
+            "title": "Reading Book",
+            "author": "Author One",
+            "genre": "Technology",
+            "status": "reading",
+            "pages_total": 200,
+            "pages_read": 80,
+            "rating": 4,
+        },
+        headers=auth_headers,
+    )
+    client.post(
+        "/api/books",
+        json={
+            "title": "Completed Book",
+            "author": "Author Two",
+            "genre": "Fantasy",
+            "status": "completed",
+            "pages_total": 300,
+            "pages_read": 300,
+            "rating": 5,
+        },
+        headers=auth_headers,
+    )
+
+    response = client.get(
+        "/api/books/stats",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["total_books"] == 2
+    assert data["reading"] == 1
+    assert data["completed"] == 1
+    assert data["total_pages"] == 500
+    assert data["total_pages_read"] == 380
+    assert data["average_rating"] == 4.5
+    assert data["reading_progress"] == 76.0
+
+
 def test_get_books_with_filters_and_search(client, auth_headers):
     """Test getting books with status, genre filter, and search query."""
     # Create books with different attributes
