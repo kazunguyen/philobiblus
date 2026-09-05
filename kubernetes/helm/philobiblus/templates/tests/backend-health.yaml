@@ -1,0 +1,17 @@
+{{- if .Values.tests.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "philobiblus.fullname" . }}-backend-health"
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: backend-health
+      image: curlimages/curl:8.10.1
+      command: ["curl"]
+      args: ["--fail", "--retry", "12", "--retry-connrefused", "http://{{ include "philobiblus.fullname" . }}-backend:{{ .Values.backend.service.port }}/health"]
+{{- end }}

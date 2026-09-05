@@ -1,0 +1,22 @@
+# Copy to values.local.yaml (ignored by Git) and replace all placeholder values.
+# `values.local.yaml` is intended for a local k3d cluster with images imported
+# using `k3d image import`.
+secrets:
+  create: true
+  existingSecret: ""
+  postgresUser: postgres
+  postgresPassword: REPLACE_WITH_LOCAL_PASSWORD
+  postgresDatabase: philobiblus_db
+  jwtSecret: REPLACE_WITH_LONG_RANDOM_LOCAL_JWT_SECRET
+
+backend:
+  image:
+    repository: philobiblus-backend
+    tag: local
+    pullPolicy: IfNotPresent
+
+frontend:
+  image:
+    repository: philobiblus-frontend
+    tag: local
+    pullPolicy: IfNotPresent

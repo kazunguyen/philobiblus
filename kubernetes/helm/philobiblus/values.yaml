@@ -1,0 +1,93 @@
+# This chart deliberately ships without secrets.  Create the Secret named below
+# before installing, or use a private values file with secrets.create=true.
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+backend:
+  replicaCount: 1
+  image:
+    repository: philobiblus-backend
+    tag: local
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  accessTokenExpireMinutes: 1440
+  allowedOrigins: http://localhost
+  probe:
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: philobiblus-frontend
+    tag: local
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5173
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  apiUrl: /api
+  probe:
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+postgres:
+  image:
+    repository: postgres
+    tag: 16-alpine
+    pullPolicy: IfNotPresent
+  service:
+    port: 5432
+  persistence:
+    size: 1Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+secrets:
+  # With the default setting, create this Secret out of band. It must include
+  # POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB and SECRET_KEY.
+  existingSecret: philobiblus-secrets
+  create: false
+  postgresUser: ""
+  postgresPassword: ""
+  postgresDatabase: ""
+  jwtSecret: ""
+
+ingress:
+  enabled: true
+  className: traefik
+  host: localhost
+  annotations: {}
+
+tests:
+  enabled: true
+
+monitoring:
+  # Enable only after the Prometheus Operator CRDs are installed in the cluster.
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s

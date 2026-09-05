@@ -1,0 +1,36 @@
+{{- define "philobiblus.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{- define "philobiblus.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- if contains (include "philobiblus.name" .) .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name (include "philobiblus.name" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "philobiblus.labels" -}}
+app.kubernetes.io/name: {{ include "philobiblus.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" }}
+{{- end }}
+
+{{- define "philobiblus.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "philobiblus.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{- define "philobiblus.secretName" -}}
+{{- if .Values.secrets.create }}
+{{- printf "%s-secrets" (include "philobiblus.fullname" .) }}
+{{- else }}
+{{- required "secrets.existingSecret is required when secrets.create=false" .Values.secrets.existingSecret }}
+{{- end }}
+{{- end }}

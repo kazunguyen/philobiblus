@@ -163,7 +163,62 @@ Các manifest sử dụng các resource sau:
 
 Backend có init container chờ PostgreSQL sẵn sàng trước khi khởi động application container.
 
-## 9. Kiểm tra deployment
+## 9. Seed database
+
+Kubernetes không tự chạy service `db-seed` như Docker Compose. Backend chỉ tạo schema bằng SQLAlchemy khi khởi động; để tạo dữ liệu mẫu, cần chạy script seed thủ công sau khi PostgreSQL và backend ở trạng thái `Ready`.
+
+Kiểm tra rollout trước khi seed:
+
+```bash
+kubectl rollout status deployment/postgres -n philobiblus
+kubectl rollout status deployment/backend -n philobiblus
+```
+
+Chạy script seed trong Pod backend:
+
+```bash
+kubectl exec -n philobiblus deployment/backend -- python -m scripts.seed_database
+```
+
+Script tạo hoặc cập nhật ba tài khoản mẫu và các sách mẫu được khai báo trong `backend/scripts/seed_database.py`. Script có thể chạy lại mà không tạo bản ghi sách trùng theo owner, title và author. Script hiện không tạo review mẫu.
+
+Kiểm tra số lượng bản ghi trong PostgreSQL:
+
+```bash
+kubectl exec -n philobiblus deployment/postgres -- sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT COUNT(*) AS users FROM users; SELECT COUNT(*) AS books FROM books;"'
+```
+
+Kiểm tra dữ liệu qua API:
+
+```bash
+curl http://localhost/api/books/public
+```
+
+### 9.1. Reset database trước khi seed lại
+
+Chỉ thực hiện khi cần xóa toàn bộ dữ liệu hiện tại. Các lệnh sau xóa users, books, reviews và mọi bảng trong schema `public`; PVC vẫn được giữ lại.
+
+Tạm dừng backend để tránh request trong lúc reset:
+
+```bash
+kubectl scale deployment/backend --replicas=0 -n philobiblus
+```
+
+Xóa và tạo lại schema `public`:
+
+```bash
+kubectl exec -n philobiblus deployment/postgres -- sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"'
+```
+
+Khởi động backend để tạo lại bảng, sau đó chạy seed:
+
+```bash
+kubectl scale deployment/backend --replicas=1 -n philobiblus
+kubectl rollout status deployment/backend -n philobiblus
+kubectl exec -n philobiblus deployment/backend -- python -m scripts.seed_database
+```
+
+## 10. Kiểm tra deployment
 
 Kiểm tra toàn bộ resource:
 
@@ -193,7 +248,7 @@ Kiểm tra Ingress:
 kubectl describe ingress philobiblus-ingress -n philobiblus
 ```
 
-## 10. Truy cập ứng dụng
+## 11. Truy cập ứng dụng
 
 Với cluster expose port 80:
 
@@ -225,7 +280,7 @@ Ingress định tuyến:
 /*     → frontend:5173
 ```
 
-## 11. Kiểm tra log và xử lý lỗi
+## 12. Kiểm tra log và xử lý lỗi
 
 Xem log backend:
 
@@ -260,9 +315,9 @@ Các lỗi thường gặp:
 | Backend chờ PostgreSQL | PostgreSQL chưa Ready hoặc Secret không khớp | `kubectl logs deployment/postgres`, `kubectl describe pod` |
 | PVC `Pending` | StorageClass local chưa sẵn sàng | `kubectl get storageclass`, `kubectl describe pvc -n philobiblus` |
 | Ingress không truy cập được | Traefik hoặc port mapping chưa hoạt động | `kubectl get ingressclass`, `k3d cluster list` |
-| Frontend gọi API lỗi | Ingress path hoặc `VITE_API_URL` không đúng | Kiểm tra `http://localhost/api/health` và browser Network tab |
+| Frontend gọi API lỗi | Ingress path hoặc `VITE_API_URL` không đúng | Kiểm tra `http://localhost/api/books/public` và browser Network tab |
 
-## 12. Cập nhật image sau khi sửa code
+## 13. Cập nhật image sau khi sửa code
 
 Sau khi thay đổi backend hoặc frontend, build lại image và import lại:
 
@@ -281,7 +336,7 @@ kubectl rollout status deployment/backend -n philobiblus
 kubectl rollout status deployment/frontend -n philobiblus
 ```
 
-## 13. Xóa deployment và cluster local
+## 14. Xóa deployment và cluster local
 
 Xóa các resource trong namespace:
 
@@ -297,7 +352,7 @@ Xóa toàn bộ k3d cluster:
 k3d cluster delete philobiblus
 ```
 
-## 14. Quy trình triển khai tóm tắt
+## 15. Quy trình triển khai tóm tắt
 
 ```bash
 k3d cluster create philobiblus --servers 1 --agents 1 --port "80:80@loadbalancer" --wait
@@ -312,6 +367,10 @@ kubectl apply -R -f kubernetes/manifests/postgres
 kubectl apply -R -f kubernetes/manifests/backend
 kubectl apply -R -f kubernetes/manifests/frontend
 kubectl apply -f kubernetes/manifests/ingress.yaml
+
+kubectl rollout status deployment/postgres -n philobiblus
+kubectl rollout status deployment/backend -n philobiblus
+kubectl exec -n philobiblus deployment/backend -- python -m scripts.seed_database
 
 kubectl get pods -n philobiblus
 kubectl get services -n philobiblus

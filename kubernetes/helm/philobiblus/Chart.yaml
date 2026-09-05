@@ -1,0 +1,14 @@
+apiVersion: v2
+name: philobiblus
+description: Helm chart for the Philobiblus reading-tracker application
+type: application
+version: 0.1.0
+appVersion: "local"
+kubeVersion: ">=1.25.0-0"
+keywords:
+  - philobiblus
+  - fastapi
+  - react
+  - postgresql
+maintainers:
+  - name: Nguyen Quang Dung
