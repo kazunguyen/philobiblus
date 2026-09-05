@@ -87,14 +87,7 @@ const Navbar = () => {
 
         {isAuthenticated ? (
           <div className="flex items-center gap-2">
-            <Button
-              variant={isActive('/statistics') ? 'secondary' : 'ghost'}
-              aria-current={isActive('/statistics') ? 'page' : undefined}
-              onClick={() => navigate('/statistics')}
-            >
-              <LayoutDashboard />
-              Statistics
-            </Button>
+
 
             <Button
               variant={isActive('/dashboard') ? 'secondary' : 'ghost'}
@@ -103,6 +96,15 @@ const Navbar = () => {
             >
               <BookOpen />
               Dashboard
+            </Button>
+
+            <Button
+              variant={isActive('/statistics') ? 'secondary' : 'ghost'}
+              aria-current={isActive('/statistics') ? 'page' : undefined}
+              onClick={() => navigate('/statistics')}
+            >
+              <LayoutDashboard />
+              Statistics
             </Button>
 
             <Button
