@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
@@ -33,6 +32,13 @@ import {
     getPublicationStatusLabel,
 } from '@/lib/publicationStatus';
 
+const getToday = () => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${now.getFullYear()}-${month}-${day}`;
+};
+
 const EMPTY_FORM = {
     title: '',
     author: '',
@@ -42,12 +48,13 @@ const EMPTY_FORM = {
     rating: '',
     volume: '',
     pages_total: '',
-    pages_read: 0,
+    pages_read: '',
+    chapters_read: '',
+    date_started: getToday(),
     notes: '',
     cover_url: '',
     visibility: 'public',
     publication_status: 'ongoing',
-    chapters_read: 0,
 };
 
 const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
@@ -70,14 +77,15 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                 tags: existingTags,
                 status: bookToEdit.status || 'want_to_read',
                 rating: bookToEdit.rating || '',
-                volume: bookToEdit.volume || '',
-                pages_total: bookToEdit.pages_total || '',
-                pages_read: bookToEdit.pages_read || 0,
+                volume: bookToEdit.volume >= 0 ? bookToEdit.volume : '',
+                pages_total: bookToEdit.pages_total >= 0 ? bookToEdit.pages_total : '',
+                pages_read: bookToEdit.pages_read >= 0 ? bookToEdit.pages_read : '',
+                date_started: bookToEdit.date_started || '',
                 notes: bookToEdit.notes || '',
                 cover_url: bookToEdit.cover_url || '',
                 visibility: bookToEdit.visibility || 'public',
                 publication_status: bookToEdit.publication_status || 'ongoing',
-                chapters_read: bookToEdit.chapters_read || 0,
+                chapters_read: bookToEdit.chapters_read >= 0 ? bookToEdit.chapters_read : '',
             });
         } else {
             setFormData(EMPTY_FORM);
@@ -138,10 +146,11 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
         payload.genre = payload.tags[0];
 
         if (payload.rating === '') payload.rating = null;
-        if (payload.volume === '') payload.volume = null;
-        if (payload.pages_total === '') payload.pages_total = null;
-        if (payload.pages_read === '') payload.pages_read = 0;
-        if (payload.chapters_read === '') payload.chapters_read = 0;
+        if (payload.volume === '') payload.volume = -1;
+        if (payload.pages_total === '') payload.pages_total = -1;
+        if (payload.pages_read === '') payload.pages_read = -1;
+        if (payload.chapters_read === '') payload.chapters_read = -1;
+        if (payload.date_started === '') payload.date_started = null;
         if (payload.cover_url === '') payload.cover_url = null;
 
         try {
@@ -172,9 +181,6 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                     <DialogTitle>
                         {bookToEdit ? 'Edit Book' : 'Add New Book'}
                     </DialogTitle>
-                    <DialogDescription>
-                        Update the book information and reading progress.
-                    </DialogDescription>
                 </DialogHeader>
 
                 {error && (
@@ -276,11 +282,6 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <p className="text-xs text-muted-foreground">
-                                {BOOK_VISIBILITY_OPTIONS.find(
-                                    (option) => option.value === formData.visibility,
-                                )?.description}
-                            </p>
                         </div>
 
                         <div className="space-y-2">
@@ -371,6 +372,19 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                                 min="0"
                                 step="0.1"
                                 value={formData.chapters_read}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="book-form-date-started">
+                                Started reading
+                            </Label>
+                            <Input
+                                id="book-form-date-started"
+                                name="date_started"
+                                type="date"
+                                value={formData.date_started}
                                 onChange={handleChange}
                             />
                         </div>

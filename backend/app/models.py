@@ -115,10 +115,11 @@ class Book(Base):
         nullable=False,
     )
     rating = Column(Integer, nullable=True)
-    volume = Column(Integer, nullable=True)
-    pages_total = Column(Integer, nullable=True)
-    pages_read = Column(Integer, default=0, nullable=False)
-    chapters_read = Column(Float, default=0.0, server_default="0", nullable=False)
+    # A value of -1 means that the owner has not supplied this number yet.
+    volume = Column(Integer, default=-1, server_default="-1", nullable=False)
+    pages_total = Column(Integer, default=-1, server_default="-1", nullable=False)
+    pages_read = Column(Integer, default=-1, server_default="-1", nullable=False)
+    chapters_read = Column(Float, default=-1.0, server_default="-1", nullable=False)
     
     date_started = Column(Date, nullable=True)
     date_finished = Column(Date, nullable=True)
@@ -165,10 +166,13 @@ class ReadingHistory(Base):
         server_default=func.current_date(),
         index=True,
     )
-    pages_read = Column(Integer, nullable=True)
-    chapters_read = Column(Float, nullable=True)
+    # Snapshot values use the same -1 sentinel as Book for values not supplied.
+    date_started = Column(Date, nullable=True)
+    event_type = Column(String(20), default="progress", server_default="progress", nullable=False)
+    pages_read = Column(Integer, default=-1, server_default="-1", nullable=False)
+    chapters_read = Column(Float, default=-1.0, server_default="-1", nullable=False)
     chapter = Column(String(100), nullable=True)
-    volume = Column(Integer, nullable=True)
+    volume = Column(Integer, default=-1, server_default="-1", nullable=False)
     note = Column(Text, nullable=True)
     recorded_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

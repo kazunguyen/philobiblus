@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -61,9 +60,6 @@ const LoginPage = () => {
             </div>
             <div>
               <CardTitle className="text-2xl">Login to Philobiblus</CardTitle>
-              <CardDescription>
-                Continue tracking your library and reading progress.
-              </CardDescription>
             </div>
           </CardHeader>
           <CardContent>

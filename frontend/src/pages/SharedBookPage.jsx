@@ -51,8 +51,12 @@ const ReadOnlyBookDetail = () => {
     : book.genre
       ? [book.genre]
       : [];
-  const progress = book.pages_total
-    ? Math.min((book.pages_read || 0) / book.pages_total, 1) * 100
+  const hasVolume = book.volume >= 0;
+  const hasPagesRead = book.pages_read >= 0;
+  const hasPagesTotal = book.pages_total >= 0;
+  const hasChaptersRead = book.chapters_read >= 0;
+  const progress = book.pages_total > 0 && hasPagesRead
+    ? Math.min(book.pages_read / book.pages_total, 1) * 100
     : 0;
 
   return (
@@ -110,23 +114,31 @@ const ReadOnlyBookDetail = () => {
                 {book.rating ? `${'★'.repeat(book.rating)}${'☆'.repeat(5 - book.rating)}` : 'Not rated'}
               </p>
             </div>
-            {book.volume && (
+            {hasVolume && (
               <div>
                 <p className="text-sm text-muted-foreground">Volume</p>
                 <p className="font-medium">{book.volume}</p>
               </div>
             )}
+            {hasChaptersRead && (
             <div>
               <p className="text-sm text-muted-foreground">Chapters read</p>
-              <p className="font-medium">{book.chapters_read || 0}</p>
+              <p className="font-medium">{book.chapters_read}</p>
             </div>
+            )}
+            {book.date_started && (
+              <div>
+                <p className="text-sm text-muted-foreground">Started reading</p>
+                <p className="font-medium">{new Date(`${book.date_started}T00:00:00`).toLocaleDateString()}</p>
+              </div>
+            )}
           </div>
 
-          {book.pages_total ? (
+          {book.pages_total > 0 && hasPagesRead ? (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Reading progress</span>
-                <span>{book.pages_read || 0} / {book.pages_total} pages</span>
+                <span>{book.pages_read} / {book.pages_total} pages</span>
               </div>
               <Progress
                 value={progress}

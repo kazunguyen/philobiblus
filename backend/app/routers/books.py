@@ -88,12 +88,25 @@ def create_book(
     db.add(new_book)
     db.commit()
     db.refresh(new_book)
-    if new_book.pages_read or new_book.chapters_read or new_book.volume:
+    has_initial_snapshot = (
+        new_book.date_started is not None
+        or any(
+            value >= 0
+            for value in (
+                new_book.pages_read,
+                new_book.chapters_read,
+                new_book.volume,
+            )
+        )
+    )
+    if has_initial_snapshot:
         db.add(
             ReadingHistory(
                 book_id=new_book.id,
                 user_id=current_user.id,
-                read_on=date.today(),
+                read_on=new_book.date_started or date.today(),
+                date_started=new_book.date_started,
+                event_type="started" if new_book.date_started else "progress",
                 pages_read=new_book.pages_read,
                 chapters_read=new_book.chapters_read,
                 volume=new_book.volume,
@@ -198,8 +211,8 @@ def get_book_stats(
         )
         status_counts[status_value] = status_counts.get(status_value, 0) + 1
 
-    total_pages = sum(book.pages_total or 0 for book in books)
-    total_pages_read = sum(book.pages_read or 0 for book in books)
+    total_pages = sum(book.pages_total for book in books if book.pages_total >= 0)
+    total_pages_read = sum(book.pages_read for book in books if book.pages_read >= 0)
     ratings = [
         book.rating
         for book in books
@@ -281,7 +294,7 @@ def update_book(
     update_data = book_in.model_dump(exclude_unset=True)
     previous_progress = {
         field: getattr(book, field)
-        for field in ("pages_read", "chapters_read", "volume")
+        for field in ("pages_read", "chapters_read", "volume", "date_started")
     }
     if "visibility" in update_data:
         visibility = update_data["visibility"]
@@ -302,6 +315,7 @@ def update_book(
                 book_id=book.id,
                 user_id=current_user.id,
                 read_on=date.today(),
+                date_started=book.date_started,
                 pages_read=book.pages_read,
                 chapters_read=book.chapters_read,
                 volume=book.volume,

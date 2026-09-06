@@ -56,8 +56,9 @@ def get_reading_history(
             ReadingHistory.user_id == current_user.id,
         )
         .order_by(
-            ReadingHistory.recorded_at.desc().nullslast(),
-            ReadingHistory.id.desc(),
+            ReadingHistory.read_on.asc(),
+            ReadingHistory.recorded_at.asc().nullslast(),
+            ReadingHistory.id.asc(),
         )
         .all()
     )

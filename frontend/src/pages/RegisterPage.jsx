@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -63,9 +62,6 @@ const RegisterPage = () => {
             </div>
             <div>
               <CardTitle className="text-2xl">Create your account</CardTitle>
-              <CardDescription>
-                Start building your personal reading library.
-              </CardDescription>
             </div>
           </CardHeader>
           <CardContent>

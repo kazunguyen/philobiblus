@@ -1,12 +1,20 @@
 import logging
 from datetime import date
+from pathlib import Path
 from typing import Dict, List
 
 from sqlalchemy.orm import Session
 
 from app.auth import get_password_hash
 from app.database import Base, SessionLocal, engine
-from app.models import Book, BookStatus, User
+from app.models import (
+    Book,
+    BookStatus,
+    BookVisibility,
+    PublicationStatus,
+    ReadingHistory,
+    User,
+)
 
 
 logging.basicConfig(
@@ -251,6 +259,49 @@ BOOK_SEEDS = [
     },
 ]
 
+SEED_HISTORY_NOTE = "__seed__"
+LEGACY_SEED_HISTORY_NOTE = "Seeded from the book's current reading progress."
+
+
+def apply_schema_updates(db: Session) -> None:
+    """Apply the idempotent reading-progress migration before seeding data."""
+    migration_path = Path(__file__).with_name("add_reading_progress_fields.sql")
+    db.connection().exec_driver_sql(migration_path.read_text(encoding="utf-8"))
+
+
+def build_book_values(book_data: dict, owner: User) -> dict:
+    """Fill every persisted book field, including the reading-progress fields."""
+    pages_read = book_data.get("pages_read", -1)
+    chapters_read = book_data.get("chapters_read")
+    if chapters_read is None:
+        chapters_read = round(pages_read / 35, 1) if pages_read >= 0 else -1.0
+
+    return {
+        "user_id": owner.id,
+        "title": book_data["title"],
+        "author": book_data["author"],
+        "genre": book_data["genre"],
+        "tags": book_data.get("tags", [book_data["genre"]]),
+        "visibility": book_data.get("visibility", BookVisibility.PUBLIC),
+        "share_token": None,
+        "publication_status": book_data.get(
+            "publication_status",
+            PublicationStatus.COMPLETED
+            if book_data["status"] == BookStatus.COMPLETED
+            else PublicationStatus.ONGOING,
+        ),
+        "status": book_data["status"],
+        "rating": book_data.get("rating"),
+        "volume": book_data.get("volume", -1),
+        "pages_total": book_data.get("pages_total", -1),
+        "pages_read": pages_read,
+        "chapters_read": chapters_read,
+        "date_started": book_data.get("date_started"),
+        "date_finished": book_data.get("date_finished"),
+        "notes": book_data.get("notes"),
+        "cover_url": book_data.get("cover_url"),
+    }
+
 
 def get_or_create_user(db: Session, username: str, email: str) -> User:
     """Return an existing user or create one with the seed password."""
@@ -302,12 +353,7 @@ def upsert_book(db: Session, book_data: dict, users: Dict[str, User]) -> Book:
         .first()
     )
 
-    book_values = {
-        key: value
-        for key, value in book_data.items()
-        if key != "owner"
-    }
-    book_values["user_id"] = owner.id
+    book_values = build_book_values(book_data, owner)
 
     if book:
         for field, value in book_values.items():
@@ -321,10 +367,41 @@ def upsert_book(db: Session, book_data: dict, users: Dict[str, User]) -> Book:
     return book
 
 
+def upsert_reading_history(db: Session, book: Book) -> None:
+    """Create one deterministic progress snapshot for every seeded book."""
+    history = (
+        db.query(ReadingHistory)
+        .filter(
+            ReadingHistory.book_id == book.id,
+            ReadingHistory.note.in_((SEED_HISTORY_NOTE, LEGACY_SEED_HISTORY_NOTE)),
+        )
+        .first()
+    )
+    values = {
+        "book_id": book.id,
+        "user_id": book.user_id,
+        "read_on": book.date_started or date.today(),
+        "date_started": book.date_started,
+        "event_type": "started" if book.date_started else "progress",
+        "pages_read": book.pages_read,
+        "chapters_read": book.chapters_read,
+        "volume": book.volume,
+        "note": SEED_HISTORY_NOTE,
+    }
+    if history:
+        for field, value in values.items():
+            setattr(history, field, value)
+        return
+
+    db.add(ReadingHistory(**values))
+
+
 def seed_books(db: Session, users: Dict[str, User]) -> None:
-    """Create or update all seed books."""
+    """Create or update all seed books and their current progress snapshots."""
     for book_data in BOOK_SEEDS:
-        upsert_book(db=db, book_data=book_data, users=users)
+        book = upsert_book(db=db, book_data=book_data, users=users)
+        db.flush()
+        upsert_reading_history(db=db, book=book)
 
 
 def seed_database() -> None:
@@ -333,6 +410,7 @@ def seed_database() -> None:
 
     db = SessionLocal()
     try:
+        apply_schema_updates(db)
         users = get_seed_users(db)
         seed_books(db=db, users=users)
         db.commit()

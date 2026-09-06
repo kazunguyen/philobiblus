@@ -56,11 +56,11 @@ class BookBase(BaseModel):
     genre: str = Field(..., max_length=100)
     status: BookStatus = BookStatus.WANT_TO_READ
     rating: Optional[int] = Field(None, ge=1, le=5)
-    volume: Optional[int] = Field(None, ge=1)
+    volume: int = Field(-1, ge=-1)
     cover_url: Optional[str] = Field(None, max_length=500)
-    pages_total: Optional[int] = Field(None, ge=0)
-    pages_read: int = Field(0, ge=0)
-    chapters_read: float = Field(0.0, ge=0)
+    pages_total: int = Field(-1, ge=-1)
+    pages_read: int = Field(-1, ge=-1)
+    chapters_read: float = Field(-1.0, ge=-1)
     date_started: Optional[date] = None
     date_finished: Optional[date] = None
     notes: Optional[str] = None
@@ -79,17 +79,17 @@ class BookUpdate(BaseModel):
     genre: Optional[str] = Field(None, max_length=100)
     status: Optional[BookStatus] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
-    volume: Optional[int] = Field(None, ge=1)
+    volume: Optional[int] = Field(None, ge=-1)
     cover_url: Optional[str] = Field(None, max_length=500)
-    pages_total: Optional[int] = Field(None, ge=0)
-    pages_read: Optional[int] = Field(None, ge=0)
+    pages_total: Optional[int] = Field(None, ge=-1)
+    pages_read: Optional[int] = Field(None, ge=-1)
     date_started: Optional[date] = None
     date_finished: Optional[date] = None
     notes: Optional[str] = None
     tags: Optional[List[str]] = Field(None, max_length=20)
     visibility: Optional[BookVisibility] = None
     publication_status: Optional[PublicationStatus] = None
-    chapters_read: Optional[float] = Field(None, ge=0)
+    chapters_read: Optional[float] = Field(None, ge=-1)
 
 class BookOut(BookBase):
     model_config = ConfigDict(from_attributes=True)
@@ -171,6 +171,8 @@ class ReadingHistoryOut(BaseModel):
     book_id: int
     user_id: int
     read_on: date
+    date_started: Optional[date] = None
+    event_type: str
     pages_read: Optional[int] = None
     chapters_read: Optional[float] = None
     chapter: Optional[str] = None

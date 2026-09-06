@@ -33,6 +33,13 @@ import {
     getPublicationStatusLabel,
 } from '@/lib/publicationStatus';
 
+const getToday = () => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${now.getFullYear()}-${month}-${day}`;
+};
+
 const BookAddPage = () => {
     const navigate = useNavigate();
 
@@ -45,12 +52,13 @@ const BookAddPage = () => {
         rating: '',
         volume: '',
         pages_total: '',
-        pages_read: 0,
+        pages_read: '',
+        chapters_read: '',
+        date_started: getToday(),
         notes: '',
         cover_url: '',
         visibility: 'public',
         publication_status: 'ongoing',
-        chapters_read: 0,
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -108,10 +116,11 @@ const BookAddPage = () => {
         payload.genre = payload.tags[0];
 
         if (payload.rating === '') payload.rating = null;
-        if (payload.volume === '') payload.volume = null;
-        if (payload.pages_total === '') payload.pages_total = null;
-        if (payload.pages_read === '') payload.pages_read = 0;
-        if (payload.chapters_read === '') payload.chapters_read = 0;
+        if (payload.volume === '') payload.volume = -1;
+        if (payload.pages_total === '') payload.pages_total = -1;
+        if (payload.pages_read === '') payload.pages_read = -1;
+        if (payload.chapters_read === '') payload.chapters_read = -1;
+        if (payload.date_started === '') payload.date_started = null;
         if (payload.cover_url === '') payload.cover_url = null;
 
         try {
@@ -245,11 +254,6 @@ const BookAddPage = () => {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <p className="text-xs text-muted-foreground">
-                                        {BOOK_VISIBILITY_OPTIONS.find(
-                                            (option) => option.value === formData.visibility,
-                                        )?.description}
-                                    </p>
                                 </div>
 
                                 <div className="space-y-2">
@@ -335,6 +339,17 @@ const BookAddPage = () => {
                                         min="0"
                                         step="0.1"
                                         value={formData.chapters_read}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="date_started">Started reading</Label>
+                                    <Input
+                                        id="date_started"
+                                        name="date_started"
+                                        type="date"
+                                        value={formData.date_started}
                                         onChange={handleChange}
                                     />
                                 </div>

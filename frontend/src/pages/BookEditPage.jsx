@@ -46,12 +46,13 @@ const BookEditPage = () => {
         rating: '',
         volume: '',
         pages_total: '',
-        pages_read: 0,
+        pages_read: '',
+        chapters_read: '',
+        date_started: '',
         notes: '',
         cover_url: '',
         visibility: 'public',
         publication_status: 'ongoing',
-        chapters_read: 0,
     });
 
     const [isLoading, setIsLoading] = useState(true);
@@ -78,14 +79,15 @@ const BookEditPage = () => {
                     tags: existingTags,
                     status: book.status || 'want_to_read',
                     rating: book.rating || '',
-                    volume: book.volume || '',
-                    pages_total: book.pages_total || '',
-                    pages_read: book.pages_read || 0,
+                    volume: book.volume >= 0 ? book.volume : '',
+                    pages_total: book.pages_total >= 0 ? book.pages_total : '',
+                    pages_read: book.pages_read >= 0 ? book.pages_read : '',
+                    date_started: book.date_started || '',
                     notes: book.notes || '',
                     cover_url: book.cover_url || '',
                     visibility: book.visibility || 'public',
                     publication_status: book.publication_status || 'ongoing',
-                    chapters_read: book.chapters_read || 0,
+                    chapters_read: book.chapters_read >= 0 ? book.chapters_read : '',
                 });
             } catch (fetchError) {
                 setError(fetchError.message);
@@ -148,10 +150,11 @@ const BookEditPage = () => {
         payload.genre = payload.tags[0];
 
         if (payload.rating === '') payload.rating = null;
-        if (payload.volume === '') payload.volume = null;
-        if (payload.pages_total === '') payload.pages_total = null;
-        if (payload.pages_read === '') payload.pages_read = 0;
-        if (payload.chapters_read === '') payload.chapters_read = 0;
+        if (payload.volume === '') payload.volume = -1;
+        if (payload.pages_total === '') payload.pages_total = -1;
+        if (payload.pages_read === '') payload.pages_read = -1;
+        if (payload.chapters_read === '') payload.chapters_read = -1;
+        if (payload.date_started === '') payload.date_started = null;
         if (payload.cover_url === '') payload.cover_url = null;
 
         try {
@@ -292,11 +295,6 @@ const BookEditPage = () => {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <p className="text-xs text-muted-foreground">
-                                        {BOOK_VISIBILITY_OPTIONS.find(
-                                            (option) => option.value === formData.visibility,
-                                        )?.description}
-                                    </p>
                                 </div>
 
                                 <div className="space-y-2">
@@ -381,6 +379,17 @@ const BookEditPage = () => {
                                         min="0"
                                         step="0.1"
                                         value={formData.chapters_read}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="date_started">Started reading</Label>
+                                    <Input
+                                        id="date_started"
+                                        name="date_started"
+                                        type="date"
+                                        value={formData.date_started}
                                         onChange={handleChange}
                                     />
                                 </div>

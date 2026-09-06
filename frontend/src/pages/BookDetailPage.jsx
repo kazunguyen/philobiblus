@@ -181,9 +181,14 @@ const BookDetailPage = () => {
     }
 
     const progress =
-        book.pages_total > 0
+        book.pages_total > 0 && book.pages_read >= 0
             ? Math.min((book.pages_read / book.pages_total) * 100, 100)
             : 0;
+    const hasVolume = book.volume >= 0;
+    const hasPagesRead = book.pages_read >= 0;
+    const hasPagesTotal = book.pages_total >= 0;
+    const hasChaptersRead = book.chapters_read >= 0;
+    const hasProgress = hasPagesRead || hasPagesTotal || hasChaptersRead;
 
     const bookTags =
         Array.isArray(book.tags) && book.tags.length > 0
@@ -262,14 +267,16 @@ const BookDetailPage = () => {
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
+                            {hasVolume && (
                             <div>
                                 <p className="text-sm text-muted-foreground">
                                     Volume
                                 </p>
                                 <p className="font-medium">
-                                    {book.volume || 'N/A'}
+                                    {book.volume}
                                 </p>
                             </div>
+                            )}
 
                             <div>
                                 <p className="text-sm text-muted-foreground">
@@ -281,21 +288,42 @@ const BookDetailPage = () => {
                                         : 'Unrated'}
                                 </p>
                             </div>
+
+                            {book.date_started && (
+                                <div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Started reading
+                                    </p>
+                                    <p className="font-medium">
+                                        {new Date(`${book.date_started}T00:00:00`).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
+                        {hasProgress && (
                         <section className="space-y-3 rounded-lg bg-muted/50 p-4">
                             <div className="flex items-center justify-between">
                                 <p className="font-medium">
                                     Reading progress
                                 </p>
-                                <p className="text-sm text-muted-foreground">
-                                    {book.pages_read} /{' '}
-                                    {book.pages_total || '?'} pages
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                    {book.chapters_read || 0} chapters read
-                                </p>
+                                {hasPagesRead && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Pages read: {book.pages_read}{hasPagesTotal && ` / ${book.pages_total}`}
+                                    </p>
+                                )}
+                                {hasPagesTotal && !hasPagesRead && (
+                                    <p className="text-sm text-muted-foreground">
+                                        Total pages: {book.pages_total}
+                                    </p>
+                                )}
+                                {hasChaptersRead && (
+                                    <p className="text-sm text-muted-foreground">
+                                        {book.chapters_read} chapters read
+                                    </p>
+                                )}
                             </div>
+                            {book.pages_total > 0 && hasPagesRead && (
                             <Progress
                                 value={progress}
                                 indicatorClassName={
@@ -308,15 +336,12 @@ const BookDetailPage = () => {
                                                 : 'bg-muted-foreground'
                                 }
                             />
+                            )}
                         </section>
+                        )}
 
                         <section className="space-y-4 rounded-lg border bg-background p-4">
-                            <div>
-                                <h2 className="font-medium">Reading history</h2>
-                                <p className="text-sm text-muted-foreground">
-                            Progress snapshots are recorded automatically when you edit the book.
-                                </p>
-                            </div>
+                            <h2 className="font-medium">Reading history</h2>
 
                             {isLoadingHistory ? (
                                 <p className="py-4 text-center text-sm text-muted-foreground">
@@ -327,28 +352,31 @@ const BookDetailPage = () => {
                                     No reading history recorded yet.
                                 </p>
                             ) : (
-                                <ol className="space-y-3">
+                                <ol className="max-h-80 space-y-3 overflow-y-auto pr-2">
                                     {readingHistory.map((entry) => (
-                                        <li
-                                            key={entry.id}
-                                            className="rounded-lg border p-3"
-                                        >
+                                        <li key={entry.id} className="rounded-lg border p-3">
                                             <div className="flex flex-wrap items-center justify-between gap-2">
                                                 <time
-                                                    dateTime={entry.recorded_at || entry.read_on}
+                                                    dateTime={entry.read_on}
                                                     className="font-medium"
                                                 >
-                                                    {new Date(entry.recorded_at || entry.read_on).toLocaleString()}
+                                                    {new Date(`${entry.read_on}T00:00:00`).toLocaleDateString()}
                                                 </time>
 
                                                 <div className="flex flex-wrap gap-2">
-                                                    {entry.pages_read !== null && (
+                                                    {entry.event_type === 'started' && (
+                                                        <Badge variant="secondary">
+                                                            Started reading
+                                                        </Badge>
+                                                    )}
+
+                                                    {entry.pages_read >= 0 && (
                                                         <Badge variant="secondary">
                                                             Page {entry.pages_read}
                                                         </Badge>
                                                     )}
 
-                                                    {entry.chapters_read !== null && entry.chapters_read !== undefined && (
+                                                    {entry.chapters_read >= 0 && (
                                                         <Badge variant="secondary">
                                                             Chapters {entry.chapters_read}
                                                         </Badge>
@@ -360,7 +388,7 @@ const BookDetailPage = () => {
                                                         </Badge>
                                                     )}
 
-                                                    {entry.volume && (
+                                                    {entry.volume >= 0 && (
                                                         <Badge variant="secondary">
                                                             Volume {entry.volume}
                                                         </Badge>
@@ -368,7 +396,7 @@ const BookDetailPage = () => {
                                                 </div>
                                             </div>
 
-                                            {entry.note && (
+                                            {entry.note && entry.note !== '__seed__' && entry.note !== "Seeded from the book's current reading progress." && (
                                                 <p className="mt-2 text-sm text-muted-foreground">
                                                     {entry.note}
                                                 </p>
@@ -389,9 +417,6 @@ const BookDetailPage = () => {
                         {book.visibility === 'restricted' && book.share_token && (
                             <section className="space-y-2 rounded-lg border bg-background p-4">
                                 <h2 className="font-medium">Restricted share link</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    This book is hidden from public listings and can only be opened with this link.
-                                </p>
                                 <div className="flex flex-col gap-2 sm:flex-row">
                                     <Input value={shareUrl} readOnly aria-label="Restricted book share link" />
                                     <Button

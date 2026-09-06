@@ -7,6 +7,7 @@ def test_progress_changes_create_reading_history(client, auth_headers):
             "author": "Author",
             "genre": "Tech",
             "pages_total": 300,
+            "date_started": "2026-09-01",
         },
         headers=auth_headers,
     )
@@ -26,11 +27,38 @@ def test_progress_changes_create_reading_history(client, auth_headers):
     )
 
     assert response.status_code == 200
-    entry = response.json()[0]
+    history = response.json()
+    assert history[0]["read_on"] == "2026-09-01"
+    assert history[0]["date_started"] == "2026-09-01"
+    assert history[0]["event_type"] == "started"
+
+    entry = next(entry for entry in history if entry["pages_read"] == 80)
     assert entry["pages_read"] == 80
     assert entry["chapters_read"] == 2.5
     assert entry["volume"] == 1
+    assert entry["date_started"] == "2026-09-01"
+    assert entry["event_type"] == "progress"
     assert entry["recorded_at"] is not None
+
+
+def test_unentered_numeric_fields_use_negative_one_sentinel(client, auth_headers):
+    """Test omitted numeric book fields are persisted as -1."""
+    response = client.post(
+        "/api/books",
+        json={
+            "title": "Untitled Progress",
+            "author": "Author",
+            "genre": "Tech",
+        },
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 201
+    book = response.json()
+    assert book["volume"] == -1
+    assert book["pages_total"] == -1
+    assert book["pages_read"] == -1
+    assert book["chapters_read"] == -1
 
 
 def test_reading_history_is_not_created_without_progress_change(

@@ -15,13 +15,10 @@ const HomePage = () => {
             Personal reading tracker
           </div>
 
-          <div className="space-y-4">
+          <div>
             <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
               Welcome to Philobiblus
             </h1>
-            <p className="max-w-xl text-base leading-7 text-muted-foreground">
-              Track books, organize reading progress, and explore public libraries from other readers.
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-3">

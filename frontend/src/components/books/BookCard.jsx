@@ -17,7 +17,12 @@ import { getPublicationStatusLabel } from '@/lib/publicationStatus';
 const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
     const navigate = useNavigate();
 
-    const progress = book.pages_total
+    const hasVolume = book.volume >= 0;
+    const hasPagesRead = book.pages_read >= 0;
+    const hasPagesTotal = book.pages_total >= 0;
+    const hasChaptersRead = book.chapters_read >= 0;
+    const hasProgress = hasPagesRead || hasPagesTotal || hasChaptersRead;
+    const progress = book.pages_total > 0 && hasPagesRead
         ? Math.min((book.pages_read / book.pages_total) * 100, 100)
         : 0;
 
@@ -78,7 +83,7 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                         <span className="font-medium text-foreground">Author:</span> {book.author}
                     </p>
 
-                    {book.volume && (
+                    {hasVolume && (
                         <p className="text-muted-foreground">
                             <span className="font-medium text-foreground">Volume:</span> {book.volume}
                         </p>
@@ -92,17 +97,25 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                     )}
                 </div>
 
+                {hasProgress && (
                 <div className="mt-auto space-y-2">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Progress</span>
-                        <span>{Math.round(progress)}%</span>
+                        {book.pages_total > 0 && hasPagesRead && (
+                            <span>{Math.round(progress)}%</span>
+                        )}
                     </div>
-                    <Progress value={progress} indicatorClassName={progressColor} />
+                    {book.pages_total > 0 && hasPagesRead && (
+                        <Progress value={progress} indicatorClassName={progressColor} />
+                    )}
                     <p className="text-xs text-muted-foreground">
-                        {book.pages_read || 0} / {book.pages_total || '?'} pages
-                        {book.chapters_read ? ` · ${book.chapters_read} chapters` : ''}
+                        {hasPagesRead && `Pages read: ${book.pages_read}`}
+                        {hasPagesRead && hasPagesTotal && ' / '}
+                        {hasPagesTotal && `${book.pages_total} pages`}
+                        {hasChaptersRead && `${hasPagesRead || hasPagesTotal ? ' · ' : ''}${book.chapters_read} chapters`}
                     </p>
                 </div>
+                )}
             </CardContent>
 
             <CardFooter className="flex-wrap gap-2">
