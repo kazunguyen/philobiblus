@@ -66,6 +66,18 @@ postgres:
       cpu: 500m
       memory: 512Mi
 
+seed:
+  enabled: true
+  runOnUpgrade: true
+  backoffLimit: 3
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
 secrets:
   # With the default setting, create this Secret out of band. It must include
   # POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB and SECRET_KEY.

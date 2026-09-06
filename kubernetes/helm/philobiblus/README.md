@@ -1,6 +1,6 @@
 # Helm chart Philobiblus
 
-Chart này chuyển toàn bộ workload Kubernetes của Philobiblus thành Helm templates: PostgreSQL + PVC, backend FastAPI, frontend React, Service và Ingress. Chart không chứa credential thực.
+Chart này chuyển toàn bộ workload Kubernetes của Philobiblus thành Helm templates: PostgreSQL + PVC, backend FastAPI, frontend React, Service, Ingress và seed Job. Chart không chứa credential thực.
 
 ## Chuẩn bị secret local
 
@@ -35,6 +35,26 @@ kubectl rollout status deployment/philobiblus-postgres -n philobiblus
 kubectl rollout status deployment/philobiblus-backend -n philobiblus
 kubectl rollout status deployment/philobiblus-frontend -n philobiblus
 helm test philobiblus -n philobiblus
+```
+
+## Seed database
+
+Chart tạo Helm hook Job sau mỗi lần cài đặt và, theo mặc định, sau mỗi lần upgrade. Job chờ PostgreSQL sẵn sàng rồi chạy `python -m scripts.seed_database`; script này thực hiện migration idempotent trước khi tạo hoặc cập nhật dữ liệu mẫu.
+
+Kiểm tra kết quả seed:
+
+```bash
+kubectl get jobs -n philobiblus
+kubectl logs job/philobiblus-seed -n philobiblus
+```
+
+Tắt seed khi cần giữ nguyên dữ liệu trong namespace:
+
+```bash
+helm upgrade philobiblus kubernetes/helm/philobiblus \
+  --namespace philobiblus \
+  --values kubernetes/helm/philobiblus/values.local.yaml \
+  --set seed.enabled=false
 ```
 
 Với k3d, build và import `philobiblus-backend:local` và `philobiblus-frontend:local` trước khi cài chart. Nếu dùng tên release khác `philobiblus`, tên Deployment thay đổi theo release; kiểm tra bằng `kubectl get deployment -n philobiblus`.
