@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import BookCard from '../components/books/BookCard';
+import BookListItem from '../components/books/BookListItem';
+import BookViewToggle from '../components/books/BookViewToggle';
 import { bookService } from '../services/bookServices';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +13,7 @@ const PublicDashboardPage = () => {
     const [filters, setFilters] = useState({ genre: '', search: '' });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [bookView, setBookView] = useState('grid');
 
     useEffect(() => {
         fetchPublicBooks();
@@ -42,11 +45,14 @@ const PublicDashboardPage = () => {
     return (
         <div className="min-h-screen bg-muted/30">
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="mb-6 space-y-2">
-                    <h1 className="text-3xl font-semibold tracking-tight">Public Dashboard</h1>
-                    <p className="text-muted-foreground">
-                        Explore books shared by readers across Philobiblus.
-                    </p>
+                <div className="mb-6 flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-semibold tracking-tight">Public Dashboard</h1>
+                        <p className="text-muted-foreground">
+                            Explore books shared by readers across Philobiblus.
+                        </p>
+                    </div>
+                    <BookViewToggle view={bookView} onViewChange={setBookView} />
                 </div>
 
                 <Card className="mb-6">
@@ -89,9 +95,15 @@ const PublicDashboardPage = () => {
                 ) : books.length === 0 ? (
                     <p className="text-muted-foreground">No public books found.</p>
                 ) : (
-                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className={bookView === 'grid'
+                        ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                        : 'space-y-3'}>
                         {books.map((book) => (
-                            <BookCard key={book.id} book={book} isReadOnly />
+                            bookView === 'grid' ? (
+                                <BookCard key={book.id} book={book} isReadOnly />
+                            ) : (
+                                <BookListItem key={book.id} book={book} isReadOnly />
+                            )
                         ))}
                     </div>
                 )}

@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { bookService } from '../services/bookServices';
 import BookCard from '../components/books/BookCard';
+import BookListItem from '../components/books/BookListItem';
+import BookViewToggle from '../components/books/BookViewToggle';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -61,6 +63,7 @@ const DashboardPage = () => {
     const [stats, setStats] = useState(INITIAL_STATS);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [bookView, setBookView] = useState('grid');
 
     const loadDashboard = async () => {
         try {
@@ -192,17 +195,20 @@ const DashboardPage = () => {
                         </Card>
 
                         <section className="mb-8">
-                            <div className="mb-4 flex items-center justify-between">
+                            <div className="mb-4 flex items-center justify-between gap-3">
                                 <h2 className="text-xl font-semibold">
                                     Recently added
                                 </h2>
 
-                                <Button
-                                    variant="outline"
-                                    onClick={() => navigate('/books')}
-                                >
-                                    View library
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <BookViewToggle view={bookView} onViewChange={setBookView} />
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => navigate('/books')}
+                                    >
+                                        View library
+                                    </Button>
+                                </div>
                             </div>
 
                             {books.length === 0 ? (
@@ -212,18 +218,25 @@ const DashboardPage = () => {
                                     </CardContent>
                                 </Card>
                             ) : (
-                                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                <div className={bookView === 'grid'
+                                    ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                    : 'space-y-3'}>
                                     {books.slice(0, 4).map((book) => (
-                                        <BookCard
-                                            key={book.id}
-                                            book={book}
-                                            onDelete={() => handleDelete(book.id)}
-                                            onEdit={() =>
-                                                navigate(
-                                                    `/books/${book.id}/edit`,
-                                                )
-                                            }
-                                        />
+                                        bookView === 'grid' ? (
+                                            <BookCard
+                                                key={book.id}
+                                                book={book}
+                                                onDelete={() => handleDelete(book.id)}
+                                                onEdit={() => navigate(`/books/${book.id}/edit`)}
+                                            />
+                                        ) : (
+                                            <BookListItem
+                                                key={book.id}
+                                                book={book}
+                                                onDelete={() => handleDelete(book.id)}
+                                                onEdit={() => navigate(`/books/${book.id}/edit`)}
+                                            />
+                                        )
                                     ))}
                                 </div>
                             )}
@@ -231,22 +244,27 @@ const DashboardPage = () => {
 
                         {topRatedBooks.length > 0 && (
                             <section>
-                                <h2 className="mb-4 text-xl font-semibold">
-                                    Top rated books
-                                </h2>
+                                <h2 className="mb-4 text-xl font-semibold">Top rated books</h2>
 
-                                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                <div className={bookView === 'grid'
+                                    ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                    : 'space-y-3'}>
                                     {topRatedBooks.map((book) => (
-                                        <BookCard
-                                            key={book.id}
-                                            book={book}
-                                            onDelete={() => handleDelete(book.id)}
-                                            onEdit={() =>
-                                                navigate(
-                                                    `/books/${book.id}/edit`,
-                                                )
-                                            }
-                                        />
+                                        bookView === 'grid' ? (
+                                            <BookCard
+                                                key={book.id}
+                                                book={book}
+                                                onDelete={() => handleDelete(book.id)}
+                                                onEdit={() => navigate(`/books/${book.id}/edit`)}
+                                            />
+                                        ) : (
+                                            <BookListItem
+                                                key={book.id}
+                                                book={book}
+                                                onDelete={() => handleDelete(book.id)}
+                                                onEdit={() => navigate(`/books/${book.id}/edit`)}
+                                            />
+                                        )
                                     ))}
                                 </div>
                             </section>

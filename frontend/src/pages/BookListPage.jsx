@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { bookService } from '../services/bookServices';
 import BookCard from '../components/books/BookCard';
+import BookListItem from '../components/books/BookListItem';
+import BookViewToggle from '../components/books/BookViewToggle';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +13,7 @@ const BookListPage = () => {
     const [books, setBooks] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [bookView, setBookView] = useState('grid');
 
 
 
@@ -57,10 +60,13 @@ const BookListPage = () => {
                         </p>
                     </div>
 
-                    <Button onClick={() => navigate('/books/add')}>
-                        <Plus />
-                        Add Book
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <BookViewToggle view={bookView} onViewChange={setBookView} />
+                        <Button onClick={() => navigate('/books/add')}>
+                            <Plus />
+                            Add Book
+                        </Button>
+                    </div>
                 </div>
 
                 {error && (
@@ -83,14 +89,25 @@ const BookListPage = () => {
                         </CardContent>
                     </Card>
                 ) : (
-                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div className={bookView === 'grid'
+                        ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                        : 'space-y-3'}>
                         {books.map((book) => (
-                            <BookCard
-                                key={book.id}
-                                book={book}
-                                onDelete={() => handleDelete(book.id)}
-                                onEdit={() => handleEdit(book)}
-                            />
+                            bookView === 'grid' ? (
+                                <BookCard
+                                    key={book.id}
+                                    book={book}
+                                    onDelete={() => handleDelete(book.id)}
+                                    onEdit={() => handleEdit(book)}
+                                />
+                            ) : (
+                                <BookListItem
+                                    key={book.id}
+                                    book={book}
+                                    onDelete={() => handleDelete(book.id)}
+                                    onEdit={() => handleEdit(book)}
+                                />
+                            )
                         ))}
                     </div>
                 )}

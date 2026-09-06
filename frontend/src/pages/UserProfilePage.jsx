@@ -8,6 +8,8 @@ import {
     UserRound,
 } from 'lucide-react';
 import BookCard from '../components/books/BookCard';
+import BookListItem from '../components/books/BookListItem';
+import BookViewToggle from '../components/books/BookViewToggle';
 import { useAuth } from '../context/AuthContext';
 import { socialService } from '../services/socialServices';
 import { userService } from '../services/userServices';
@@ -30,6 +32,7 @@ const UserProfilePage = () => {
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [error, setError] = useState(null);
     const [relationshipError, setRelationshipError] = useState(null);
+    const [bookView, setBookView] = useState('grid');
 
     const isOwnProfile = currentUser?.username === username;
     const friendship = relationship?.friendship;
@@ -274,16 +277,29 @@ const UserProfilePage = () => {
                 </Card>
 
                 <section className="space-y-4">
-                    <h2 className="text-xl font-semibold">Public Library</h2>
+                    <div className="flex items-center justify-between gap-3">
+                        <h2 className="text-xl font-semibold">Public Library</h2>
+                        <BookViewToggle view={bookView} onViewChange={setBookView} />
+                    </div>
 
                     {profile.books.length > 0 ? (
-                        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <div className={bookView === 'grid'
+                            ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                            : 'space-y-3'}>
                             {profile.books.map((book) => (
-                                <BookCard
-                                    key={book.id}
-                                    book={book}
-                                    isReadOnly
-                                />
+                                bookView === 'grid' ? (
+                                    <BookCard
+                                        key={book.id}
+                                        book={book}
+                                        isReadOnly
+                                    />
+                                ) : (
+                                    <BookListItem
+                                        key={book.id}
+                                        book={book}
+                                        isReadOnly
+                                    />
+                                )
                             ))}
                         </div>
                     ) : (
