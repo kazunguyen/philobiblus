@@ -47,6 +47,8 @@ const BookDetailPage = () => {
 
     const [readingHistory, setReadingHistory] = useState([]);
     const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+    const [deletingHistoryId, setDeletingHistoryId] = useState(null);
+    const [isClearingHistory, setIsClearingHistory] = useState(false);
 
     useEffect(() => {
         const loadBookPage = async () => {
@@ -87,6 +89,40 @@ const BookDetailPage = () => {
             navigate('/books');
         } catch (deleteError) {
             window.alert(`Failed to delete: ${deleteError.message}`);
+        }
+    };
+
+    const handleDeleteHistoryEntry = async (historyId) => {
+        if (!window.confirm('Delete this reading history entry?')) {
+            return;
+        }
+
+        setDeletingHistoryId(historyId);
+        try {
+            await bookService.deleteReadingHistoryEntry(id, historyId);
+            setReadingHistory((previous) =>
+                previous.filter((entry) => entry.id !== historyId),
+            );
+        } catch (deleteError) {
+            window.alert(`Failed to delete history entry: ${deleteError.message}`);
+        } finally {
+            setDeletingHistoryId(null);
+        }
+    };
+
+    const handleClearReadingHistory = async () => {
+        if (!window.confirm('Delete all reading history entries?')) {
+            return;
+        }
+
+        setIsClearingHistory(true);
+        try {
+            await bookService.deleteAllReadingHistory(id);
+            setReadingHistory([]);
+        } catch (deleteError) {
+            window.alert(`Failed to clear reading history: ${deleteError.message}`);
+        } finally {
+            setIsClearingHistory(false);
         }
     };
 
@@ -341,7 +377,20 @@ const BookDetailPage = () => {
                         )}
 
                         <section className="space-y-4 rounded-lg border bg-background p-4">
-                            <h2 className="font-medium">Reading history</h2>
+                            <div className="flex items-center justify-between gap-3">
+                                <h2 className="font-medium">Reading history</h2>
+                                {readingHistory.length > 0 && (
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={handleClearReadingHistory}
+                                        disabled={isClearingHistory || deletingHistoryId !== null}
+                                    >
+                                        <Trash2 />
+                                        {isClearingHistory ? 'Clearing...' : 'Clear all'}
+                                    </Button>
+                                )}
+                            </div>
 
                             {isLoadingHistory ? (
                                 <p className="py-4 text-center text-sm text-muted-foreground">
@@ -363,7 +412,7 @@ const BookDetailPage = () => {
                                                     {new Date(`${entry.read_on}T00:00:00`).toLocaleDateString()}
                                                 </time>
 
-                                                <div className="flex flex-wrap gap-2">
+                                                <div className="flex flex-wrap items-center gap-2">
                                                     {entry.event_type === 'started' && (
                                                         <Badge variant="secondary">
                                                             Started reading
@@ -393,6 +442,17 @@ const BookDetailPage = () => {
                                                             Volume {entry.volume}
                                                         </Badge>
                                                     )}
+
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon-sm"
+                                                        aria-label="Delete reading history entry"
+                                                        onClick={() => handleDeleteHistoryEntry(entry.id)}
+                                                        disabled={deletingHistoryId === entry.id || isClearingHistory}
+                                                    >
+                                                        <Trash2 />
+                                                    </Button>
                                                 </div>
                                             </div>
 

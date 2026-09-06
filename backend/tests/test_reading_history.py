@@ -61,6 +61,49 @@ def test_unentered_numeric_fields_use_negative_one_sentinel(client, auth_headers
     assert book["chapters_read"] == -1
 
 
+def test_reading_history_entries_can_be_deleted_individually_or_all(
+    client,
+    auth_headers,
+):
+    """Test owners can remove individual entries and clear a book history."""
+    book_response = client.post(
+        "/api/books",
+        json={
+            "title": "Deletable History Book",
+            "author": "Author",
+            "genre": "Tech",
+            "date_started": "2026-09-01",
+        },
+        headers=auth_headers,
+    )
+    book_id = book_response.json()["id"]
+    client.put(
+        f"/api/books/{book_id}",
+        json={"pages_read": 50},
+        headers=auth_headers,
+    )
+    history = client.get(
+        f"/api/books/{book_id}/reading-history",
+        headers=auth_headers,
+    ).json()
+
+    response = client.delete(
+        f"/api/books/{book_id}/reading-history/{history[0]['id']}",
+        headers=auth_headers,
+    )
+    assert response.status_code == 204
+
+    response = client.delete(
+        f"/api/books/{book_id}/reading-history",
+        headers=auth_headers,
+    )
+    assert response.status_code == 204
+    assert client.get(
+        f"/api/books/{book_id}/reading-history",
+        headers=auth_headers,
+    ).json() == []
+
+
 def test_reading_history_is_not_created_without_progress_change(
     client,
     auth_headers,

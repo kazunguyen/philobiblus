@@ -101,4 +101,16 @@ export const bookService = {
     return fetchWithAuth(`${BOOKS_URL}/${bookId}/reading-history`);
   },
 
+  async deleteReadingHistoryEntry(bookId, historyId) {
+    return fetchWithAuth(`${BOOKS_URL}/${bookId}/reading-history/${historyId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async deleteAllReadingHistory(bookId) {
+    return fetchWithAuth(`${BOOKS_URL}/${bookId}/reading-history`, {
+      method: 'DELETE',
+    });
+  },
+
 };
