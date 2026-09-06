@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Float,
     Integer,
     String,
     Text,
@@ -30,6 +31,11 @@ class BookVisibility(str, enum.Enum):
     PUBLIC = "public"
     RESTRICTED = "restricted"
     PRIVATE = "private"
+
+
+class PublicationStatus(str, enum.Enum):
+    ONGOING = "ongoing"
+    COMPLETED = "completed"
 
 
 class User(Base):
@@ -91,6 +97,17 @@ class Book(Base):
         nullable=False,
     )
     share_token = Column(String(64), unique=True, nullable=True, index=True)
+    publication_status = Column(
+        Enum(
+            PublicationStatus,
+            name="publication_status_enum",
+            native_enum=False,
+            values_callable=lambda values: [member.value for member in values],
+        ),
+        default=PublicationStatus.ONGOING,
+        server_default="ongoing",
+        nullable=False,
+    )
     
     status = Column(
         Enum(BookStatus, name="book_status_enum", native_enum=False),
@@ -101,6 +118,7 @@ class Book(Base):
     volume = Column(Integer, nullable=True)
     pages_total = Column(Integer, nullable=True)
     pages_read = Column(Integer, default=0, nullable=False)
+    chapters_read = Column(Float, default=0.0, server_default="0", nullable=False)
     
     date_started = Column(Date, nullable=True)
     date_finished = Column(Date, nullable=True)
@@ -119,6 +137,44 @@ class Book(Base):
         cascade="all, delete-orphan",
     )
 
+    reading_history = relationship(
+        "ReadingHistory",
+        back_populates="book",
+        cascade="all, delete-orphan",
+    )
+
+class ReadingHistory(Base):
+    __tablename__ = "reading_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    book_id = Column(
+        Integer,
+        ForeignKey("books.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    read_on = Column(
+        Date,
+        nullable=False,
+        server_default=func.current_date(),
+        index=True,
+    )
+    pages_read = Column(Integer, nullable=True)
+    chapters_read = Column(Float, nullable=True)
+    chapter = Column(String(100), nullable=True)
+    volume = Column(Integer, nullable=True)
+    note = Column(Text, nullable=True)
+    recorded_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    book = relationship("Book", back_populates="reading_history")
+    user = relationship("User")
 
 class Review(Base):
     __tablename__ = "reviews"

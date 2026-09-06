@@ -28,6 +28,10 @@ import {
     BOOK_VISIBILITY_OPTIONS,
     getBookVisibilityLabel,
 } from '@/lib/bookVisibility';
+import {
+    PUBLICATION_STATUS_OPTIONS,
+    getPublicationStatusLabel,
+} from '@/lib/publicationStatus';
 
 const BookEditPage = () => {
     const { id } = useParams();
@@ -46,6 +50,8 @@ const BookEditPage = () => {
         notes: '',
         cover_url: '',
         visibility: 'public',
+        publication_status: 'ongoing',
+        chapters_read: 0,
     });
 
     const [isLoading, setIsLoading] = useState(true);
@@ -78,6 +84,8 @@ const BookEditPage = () => {
                     notes: book.notes || '',
                     cover_url: book.cover_url || '',
                     visibility: book.visibility || 'public',
+                    publication_status: book.publication_status || 'ongoing',
+                    chapters_read: book.chapters_read || 0,
                 });
             } catch (fetchError) {
                 setError(fetchError.message);
@@ -99,11 +107,19 @@ const BookEditPage = () => {
 
     const handleChange = (event) => {
         const { name, value } = event.target;
-        const numericFields = ['rating', 'volume', 'pages_total', 'pages_read'];
+        const numericFields = [
+            'rating',
+            'volume',
+            'pages_total',
+            'pages_read',
+            'chapters_read',
+        ];
         const parsedValue = numericFields.includes(name)
             ? value === ''
                 ? ''
-                : parseInt(value, 10)
+                : name === 'chapters_read'
+                    ? parseFloat(value)
+                    : parseInt(value, 10)
             : value;
 
         setFormData((previous) => ({
@@ -135,6 +151,7 @@ const BookEditPage = () => {
         if (payload.volume === '') payload.volume = null;
         if (payload.pages_total === '') payload.pages_total = null;
         if (payload.pages_read === '') payload.pages_read = 0;
+        if (payload.chapters_read === '') payload.chapters_read = 0;
         if (payload.cover_url === '') payload.cover_url = null;
 
         try {
@@ -281,6 +298,29 @@ const BookEditPage = () => {
                                         )?.description}
                                     </p>
                                 </div>
+
+                                <div className="space-y-2">
+                                    <Label>Publication status</Label>
+                                    <Select
+                                        value={formData.publication_status}
+                                        onValueChange={(value) =>
+                                            handleSelectChange('publication_status', value)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue>
+                                                {getPublicationStatusLabel(formData.publication_status)}
+                                            </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {PUBLICATION_STATUS_OPTIONS.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-2">
@@ -328,6 +368,19 @@ const BookEditPage = () => {
                                         type="number"
                                         min="0"
                                         value={formData.pages_total}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="chapters_read">Chapters read</Label>
+                                    <Input
+                                        id="chapters_read"
+                                        name="chapters_read"
+                                        type="number"
+                                        min="0"
+                                        step="0.1"
+                                        value={formData.chapters_read}
                                         onChange={handleChange}
                                     />
                                 </div>

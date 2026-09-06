@@ -1,4 +1,5 @@
 import secrets
+from datetime import date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -7,7 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import Book, BookStatus, BookVisibility, User
+from app.models import (
+    Book,
+    BookStatus,
+    BookVisibility,
+    ReadingHistory,
+    User,
+)
 from app.schemas import (
     BookCreate,
     BookOwnerOut,
@@ -81,6 +88,18 @@ def create_book(
     db.add(new_book)
     db.commit()
     db.refresh(new_book)
+    if new_book.pages_read or new_book.chapters_read or new_book.volume:
+        db.add(
+            ReadingHistory(
+                book_id=new_book.id,
+                user_id=current_user.id,
+                read_on=date.today(),
+                pages_read=new_book.pages_read,
+                chapters_read=new_book.chapters_read,
+                volume=new_book.volume,
+            )
+        )
+        db.commit()
     return new_book
 
 @router.get(
@@ -260,6 +279,10 @@ def update_book(
 
     # Update only provided non-None fields
     update_data = book_in.model_dump(exclude_unset=True)
+    previous_progress = {
+        field: getattr(book, field)
+        for field in ("pages_read", "chapters_read", "volume")
+    }
     if "visibility" in update_data:
         visibility = update_data["visibility"]
         if visibility == BookVisibility.RESTRICTED:
@@ -268,6 +291,22 @@ def update_book(
             update_data["share_token"] = None
     for field, value in update_data.items():
         setattr(book, field, value)
+
+    progress_changed = any(
+        getattr(book, field) != previous_progress[field]
+        for field in previous_progress
+    )
+    if progress_changed:
+        db.add(
+            ReadingHistory(
+                book_id=book.id,
+                user_id=current_user.id,
+                read_on=date.today(),
+                pages_read=book.pages_read,
+                chapters_read=book.chapters_read,
+                volume=book.volume,
+            )
+        )
 
     db.commit()
     db.refresh(book)

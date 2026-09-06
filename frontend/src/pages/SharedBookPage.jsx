@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { getBookStatusLabel } from '@/lib/bookStatus';
+import { getPublicationStatusLabel } from '@/lib/publicationStatus';
 
 const ReadOnlyBookDetail = () => {
   const { id, shareToken } = useParams();
@@ -100,6 +101,10 @@ const ReadOnlyBookDetail = () => {
               <p className="font-medium">{getBookStatusLabel(book.status)}</p>
             </div>
             <div>
+              <p className="text-sm text-muted-foreground">Publication</p>
+              <p className="font-medium">{getPublicationStatusLabel(book.publication_status)}</p>
+            </div>
+            <div>
               <p className="text-sm text-muted-foreground">Rating</p>
               <p className="font-medium text-amber-500">
                 {book.rating ? `${'★'.repeat(book.rating)}${'☆'.repeat(5 - book.rating)}` : 'Not rated'}
@@ -111,6 +116,10 @@ const ReadOnlyBookDetail = () => {
                 <p className="font-medium">{book.volume}</p>
               </div>
             )}
+            <div>
+              <p className="text-sm text-muted-foreground">Chapters read</p>
+              <p className="font-medium">{book.chapters_read || 0}</p>
+            </div>
           </div>
 
           {book.pages_total ? (
@@ -119,7 +128,10 @@ const ReadOnlyBookDetail = () => {
                 <span>Reading progress</span>
                 <span>{book.pages_read || 0} / {book.pages_total} pages</span>
               </div>
-              <Progress value={progress} />
+              <Progress
+                value={progress}
+                indicatorClassName={progress >= 100 ? 'bg-emerald-500' : progress > 0 ? 'bg-blue-500' : 'bg-muted-foreground'}
+              />
             </div>
           ) : null}
 

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.database import Base, engine
-from app.routers import auth, books, reviews, social, users
+from app.routers import auth, books, reviews, social, users, reading_history
 
 
 @asynccontextmanager
@@ -56,6 +56,7 @@ app.include_router(books.router)
 app.include_router(users.router)
 app.include_router(reviews.router)
 app.include_router(social.router)
+app.include_router(reading_history.router)
 
 
 @app.get("/", tags=["General"])

@@ -95,5 +95,10 @@ export const bookService = {
 
   async getSharedBook(shareToken) {
     return fetchWithAuth(`${BOOKS_URL}/shared/${encodeURIComponent(shareToken)}`);
-  }
+  },
+
+  async getReadingHistory(bookId) {
+    return fetchWithAuth(`${BOOKS_URL}/${bookId}/reading-history`);
+  },
+
 };

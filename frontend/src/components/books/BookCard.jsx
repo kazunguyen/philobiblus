@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getBookStatusLabel } from '@/lib/bookStatus';
+import { getPublicationStatusLabel } from '@/lib/publicationStatus';
 
 const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
     const navigate = useNavigate();
@@ -28,6 +29,13 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                 : [];
 
     const statusLabel = getBookStatusLabel(book.status);
+    const progressColor = book.status === 'dropped'
+        ? 'bg-destructive'
+        : progress >= 100
+            ? 'bg-emerald-500'
+            : progress > 0
+                ? 'bg-blue-500'
+                : 'bg-muted-foreground';
 
     return (
         <Card className="flex h-full w-[280px] flex-col overflow-hidden">
@@ -53,6 +61,9 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
 
                 <div className="flex flex-wrap gap-2">
                     <Badge variant="secondary">{statusLabel}</Badge>
+                    <Badge variant="outline">
+                        {getPublicationStatusLabel(book.publication_status)}
+                    </Badge>
                     {bookTags.map((tag) => (
                         <Badge key={tag} variant="outline">
                             {tag}
@@ -86,9 +97,10 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                         <span>Progress</span>
                         <span>{Math.round(progress)}%</span>
                     </div>
-                    <Progress value={progress} />
+                    <Progress value={progress} indicatorClassName={progressColor} />
                     <p className="text-xs text-muted-foreground">
                         {book.pages_read || 0} / {book.pages_total || '?'} pages
+                        {book.chapters_read ? ` · ${book.chapters_read} chapters` : ''}
                     </p>
                 </div>
             </CardContent>

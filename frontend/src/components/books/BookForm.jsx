@@ -28,6 +28,10 @@ import {
     BOOK_VISIBILITY_OPTIONS,
     getBookVisibilityLabel,
 } from '@/lib/bookVisibility';
+import {
+    PUBLICATION_STATUS_OPTIONS,
+    getPublicationStatusLabel,
+} from '@/lib/publicationStatus';
 
 const EMPTY_FORM = {
     title: '',
@@ -42,6 +46,8 @@ const EMPTY_FORM = {
     notes: '',
     cover_url: '',
     visibility: 'public',
+    publication_status: 'ongoing',
+    chapters_read: 0,
 };
 
 const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
@@ -70,6 +76,8 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                 notes: bookToEdit.notes || '',
                 cover_url: bookToEdit.cover_url || '',
                 visibility: bookToEdit.visibility || 'public',
+                publication_status: bookToEdit.publication_status || 'ongoing',
+                chapters_read: bookToEdit.chapters_read || 0,
             });
         } else {
             setFormData(EMPTY_FORM);
@@ -93,12 +101,15 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
             'volume',
             'pages_total',
             'pages_read',
+            'chapters_read',
         ];
 
         const parsedValue = numericFields.includes(name)
             ? value === ''
                 ? ''
-                : parseInt(value, 10)
+                : name === 'chapters_read'
+                    ? parseFloat(value)
+                    : parseInt(value, 10)
             : value;
 
         setFormData((previous) => ({
@@ -130,6 +141,7 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
         if (payload.volume === '') payload.volume = null;
         if (payload.pages_total === '') payload.pages_total = null;
         if (payload.pages_read === '') payload.pages_read = 0;
+        if (payload.chapters_read === '') payload.chapters_read = 0;
         if (payload.cover_url === '') payload.cover_url = null;
 
         try {
@@ -270,6 +282,29 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                                 )?.description}
                             </p>
                         </div>
+
+                        <div className="space-y-2">
+                            <Label>Publication status</Label>
+                            <Select
+                                value={formData.publication_status}
+                                onValueChange={(value) =>
+                                    handleSelectChange('publication_status', value)
+                                }
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue>
+                                        {getPublicationStatusLabel(formData.publication_status)}
+                                    </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {PUBLICATION_STATUS_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -321,6 +356,21 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                                 type="number"
                                 min="0"
                                 value={formData.pages_total}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="book-form-chapters-read">
+                                Chapters read
+                            </Label>
+                            <Input
+                                id="book-form-chapters-read"
+                                name="chapters_read"
+                                type="number"
+                                min="0"
+                                step="0.1"
+                                value={formData.chapters_read}
                                 onChange={handleChange}
                             />
                         </div>

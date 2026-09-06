@@ -2,7 +2,12 @@ from datetime import date, datetime
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.models import BookStatus, BookVisibility, FriendshipStatus
+from app.models import (
+    BookStatus,
+    BookVisibility,
+    FriendshipStatus,
+    PublicationStatus,
+)
 
 
 # --- User Schemas ---
@@ -55,11 +60,13 @@ class BookBase(BaseModel):
     cover_url: Optional[str] = Field(None, max_length=500)
     pages_total: Optional[int] = Field(None, ge=0)
     pages_read: int = Field(0, ge=0)
+    chapters_read: float = Field(0.0, ge=0)
     date_started: Optional[date] = None
     date_finished: Optional[date] = None
     notes: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
     visibility: BookVisibility = BookVisibility.PUBLIC
+    publication_status: PublicationStatus = PublicationStatus.ONGOING
 
 
 class BookCreate(BookBase):
@@ -81,6 +88,8 @@ class BookUpdate(BaseModel):
     notes: Optional[str] = None
     tags: Optional[List[str]] = Field(None, max_length=20)
     visibility: Optional[BookVisibility] = None
+    publication_status: Optional[PublicationStatus] = None
+    chapters_read: Optional[float] = Field(None, ge=0)
 
 class BookOut(BookBase):
     model_config = ConfigDict(from_attributes=True)
@@ -154,3 +163,18 @@ class RelationshipOut(BaseModel):
     target_user: UserPublicOut
     is_following: bool
     friendship: Optional[FriendshipOut] = None
+
+class ReadingHistoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    book_id: int
+    user_id: int
+    read_on: date
+    pages_read: Optional[int] = None
+    chapters_read: Optional[float] = None
+    chapter: Optional[str] = None
+    volume: Optional[int] = None
+    note: Optional[str] = None
+    created_at: Optional[datetime] = None
+    recorded_at: Optional[datetime] = None

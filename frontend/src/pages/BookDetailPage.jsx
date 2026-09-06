@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import StarRating from '../components/ui/StarRating';
 import { getBookStatusLabel } from '@/lib/bookStatus';
+import { getPublicationStatusLabel } from '@/lib/publicationStatus';
 
 const BookDetailPage = () => {
     const { id } = useParams();
@@ -44,6 +45,9 @@ const BookDetailPage = () => {
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [reviewError, setReviewError] = useState(null);
 
+    const [readingHistory, setReadingHistory] = useState([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+
     useEffect(() => {
         const loadBookPage = async () => {
             try {
@@ -52,18 +56,21 @@ const BookDetailPage = () => {
                 setError(null);
                 setReviewError(null);
 
-                const [bookData, reviewData] = await Promise.all([
+                const [bookData, reviewData, historyData] = await Promise.all([
                     bookService.getBookById(id),
                     reviewService.getReviews(id),
+                    bookService.getReadingHistory(id),
                 ]);
 
                 setBook(bookData);
                 setReviews(reviewData);
+                setReadingHistory(historyData);
             } catch (loadError) {
                 setError(loadError.message);
             } finally {
                 setIsLoading(false);
                 setIsLoadingReviews(false);
+                setIsLoadingHistory(false);
             }
         };
 
@@ -249,6 +256,9 @@ const BookDetailPage = () => {
                             <Badge variant="outline">
                                 {getBookStatusLabel(book.status)}
                             </Badge>
+                            <Badge variant="outline">
+                                {getPublicationStatusLabel(book.publication_status)}
+                            </Badge>
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
@@ -282,8 +292,91 @@ const BookDetailPage = () => {
                                     {book.pages_read} /{' '}
                                     {book.pages_total || '?'} pages
                                 </p>
+                                <p className="text-sm text-muted-foreground">
+                                    {book.chapters_read || 0} chapters read
+                                </p>
                             </div>
-                            <Progress value={progress} />
+                            <Progress
+                                value={progress}
+                                indicatorClassName={
+                                    book.status === 'dropped'
+                                        ? 'bg-destructive'
+                                        : progress >= 100
+                                            ? 'bg-emerald-500'
+                                            : progress > 0
+                                                ? 'bg-blue-500'
+                                                : 'bg-muted-foreground'
+                                }
+                            />
+                        </section>
+
+                        <section className="space-y-4 rounded-lg border bg-background p-4">
+                            <div>
+                                <h2 className="font-medium">Reading history</h2>
+                                <p className="text-sm text-muted-foreground">
+                            Progress snapshots are recorded automatically when you edit the book.
+                                </p>
+                            </div>
+
+                            {isLoadingHistory ? (
+                                <p className="py-4 text-center text-sm text-muted-foreground">
+                                    Loading reading history...
+                                </p>
+                            ) : readingHistory.length === 0 ? (
+                                <p className="rounded-lg bg-muted/40 p-4 text-center text-sm text-muted-foreground">
+                                    No reading history recorded yet.
+                                </p>
+                            ) : (
+                                <ol className="space-y-3">
+                                    {readingHistory.map((entry) => (
+                                        <li
+                                            key={entry.id}
+                                            className="rounded-lg border p-3"
+                                        >
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <time
+                                                    dateTime={entry.recorded_at || entry.read_on}
+                                                    className="font-medium"
+                                                >
+                                                    {new Date(entry.recorded_at || entry.read_on).toLocaleString()}
+                                                </time>
+
+                                                <div className="flex flex-wrap gap-2">
+                                                    {entry.pages_read !== null && (
+                                                        <Badge variant="secondary">
+                                                            Page {entry.pages_read}
+                                                        </Badge>
+                                                    )}
+
+                                                    {entry.chapters_read !== null && entry.chapters_read !== undefined && (
+                                                        <Badge variant="secondary">
+                                                            Chapters {entry.chapters_read}
+                                                        </Badge>
+                                                    )}
+
+                                                    {entry.chapter && (
+                                                        <Badge variant="secondary">
+                                                            {entry.chapter}
+                                                        </Badge>
+                                                    )}
+
+                                                    {entry.volume && (
+                                                        <Badge variant="secondary">
+                                                            Volume {entry.volume}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {entry.note && (
+                                                <p className="mt-2 text-sm text-muted-foreground">
+                                                    {entry.note}
+                                                </p>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ol>
+                            )}
                         </section>
 
                         <section className="space-y-2">
