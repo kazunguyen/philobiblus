@@ -232,6 +232,16 @@ const BookDetailPage = () => {
             : book.genre
                 ? [book.genre]
                 : [];
+    const historyEntries = book.date_started
+        ? [
+            {
+                id: 'started-reading',
+                isStartEntry: true,
+                read_on: book.date_started,
+            },
+            ...readingHistory,
+        ]
+        : readingHistory;
     const shareUrl = book.share_token
         ? `${window.location.origin}/shared/books/${book.share_token}`
         : '';
@@ -396,13 +406,13 @@ const BookDetailPage = () => {
                                 <p className="py-4 text-center text-sm text-muted-foreground">
                                     Loading reading history...
                                 </p>
-                            ) : readingHistory.length === 0 ? (
+                            ) : historyEntries.length === 0 ? (
                                 <p className="rounded-lg bg-muted/40 p-4 text-center text-sm text-muted-foreground">
                                     No reading history recorded yet.
                                 </p>
                             ) : (
                                 <ol className="max-h-80 space-y-3 overflow-y-auto pr-2">
-                                    {readingHistory.map((entry) => (
+                                    {historyEntries.map((entry) => (
                                         <li key={entry.id} className="rounded-lg border p-3">
                                             <div className="flex flex-wrap items-center justify-between gap-2">
                                                 <time
@@ -413,50 +423,52 @@ const BookDetailPage = () => {
                                                 </time>
 
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    {entry.event_type === 'started' && (
+                                                    {entry.isStartEntry && (
                                                         <Badge variant="secondary">
                                                             Started reading
                                                         </Badge>
                                                     )}
 
-                                                    {entry.pages_read >= 0 && (
+                                                    {!entry.isStartEntry && entry.pages_read >= 0 && (
                                                         <Badge variant="secondary">
                                                             Page {entry.pages_read}
                                                         </Badge>
                                                     )}
 
-                                                    {entry.chapters_read >= 0 && (
+                                                    {!entry.isStartEntry && entry.chapters_read >= 0 && (
                                                         <Badge variant="secondary">
                                                             Chapters {entry.chapters_read}
                                                         </Badge>
                                                     )}
 
-                                                    {entry.chapter && (
+                                                    {!entry.isStartEntry && entry.chapter && (
                                                         <Badge variant="secondary">
                                                             {entry.chapter}
                                                         </Badge>
                                                     )}
 
-                                                    {entry.volume >= 0 && (
+                                                    {!entry.isStartEntry && entry.volume >= 0 && (
                                                         <Badge variant="secondary">
                                                             Volume {entry.volume}
                                                         </Badge>
                                                     )}
 
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon-sm"
-                                                        aria-label="Delete reading history entry"
-                                                        onClick={() => handleDeleteHistoryEntry(entry.id)}
-                                                        disabled={deletingHistoryId === entry.id || isClearingHistory}
-                                                    >
-                                                        <Trash2 />
-                                                    </Button>
+                                                    {!entry.isStartEntry && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon-sm"
+                                                            aria-label="Delete reading history entry"
+                                                            onClick={() => handleDeleteHistoryEntry(entry.id)}
+                                                            disabled={deletingHistoryId === entry.id || isClearingHistory}
+                                                        >
+                                                            <Trash2 />
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            {entry.note && entry.note !== '__seed__' && entry.note !== "Seeded from the book's current reading progress." && (
+                                            {!entry.isStartEntry && entry.note && (
                                                 <p className="mt-2 text-sm text-muted-foreground">
                                                     {entry.note}
                                                 </p>

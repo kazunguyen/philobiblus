@@ -167,8 +167,6 @@ class ReadingHistory(Base):
         index=True,
     )
     # Snapshot values use the same -1 sentinel as Book for values not supplied.
-    date_started = Column(Date, nullable=True)
-    event_type = Column(String(20), default="progress", server_default="progress", nullable=False)
     pages_read = Column(Integer, default=-1, server_default="-1", nullable=False)
     chapters_read = Column(Float, default=-1.0, server_default="-1", nullable=False)
     chapter = Column(String(100), nullable=True)

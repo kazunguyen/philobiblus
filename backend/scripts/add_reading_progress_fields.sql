@@ -9,12 +9,6 @@ ALTER TABLE reading_history
     ADD COLUMN IF NOT EXISTS chapters_read DOUBLE PRECISION;
 
 ALTER TABLE reading_history
-    ADD COLUMN IF NOT EXISTS date_started DATE;
-
-ALTER TABLE reading_history
-    ADD COLUMN IF NOT EXISTS event_type VARCHAR(20) NOT NULL DEFAULT 'progress';
-
-ALTER TABLE reading_history
     ADD COLUMN IF NOT EXISTS recorded_at TIMESTAMPTZ DEFAULT NOW();
 
 ALTER TABLE reading_history
@@ -55,28 +49,20 @@ SET
     volume = COALESCE(volume, -1),
     recorded_at = COALESCE(recorded_at, NOW());
 
-UPDATE reading_history
-SET note = '__seed__'
-WHERE note = 'Seeded from the book''s current reading progress.';
+DELETE FROM reading_history
+WHERE note IN ('__seed__', 'Seeded from the book''s current reading progress.');
 
-UPDATE reading_history
-SET
-    event_type = 'started',
-    read_on = date_started
-WHERE date_started IS NOT NULL
-  AND note = '__seed__';
-
-WITH first_history_entry AS (
-    SELECT DISTINCT ON (book_id) id
-    FROM reading_history
-    WHERE date_started IS NOT NULL
-    ORDER BY book_id, recorded_at ASC NULLS LAST, id ASC
-)
-UPDATE reading_history
-SET
-    event_type = 'started',
-    read_on = date_started
-WHERE id IN (SELECT id FROM first_history_entry);
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name = 'reading_history'
+          AND column_name = 'event_type'
+    ) THEN
+        EXECUTE 'DELETE FROM reading_history WHERE event_type = ''started''';
+    END IF;
+END $$;
 
 ALTER TABLE reading_history
     ALTER COLUMN pages_read SET DEFAULT -1,

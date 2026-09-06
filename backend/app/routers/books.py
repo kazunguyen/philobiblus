@@ -88,31 +88,6 @@ def create_book(
     db.add(new_book)
     db.commit()
     db.refresh(new_book)
-    has_initial_snapshot = (
-        new_book.date_started is not None
-        or any(
-            value >= 0
-            for value in (
-                new_book.pages_read,
-                new_book.chapters_read,
-                new_book.volume,
-            )
-        )
-    )
-    if has_initial_snapshot:
-        db.add(
-            ReadingHistory(
-                book_id=new_book.id,
-                user_id=current_user.id,
-                read_on=new_book.date_started or date.today(),
-                date_started=new_book.date_started,
-                event_type="started" if new_book.date_started else "progress",
-                pages_read=new_book.pages_read,
-                chapters_read=new_book.chapters_read,
-                volume=new_book.volume,
-            )
-        )
-        db.commit()
     return new_book
 
 @router.get(
@@ -294,7 +269,7 @@ def update_book(
     update_data = book_in.model_dump(exclude_unset=True)
     previous_progress = {
         field: getattr(book, field)
-        for field in ("pages_read", "chapters_read", "volume", "date_started")
+        for field in ("pages_read", "chapters_read", "volume")
     }
     if "visibility" in update_data:
         visibility = update_data["visibility"]
@@ -315,7 +290,6 @@ def update_book(
                 book_id=book.id,
                 user_id=current_user.id,
                 read_on=date.today(),
-                date_started=book.date_started,
                 pages_read=book.pages_read,
                 chapters_read=book.chapters_read,
                 volume=book.volume,

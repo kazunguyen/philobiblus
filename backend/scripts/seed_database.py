@@ -12,7 +12,6 @@ from app.models import (
     BookStatus,
     BookVisibility,
     PublicationStatus,
-    ReadingHistory,
     User,
 )
 
@@ -259,10 +258,6 @@ BOOK_SEEDS = [
     },
 ]
 
-SEED_HISTORY_NOTE = "__seed__"
-LEGACY_SEED_HISTORY_NOTE = "Seeded from the book's current reading progress."
-
-
 def apply_schema_updates(db: Session) -> None:
     """Apply the idempotent reading-progress migration before seeding data."""
     migration_path = Path(__file__).with_name("add_reading_progress_fields.sql")
@@ -367,41 +362,10 @@ def upsert_book(db: Session, book_data: dict, users: Dict[str, User]) -> Book:
     return book
 
 
-def upsert_reading_history(db: Session, book: Book) -> None:
-    """Create one deterministic progress snapshot for every seeded book."""
-    history = (
-        db.query(ReadingHistory)
-        .filter(
-            ReadingHistory.book_id == book.id,
-            ReadingHistory.note.in_((SEED_HISTORY_NOTE, LEGACY_SEED_HISTORY_NOTE)),
-        )
-        .first()
-    )
-    values = {
-        "book_id": book.id,
-        "user_id": book.user_id,
-        "read_on": book.date_started or date.today(),
-        "date_started": book.date_started,
-        "event_type": "started" if book.date_started else "progress",
-        "pages_read": book.pages_read,
-        "chapters_read": book.chapters_read,
-        "volume": book.volume,
-        "note": SEED_HISTORY_NOTE,
-    }
-    if history:
-        for field, value in values.items():
-            setattr(history, field, value)
-        return
-
-    db.add(ReadingHistory(**values))
-
-
 def seed_books(db: Session, users: Dict[str, User]) -> None:
-    """Create or update all seed books and their current progress snapshots."""
+    """Create or update all seed books."""
     for book_data in BOOK_SEEDS:
-        book = upsert_book(db=db, book_data=book_data, users=users)
-        db.flush()
-        upsert_reading_history(db=db, book=book)
+        upsert_book(db=db, book_data=book_data, users=users)
 
 
 def seed_database() -> None:

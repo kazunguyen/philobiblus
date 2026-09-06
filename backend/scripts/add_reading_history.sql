@@ -3,8 +3,6 @@ CREATE TABLE IF NOT EXISTS reading_history (
     book_id INTEGER NOT NULL REFERENCES books (id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     read_on DATE NOT NULL DEFAULT CURRENT_DATE,
-    date_started DATE,
-    event_type VARCHAR(20) NOT NULL DEFAULT 'progress',
     pages_read INTEGER NOT NULL DEFAULT -1 CHECK (pages_read >= -1),
     chapters_read DOUBLE PRECISION NOT NULL DEFAULT -1 CHECK (chapters_read >= -1),
     chapter VARCHAR(100),

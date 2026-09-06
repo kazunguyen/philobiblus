@@ -171,8 +171,6 @@ class ReadingHistoryOut(BaseModel):
     book_id: int
     user_id: int
     read_on: date
-    date_started: Optional[date] = None
-    event_type: str
     pages_read: Optional[int] = None
     chapters_read: Optional[float] = None
     chapter: Optional[str] = None

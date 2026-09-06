@@ -28,16 +28,11 @@ def test_progress_changes_create_reading_history(client, auth_headers):
 
     assert response.status_code == 200
     history = response.json()
-    assert history[0]["read_on"] == "2026-09-01"
-    assert history[0]["date_started"] == "2026-09-01"
-    assert history[0]["event_type"] == "started"
-
-    entry = next(entry for entry in history if entry["pages_read"] == 80)
+    assert len(history) == 1
+    entry = history[0]
     assert entry["pages_read"] == 80
     assert entry["chapters_read"] == 2.5
     assert entry["volume"] == 1
-    assert entry["date_started"] == "2026-09-01"
-    assert entry["event_type"] == "progress"
     assert entry["recorded_at"] is not None
 
 
