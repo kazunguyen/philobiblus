@@ -21,7 +21,20 @@ spec:
             - containerPort: 5173
           env:
             - name: VITE_API_URL
-              value: /api
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: VITE_API_URL
+            - name: VITE_DEV_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: VITE_DEV_HOST
+            - name: VITE_DEV_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: VITE_DEV_PORT
           readinessProbe:
             httpGet:
               path: /

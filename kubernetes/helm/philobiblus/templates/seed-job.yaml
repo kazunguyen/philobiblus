@@ -42,7 +42,7 @@ spec:
             - name: PYTHONPATH
               value: /app
             - name: DATABASE_URL
-              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ include "philobiblus.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/$(POSTGRES_DB)"
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ include "philobiblus.fullname" . }}-postgres:{{ required "postgres.service.port is required" .Values.postgres.service.port }}/$(POSTGRES_DB)"
           resources:
             {{- toYaml .Values.seed.resources | nindent 12 }}
 {{- end }}

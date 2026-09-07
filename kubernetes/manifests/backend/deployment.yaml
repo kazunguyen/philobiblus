@@ -59,7 +59,10 @@ spec:
                   name: postgres-secret
                   key: POSTGRES_DB
             - name: DATABASE_URL
-              value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: DATABASE_URL
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
@@ -68,7 +71,20 @@ spec:
             - name: ACCESS_TOKEN_EXPIRE_MINUTES
               value: "1440"
             - name: ALLOWED_ORIGINS
-              value: http://localhost
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: ALLOWED_ORIGINS
+            - name: APP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: APP_HOST
+            - name: APP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: APP_PORT
           readinessProbe:
             httpGet:
               path: /health

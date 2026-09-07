@@ -45,7 +45,8 @@ COPY ./scripts /app/scripts
 # Set ownership of app directory to non-root user
 RUN chown -R appuser:appuser /app
 
-# Configure environment variables
+# Configure non-network environment variables. APP_HOST and APP_PORT are
+# deployment inputs and are intentionally not given image-level defaults.
 ENV PATH=/home/appuser/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
@@ -53,8 +54,5 @@ ENV PATH=/home/appuser/.local/bin:$PATH \
 # Switch to non-root user
 USER appuser
 
-# Expose FastAPI port
-EXPOSE 8000
-
 # Start FastAPI application with Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "exec uvicorn app.main:app --host \"$APP_HOST\" --port \"$APP_PORT\""]

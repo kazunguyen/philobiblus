@@ -1,8 +1,16 @@
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
+# Tests provide their own explicit application configuration before importing
+# the app. Production code intentionally has no network/URL fallbacks.
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["SECRET_KEY"] = "test-only-secret-key"
+os.environ["ALLOWED_ORIGINS"] = "http://testserver"
 
 from app.auth import get_password_hash
 from app.database import Base, get_db

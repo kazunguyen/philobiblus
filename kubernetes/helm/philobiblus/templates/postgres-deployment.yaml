@@ -27,7 +27,7 @@ spec:
           imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
           ports:
             - name: postgres
-              containerPort: {{ .Values.postgres.service.port }}
+              containerPort: {{ required "postgres.service.port is required" .Values.postgres.service.port }}
           envFrom:
             - secretRef:
                 name: {{ include "philobiblus.secretName" . }}

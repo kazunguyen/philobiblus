@@ -2,6 +2,8 @@
 node_modules/
 package-lock.json
 .env
+values.local.yaml
+rendered.yaml
 implementation_plan.md
 dist/
 电信历史.txt

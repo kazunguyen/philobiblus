@@ -11,5 +11,5 @@ spec:
     app.kubernetes.io/component: postgres
   ports:
     - name: postgres
-      port: {{ .Values.postgres.service.port }}
+      port: {{ required "postgres.service.port is required" .Values.postgres.service.port }}
       targetPort: postgres

@@ -12,8 +12,11 @@ from app.database import get_db
 from app.models import User
 from app.schemas import TokenData
 
-# Secret Key and JWT algorithm configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "philobiblus_super_secret_jwt_key_change_in_production_2026")
+# Secret Key and JWT algorithm configuration. The key must be supplied by the
+# deployment environment; no unsafe fallback is allowed.
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable is required")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # Default: 24 hours
 

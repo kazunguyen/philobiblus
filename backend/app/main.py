@@ -27,11 +27,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS for Frontend integration (React / Vite)
-origins = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:3000,http://localhost:80",
-).split(",")
+# Configure CORS for Frontend integration (React / Vite). The allowed origins
+# vary by deployment and must be provided by the environment.
+allowed_origins = os.environ.get("ALLOWED_ORIGINS")
+if not allowed_origins:
+    raise RuntimeError("ALLOWED_ORIGINS environment variable is required")
+origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
+if not origins:
+    raise RuntimeError("ALLOWED_ORIGINS must contain at least one origin")
 
 app.add_middleware(
     CORSMiddleware,

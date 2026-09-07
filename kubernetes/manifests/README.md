@@ -127,9 +127,9 @@ k3d image import \
 
 Manifest sử dụng `imagePullPolicy: IfNotPresent`, do đó Kubernetes sẽ dùng image local đã import và không cố gắng pull từ registry.
 
-## 7. Chuẩn bị Secret
+## 7. Chuẩn bị Secret và network configuration
 
-File `postgres/secret.yaml` cung cấp credential dùng cho môi trường local development. Thay các giá trị placeholder trước khi triển khai:
+File `postgres/secret.yaml` cung cấp credential và toàn bộ URL/host runtime qua biến môi trường cho môi trường local development. Thay mọi giá trị placeholder trước khi triển khai:
 
 ```yaml
 stringData:
@@ -137,7 +137,16 @@ stringData:
   POSTGRES_PASSWORD: CHANGE_ME_LOCAL_ONLY
   POSTGRES_DB: philobiblus_db
   SECRET_KEY: CHANGE_ME_JWT_SECRET_LOCAL_ONLY
+  DATABASE_URL: CHANGE_ME_DATABASE_URL_LOCAL_ONLY
+  ALLOWED_ORIGINS: CHANGE_ME_ALLOWED_ORIGINS_LOCAL_ONLY
+  APP_HOST: CHANGE_ME_BACKEND_BIND_HOST_LOCAL_ONLY
+  APP_PORT: CHANGE_ME_BACKEND_PORT_LOCAL_ONLY
+  VITE_API_URL: CHANGE_ME_FRONTEND_API_URL_LOCAL_ONLY
+  VITE_DEV_HOST: CHANGE_ME_FRONTEND_BIND_HOST_LOCAL_ONLY
+  VITE_DEV_PORT: CHANGE_ME_FRONTEND_PORT_LOCAL_ONLY
 ```
+
+Các key trên được inject vào container bằng `secretKeyRef`; ứng dụng không còn fallback cho `DATABASE_URL`, `SECRET_KEY`, `ALLOWED_ORIGINS`, `VITE_API_URL` hoặc địa chỉ bind. `DATABASE_URL` phải trỏ đến đúng service PostgreSQL của môi trường triển khai.
 
 Không sử dụng các giá trị này cho production và không commit credential thật vào Git. Nếu PostgreSQL đã khởi tạo dữ liệu trên PVC, thay đổi password trong Secret không tự động thay đổi password đã lưu trong database.
 
@@ -159,7 +168,7 @@ Các manifest sử dụng các resource sau:
 - Database service: `postgres:5432`
 - Backend service: `backend:8000`
 - Frontend service: `frontend:5173`
-- Ingress host: `localhost`
+- Ingress host: giá trị do người triển khai đặt trong `ingress.yaml`
 
 Backend có init container chờ PostgreSQL sẵn sàng trước khi khởi động application container.
 

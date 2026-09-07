@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_URL } from '../config';
+
 const BOOKS_URL = `${API_URL}/books`;
 
 const getHeaders = () => {

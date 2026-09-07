@@ -10,13 +10,29 @@ secrets:
   jwtSecret: REPLACE_WITH_LONG_RANDOM_LOCAL_JWT_SECRET
 
 backend:
+  bindHost: 0.0.0.0
+  allowedOrigins: http://localhost
+  service:
+    port: 8000
   image:
     repository: philobiblus-backend
     tag: local
     pullPolicy: IfNotPresent
 
 frontend:
+  apiUrl: /api
+  devHost: 0.0.0.0
+  devPort: 5173
+  service:
+    port: 5173
   image:
     repository: philobiblus-frontend
     tag: local
     pullPolicy: IfNotPresent
+
+postgres:
+  service:
+    port: 5432
+
+ingress:
+  host: localhost

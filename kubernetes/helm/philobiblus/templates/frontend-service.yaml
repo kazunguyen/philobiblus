@@ -11,5 +11,5 @@ spec:
     app.kubernetes.io/component: frontend
   ports:
     - name: http
-      port: {{ .Values.frontend.service.port }}
+      port: {{ required "frontend.service.port is required" .Values.frontend.service.port }}
       targetPort: http

@@ -27,10 +27,14 @@ spec:
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.frontend.service.port }}
+              containerPort: {{ required "frontend.service.port is required" .Values.frontend.service.port }}
           env:
             - name: VITE_API_URL
-              value: {{ .Values.frontend.apiUrl | quote }}
+              value: {{ required "frontend.apiUrl is required" .Values.frontend.apiUrl | quote }}
+            - name: VITE_DEV_HOST
+              value: {{ required "frontend.devHost is required" .Values.frontend.devHost | quote }}
+            - name: VITE_DEV_PORT
+              value: {{ required "frontend.devPort is required" .Values.frontend.devPort | quote }}
           readinessProbe:
             httpGet:
               path: /

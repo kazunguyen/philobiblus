@@ -13,7 +13,8 @@ backend:
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
-    port: 8000
+    port: ""
+  bindHost: ""
   resources:
     requests:
       cpu: 100m
@@ -22,7 +23,7 @@ backend:
       cpu: 500m
       memory: 512Mi
   accessTokenExpireMinutes: 1440
-  allowedOrigins: http://localhost
+  allowedOrigins: ""
   probe:
     initialDelaySeconds: 10
     periodSeconds: 5
@@ -35,7 +36,7 @@ frontend:
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
-    port: 5173
+    port: ""
   resources:
     requests:
       cpu: 50m
@@ -43,7 +44,9 @@ frontend:
     limits:
       cpu: 250m
       memory: 256Mi
-  apiUrl: /api
+  apiUrl: ""
+  devHost: ""
+  devPort: ""
   probe:
     initialDelaySeconds: 10
     periodSeconds: 5
@@ -54,7 +57,7 @@ postgres:
     tag: 16-alpine
     pullPolicy: IfNotPresent
   service:
-    port: 5432
+    port: ""
   persistence:
     size: 1Gi
     storageClass: ""
@@ -91,7 +94,7 @@ secrets:
 ingress:
   enabled: true
   className: traefik
-  host: localhost
+  host: ""
   annotations: {}
 
 tests:

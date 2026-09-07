@@ -35,7 +35,7 @@ spec:
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.backend.service.port }}
+              containerPort: {{ required "backend.service.port is required" .Values.backend.service.port }}
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -58,11 +58,15 @@ spec:
                   name: {{ include "philobiblus.secretName" . }}
                   key: SECRET_KEY
             - name: DATABASE_URL
-              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ include "philobiblus.fullname" . }}-postgres:{{ .Values.postgres.service.port }}/$(POSTGRES_DB)"
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ include "philobiblus.fullname" . }}-postgres:{{ required "postgres.service.port is required" .Values.postgres.service.port }}/$(POSTGRES_DB)"
+            - name: APP_HOST
+              value: {{ required "backend.bindHost is required" .Values.backend.bindHost | quote }}
+            - name: APP_PORT
+              value: {{ required "backend.service.port is required" .Values.backend.service.port | quote }}
             - name: ACCESS_TOKEN_EXPIRE_MINUTES
               value: {{ .Values.backend.accessTokenExpireMinutes | quote }}
             - name: ALLOWED_ORIGINS
-              value: {{ .Values.backend.allowedOrigins | quote }}
+              value: {{ required "backend.allowedOrigins is required" .Values.backend.allowedOrigins | quote }}
           readinessProbe:
             httpGet:
               path: /health

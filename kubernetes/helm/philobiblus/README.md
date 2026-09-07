@@ -2,9 +2,9 @@
 
 Chart này chuyển toàn bộ workload Kubernetes của Philobiblus thành Helm templates: PostgreSQL + PVC, backend FastAPI, frontend React, Service, Ingress và seed Job. Chart không chứa credential thực.
 
-## Chuẩn bị secret local
+## Chuẩn bị secret và network configuration local
 
-Sao chép file mẫu thành `values.local.yaml`, thay placeholder bằng secret local, rồi giữ file này ngoài Git:
+Sao chép file mẫu thành `values.local.yaml`, thay placeholder bằng secret và các giá trị host/URL/port của môi trường, rồi giữ file này ngoài Git:
 
 ```bash
 cp kubernetes/helm/philobiblus/values.local.example.yaml kubernetes/helm/philobiblus/values.local.yaml
@@ -24,8 +24,11 @@ kubectl create secret generic philobiblus-secrets \
 ## Kiểm tra và triển khai
 
 ```bash
-helm lint kubernetes/helm/philobiblus
-helm template philobiblus kubernetes/helm/philobiblus --namespace philobiblus > rendered.yaml
+helm lint kubernetes/helm/philobiblus \
+  --values kubernetes/helm/philobiblus/values.local.yaml
+helm template philobiblus kubernetes/helm/philobiblus \
+  --namespace philobiblus \
+  --values kubernetes/helm/philobiblus/values.local.yaml > rendered.yaml
 
 helm upgrade --install philobiblus kubernetes/helm/philobiblus \
   --namespace philobiblus --create-namespace \

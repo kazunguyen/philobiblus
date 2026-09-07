@@ -6,7 +6,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: localhost
+    - host: change-me-ingress-host-local-only
       http:
         paths:
           - path: /api
