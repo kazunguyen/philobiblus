@@ -19,7 +19,7 @@ import Navbar from './components/layout/Navbar';
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage />} />

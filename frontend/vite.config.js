@@ -23,5 +23,6 @@ export default defineConfig(({ mode }) => {
             port: Number(port),
             host,
         },
+        base: '/philobiblus/',
     }
 })
