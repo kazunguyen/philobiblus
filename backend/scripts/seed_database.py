@@ -259,9 +259,15 @@ BOOK_SEEDS = [
 ]
 
 def apply_schema_updates(db: Session) -> None:
-    """Apply the idempotent reading-progress migration before seeding data."""
-    migration_path = Path(__file__).with_name("add_reading_progress_fields.sql")
-    db.connection().exec_driver_sql(migration_path.read_text(encoding="utf-8"))
+    """Apply idempotent migrations before seeding data."""
+    for migration_name in (
+        "add_reading_progress_fields.sql",
+        "add_user_settings.sql",
+    ):
+        migration_path = Path(__file__).with_name(migration_name)
+        db.connection().exec_driver_sql(
+            migration_path.read_text(encoding="utf-8")
+        )
 
 
 def build_book_values(book_data: dict, owner: User) -> dict:

@@ -7,13 +7,19 @@ import BookViewToggle from '../components/books/BookViewToggle';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useSettings } from '../context/SettingsContext';
 
 const BookListPage = () => {
     const navigate = useNavigate();
     const [books, setBooks] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [bookView, setBookView] = useState('grid');
+    const { defaultBookView } = useSettings();
+    const [bookView, setBookView] = useState(defaultBookView);
+
+    useEffect(() => {
+        setBookView(defaultBookView);
+    }, [defaultBookView]);
 
 
 

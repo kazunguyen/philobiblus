@@ -20,6 +20,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { useSettings } from '../context/SettingsContext';
 
 const INITIAL_STATS = {
     total_books: 0,
@@ -63,7 +64,12 @@ const DashboardPage = () => {
     const [stats, setStats] = useState(INITIAL_STATS);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [bookView, setBookView] = useState('grid');
+    const { defaultBookView } = useSettings();
+    const [bookView, setBookView] = useState(defaultBookView);
+
+    useEffect(() => {
+        setBookView(defaultBookView);
+    }, [defaultBookView]);
 
     const loadDashboard = async () => {
         try {

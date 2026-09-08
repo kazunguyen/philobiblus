@@ -37,6 +37,25 @@ class UserPublicOut(BaseModel):
     created_at: Optional[datetime] = None
 
 
+class UserSettingsBase(BaseModel):
+    theme: str = Field("light", pattern="^(light|dark)$")
+    default_book_view: str = Field("grid", pattern="^(grid|list)$")
+
+
+class UserSettingsUpdate(BaseModel):
+    theme: Optional[str] = Field(None, pattern="^(light|dark)$")
+    default_book_view: Optional[str] = Field(None, pattern="^(grid|list)$")
+
+
+class UserSettingsOut(UserSettingsBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    user_id: int
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
 # --- Token Schemas (JWT) ---
 
 class Token(BaseModel):

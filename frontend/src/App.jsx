@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -15,10 +15,15 @@ import BookEditPage from './pages/BookEditPage';
 import SocialPage from './pages/SocialPage';
 import SharedBookPage from './pages/SharedBookPage';
 import Navbar from './components/layout/Navbar';
+import { SettingsProvider } from './context/SettingsContext';
+import SettingsPage from './pages/SettingsPage';
+import AppearanceSettingsPage from './pages/AppearanceSettingsPage';
+import PreferencesSettingsPage from './pages/PreferencesSettingsPage';
 
 function App() {
   return (
     <AuthProvider>
+      <SettingsProvider>
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Navbar />
         <Routes>
@@ -77,8 +82,21 @@ function App() {
               </ProtectedRoute>
             }
           />
+                  <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="appearance" replace />} />
+            <Route path="appearance" element={<AppearanceSettingsPage />} />
+            <Route path="preferences" element={<PreferencesSettingsPage />} />
+          </Route>
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </SettingsProvider>
     </AuthProvider>
   );
 }

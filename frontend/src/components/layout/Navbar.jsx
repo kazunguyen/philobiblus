@@ -6,6 +6,7 @@ import {
   Library,
   LogIn,
   LogOut,
+  Settings as SettingsIcon,
   UserRound,
   Users,
 } from 'lucide-react';
@@ -209,6 +210,16 @@ const Navbar = () => {
                     >
                       <Users className="size-4" />
                       Social connections
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => navigateFromMenu('/settings')}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                    >
+                      <SettingsIcon className="size-4" />
+                      Settings
                     </button>
 
                     <div className="my-2 border-t" />

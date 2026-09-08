@@ -49,6 +49,13 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    settings = relationship(
+        "UserSettings",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
     # One-to-many relationship with books table
     books = relationship("Book", back_populates="owner", cascade="all, delete-orphan")
     reviews = relationship(
@@ -68,6 +75,31 @@ class User(Base):
         back_populates="follower",
         cascade="all, delete-orphan",
     )
+
+
+
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+    theme = Column(String(20), nullable=False, default="light", server_default="light")
+    default_book_view = Column(
+        String(20),
+        nullable=False,
+        default="grid",
+        server_default="grid",
+    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    user = relationship("User", back_populates="settings")
 
 
 class Book(Base):

@@ -20,6 +20,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useSettings } from '../context/SettingsContext';
 
 const UserProfilePage = () => {
     const { username } = useParams();
@@ -32,7 +33,12 @@ const UserProfilePage = () => {
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [error, setError] = useState(null);
     const [relationshipError, setRelationshipError] = useState(null);
-    const [bookView, setBookView] = useState('grid');
+    const { defaultBookView } = useSettings();
+    const [bookView, setBookView] = useState(defaultBookView);
+
+    useEffect(() => {
+        setBookView(defaultBookView);
+    }, [defaultBookView]);
 
     const isOwnProfile = currentUser?.username === username;
     const friendship = relationship?.friendship;

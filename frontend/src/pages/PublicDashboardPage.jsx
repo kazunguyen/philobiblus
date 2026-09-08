@@ -7,13 +7,19 @@ import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useSettings } from '../context/SettingsContext';
 
 const PublicDashboardPage = () => {
     const [books, setBooks] = useState([]);
     const [filters, setFilters] = useState({ genre: '', search: '' });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [bookView, setBookView] = useState('grid');
+    const { defaultBookView } = useSettings();
+    const [bookView, setBookView] = useState(defaultBookView);
+
+    useEffect(() => {
+        setBookView(defaultBookView);
+    }, [defaultBookView]);
 
     useEffect(() => {
         fetchPublicBooks();
