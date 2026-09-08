@@ -47,6 +47,10 @@ class UserSettingsUpdate(BaseModel):
     default_book_view: Optional[str] = Field(None, pattern="^(grid|list)$")
 
 
+class ImageUploadOut(BaseModel):
+    url: str = Field(..., min_length=1, max_length=500)
+
+
 class UserSettingsOut(UserSettingsBase):
     model_config = ConfigDict(from_attributes=True)
 

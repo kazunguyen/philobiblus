@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { bookService } from '../services/bookServices';
+import CoverImageField from '../components/books/CoverImageField';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -62,6 +63,7 @@ const BookAddPage = () => {
     });
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isCoverUploading, setIsCoverUploading] = useState(false);
     const [error, setError] = useState(null);
 
     const handleChange = (event) => {
@@ -186,16 +188,18 @@ const BookAddPage = () => {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="cover_url">Cover image URL</Label>
-                                <Input
-                                    id="cover_url"
-                                    name="cover_url"
-                                    value={formData.cover_url}
-                                    onChange={handleChange}
-                                    placeholder="https://example.com/cover.jpg"
-                                />
-                            </div>
+                            <CoverImageField
+                                id="cover_url"
+                                value={formData.cover_url}
+                                onUrlChange={(coverUrl) =>
+                                    setFormData((previous) => ({
+                                        ...previous,
+                                        cover_url: coverUrl,
+                                    }))
+                                }
+                                onError={setError}
+                                onUploadingChange={setIsCoverUploading}
+                            />
 
                             <div className="space-y-5">
                                 <TagSelector
@@ -366,7 +370,7 @@ const BookAddPage = () => {
                                 />
                             </div>
 
-                            <Button type="submit" disabled={isLoading}>
+                            <Button type="submit" disabled={isLoading || isCoverUploading}>
                                 <Save />
                                 {isLoading ? 'Saving...' : 'Save book'}
                             </Button>

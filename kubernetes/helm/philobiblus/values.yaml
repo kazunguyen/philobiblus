@@ -90,6 +90,7 @@ secrets:
   postgresPassword: ""
   postgresDatabase: ""
   jwtSecret: ""
+  imgbbApi: ""
 
 ingress:
   enabled: true

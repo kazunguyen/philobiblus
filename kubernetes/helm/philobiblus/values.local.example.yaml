@@ -8,6 +8,7 @@ secrets:
   postgresPassword: REPLACE_WITH_LOCAL_PASSWORD
   postgresDatabase: philobiblus_db
   jwtSecret: REPLACE_WITH_LONG_RANDOM_LOCAL_JWT_SECRET
+  imgbbApi: REPLACE_WITH_IMGBB_API_KEY
 
 backend:
   bindHost: 0.0.0.0

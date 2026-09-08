@@ -57,6 +57,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "philobiblus.secretName" . }}
                   key: SECRET_KEY
+            - name: IMGBB_API
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "philobiblus.secretName" . }}
+                  key: IMGBB_API
             - name: DATABASE_URL
               value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ include "philobiblus.fullname" . }}-postgres:{{ required "postgres.service.port is required" .Values.postgres.service.port }}/$(POSTGRES_DB)"
             - name: APP_HOST

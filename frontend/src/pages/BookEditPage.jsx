@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
 import { bookService } from '../services/bookServices';
+import CoverImageField from '../components/books/CoverImageField';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -57,6 +58,7 @@ const BookEditPage = () => {
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isCoverUploading, setIsCoverUploading] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -228,15 +230,18 @@ const BookEditPage = () => {
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="cover_url">Cover image URL</Label>
-                                <Input
-                                    id="cover_url"
-                                    name="cover_url"
-                                    value={formData.cover_url}
-                                    onChange={handleChange}
-                                />
-                            </div>
+                            <CoverImageField
+                                id="cover_url"
+                                value={formData.cover_url}
+                                onUrlChange={(coverUrl) =>
+                                    setFormData((previous) => ({
+                                        ...previous,
+                                        cover_url: coverUrl,
+                                    }))
+                                }
+                                onError={setError}
+                                onUploadingChange={setIsCoverUploading}
+                            />
 
                             <div className="space-y-5">
                                 <TagSelector
@@ -405,7 +410,7 @@ const BookEditPage = () => {
                                 />
                             </div>
 
-                            <Button type="submit" disabled={isSaving}>
+                            <Button type="submit" disabled={isSaving || isCoverUploading}>
                                 <Save />
                                 {isSaving ? 'Saving...' : 'Update book'}
                             </Button>

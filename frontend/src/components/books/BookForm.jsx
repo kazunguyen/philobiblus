@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { bookService } from '../../services/bookServices';
+import CoverImageField from './CoverImageField';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -60,6 +61,7 @@ const EMPTY_FORM = {
 const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [isLoading, setIsLoading] = useState(false);
+    const [isCoverUploading, setIsCoverUploading] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -215,15 +217,18 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="book-form-cover">Cover image URL</Label>
-                        <Input
-                            id="book-form-cover"
-                            name="cover_url"
-                            value={formData.cover_url}
-                            onChange={handleChange}
-                        />
-                    </div>
+                    <CoverImageField
+                        id="book-form-cover"
+                        value={formData.cover_url}
+                        onUrlChange={(coverUrl) =>
+                            setFormData((previous) => ({
+                                ...previous,
+                                cover_url: coverUrl,
+                            }))
+                        }
+                        onError={setError}
+                        onUploadingChange={setIsCoverUploading}
+                    />
 
                     <div className="space-y-5">
                         <TagSelector
@@ -408,7 +413,7 @@ const BookForm = ({ isOpen, onClose, bookToEdit, onSaveSuccess }) => {
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isLoading}>
+                        <Button type="submit" disabled={isLoading || isCoverUploading}>
                             {isLoading ? 'Saving...' : 'Save'}
                         </Button>
                     </DialogFooter>
