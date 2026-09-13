@@ -256,13 +256,96 @@ chọn **Import**. Grafana hỗ trợ import dashboard JSON từ file hoặc n�
 paste qua UI. [Tài liệu import dashboard của Grafana](https://grafana.com/docs/grafana/latest/visualizations/dashboards/build-dashboards/import-dashboards/)
 ghi nhận luồng này.
 
-Dashboard có các panel: backend `up`, request rate, lỗi 5xx, p95 latency và
-restart pod. Nếu không thấy dữ liệu, kiểm tra lại query sau trong Grafana
-Explore:
+Dashboard có các panel: số target backend khỏe, request rate, lỗi 4xx/5xx,
+p95 latency, restart pod, CPU, memory và mức sử dụng PVC. Nếu không thấy dữ
+liệu, kiểm tra lại query sau trong Grafana Explore:
 
 ```promql
 up{namespace="philobiblus",service="philobiblus-backend"}
 ```
+
+### 3.3. Scale backend bằng HorizontalPodAutoscaler
+
+HPA chỉ áp dụng cho FastAPI backend vì workload này stateless và Service có
+thể phân phối request giữa các pod. PostgreSQL không được scale bằng HPA: nhiều
+pod PostgreSQL dùng cùng một PVC không tạo thành cụm database an toàn.
+
+Chart khai báo HPA tại `templates/backend-hpa.yaml`. Cấu hình backend giữ tối
+thiểu ba replica và tăng tối đa sáu replica khi CPU trung bình vượt 70% CPU
+request:
+
+```yaml
+backend:
+  replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+```
+
+Metrics Server phải hoạt động và backend phải có CPU request. Áp dụng thay đổi
+cho release đã tồn tại bằng lệnh sau. Tham số CPU target được truyền tường minh
+để tránh thiếu giá trị khi tái sử dụng values của release cũ.
+
+```bash
+helm upgrade philobiblus kubernetes/helm/philobiblus \
+  --namespace philobiblus \
+  --reuse-values \
+  --set backend.replicaCount=3 \
+  --set backend.autoscaling.enabled=true \
+  --set backend.autoscaling.minReplicas=3 \
+  --set backend.autoscaling.maxReplicas=6 \
+  --set backend.autoscaling.targetCPUUtilizationPercentage=70 \
+  --atomic \
+  --timeout 5m
+```
+
+Xác minh HPA:
+
+```bash
+kubectl get hpa philobiblus-backend-hpa -n philobiblus
+kubectl describe hpa philobiblus-backend-hpa -n philobiblus
+```
+
+Kết quả cần có `MINPODS` là `3`, `MAXPODS` là `6`, `ScalingActive=True` và
+CPU target dạng `cpu: <current>%/70%`.
+
+### 3.4. Tạo tải kiểm chứng HPA
+
+Chỉ chạy trên cluster local khi không có người dùng demo. Terminal thứ nhất
+theo dõi số replica và CPU target:
+
+```bash
+kubectl get hpa philobiblus-backend-hpa -n philobiblus --watch
+```
+
+Terminal thứ hai chạy 50 worker trong tối đa 5 phút tới ClusterIP Service;
+load-generator tự xóa khi hoàn tất. Có thể dừng sớm bằng `Ctrl+C`.
+
+```bash
+kubectl run backend-hpa-load \
+  --namespace philobiblus \
+  --rm -i --restart=Never \
+  --image=curlimages/curl:8.10.1 \
+  --command -- sh -c '
+    deadline=$(( $(date +%s) + 300 ))
+    for worker in $(seq 1 50); do
+      (
+        while [ "$(date +%s)" -lt "$deadline" ]; do
+          curl --fail --silent --max-time 2 \
+            http://philobiblus-backend:8000/health >/dev/null || true
+        done
+      ) &
+    done
+    wait
+  '
+```
+
+Nếu CPU chưa đạt 70%, tăng số worker từ `50` lên `80`, không tăng đồng thời
+thời lượng. HPA cần khoảng một đến vài chu kỳ thu thập metric để scale lên;
+sau khi tải dừng, chính sách hiện tại giữ replica cao hơn trong 5 phút trước
+khi giảm dần về tối thiểu 3 replica.
 
 ## 4. Phụ lục: kiểm tra pod, database và log
 

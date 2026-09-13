@@ -7,6 +7,11 @@ imagePullSecrets: []
 
 backend:
   replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
   image:
     repository: philobiblus-backend
     tag: local
