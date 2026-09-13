@@ -48,8 +48,7 @@
                                             "kind": "DataQuery",
                                             "spec": {
                                                 "editorMode": "code",
-                                                "expr": "up{namespace=\"philobiblus\",service=\"philobiblus-backend\"}",
-                                                "instant": true,
+                                                "expr": "sum(up{namespace=\"philobiblus\",service=\"philobiblus-backend\"} == 1)",
                                                 "legendFormat": "__auto",
                                                 "range": true
                                             },
@@ -66,7 +65,7 @@
                     "description": "",
                     "id": 1,
                     "links": [],
-                    "title": "Backend working?",
+                    "title": "Healthy backend targets",
                     "vizConfig": {
                         "group": "stat",
                         "kind": "VizConfig",
@@ -80,12 +79,16 @@
                                         "mode": "absolute",
                                         "steps": [
                                             {
-                                                "color": "green",
-                                                "value": 0
+                                                "color": "red",
+                                                "value": null
                                             },
                                             {
-                                                "color": "red",
-                                                "value": 80
+                                                "color": "orange",
+                                                "value": 1
+                                            },
+                                            {
+                                                "color": "green",
+                                                "value": 3
                                             }
                                         ]
                                     }
