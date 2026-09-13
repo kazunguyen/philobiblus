@@ -573,6 +573,366 @@
                         "version": "13.2.1"
                     }
                 }
+            },
+            "panel-6": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "prometheus"
+                                            },
+                                            "group": "prometheus",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "editorMode": "code",
+                                                "expr": "sum by (handler, method, status) (rate(http_requests_total{namespace=\"philobiblus\",service=\"philobiblus-backend\",status=~\"4..\"}[5m]))",
+                                                "instant": false,
+                                                "legendFormat": "{{method}} {{handler}} · {{status}}",
+                                                "range": true
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "Tốc độ phản hồi lỗi phía client theo endpoint, HTTP method và mã trạng thái.",
+                    "id": 6,
+                    "links": [],
+                    "title": "Client errors (4xx)",
+                    "vizConfig": {
+                        "group": "timeseries",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisCenteredZero": true,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 5,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "showPoints": "auto",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    }
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "desc"
+                                }
+                            }
+                        },
+                        "version": "13.2.1"
+                    }
+                }
+            },
+            "panel-7": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "prometheus"
+                                            },
+                                            "group": "prometheus",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "editorMode": "code",
+                                                "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"philobiblus\",container!=\"\",container!=\"POD\"}[5m]))",
+                                                "instant": false,
+                                                "legendFormat": "{{pod}}",
+                                                "range": true
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "Mức sử dụng CPU thực tế của từng pod trong namespace philobiblus.",
+                    "id": 7,
+                    "links": [],
+                    "title": "Pod CPU usage",
+                    "vizConfig": {
+                        "group": "timeseries",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "unit": "cores",
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisCenteredZero": true,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 5,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "showPoints": "auto",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    }
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "desc"
+                                }
+                            }
+                        },
+                        "version": "13.2.1"
+                    }
+                }
+            },
+            "panel-8": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "prometheus"
+                                            },
+                                            "group": "prometheus",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "editorMode": "code",
+                                                "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"philobiblus\",container!=\"\",container!=\"POD\"})",
+                                                "instant": false,
+                                                "legendFormat": "{{pod}}",
+                                                "range": true
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "Working-set memory của từng pod trong namespace philobiblus.",
+                    "id": 8,
+                    "links": [],
+                    "title": "Pod memory usage",
+                    "vizConfig": {
+                        "group": "timeseries",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "unit": "bytes",
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisCenteredZero": true,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 5,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "showPoints": "auto",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    }
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "desc"
+                                }
+                            }
+                        },
+                        "version": "13.2.1"
+                    }
+                }
+            },
+            "panel-9": {
+                "kind": "Panel",
+                "spec": {
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "hidden": false,
+                                        "query": {
+                                            "datasource": {
+                                                "name": "prometheus"
+                                            },
+                                            "group": "prometheus",
+                                            "kind": "DataQuery",
+                                            "spec": {
+                                                "editorMode": "code",
+                                                "expr": "100 * max by (persistentvolumeclaim) (kubelet_volume_stats_used_bytes{namespace=\"philobiblus\"}) / max by (persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{namespace=\"philobiblus\"})",
+                                                "instant": false,
+                                                "legendFormat": "{{persistentvolumeclaim}}",
+                                                "range": true
+                                            },
+                                            "version": "v0"
+                                        },
+                                        "refId": "A"
+                                    }
+                                }
+                            ],
+                            "queryOptions": {},
+                            "transformations": []
+                        }
+                    },
+                    "description": "Phần trăm dung lượng đã sử dụng của từng PersistentVolumeClaim.",
+                    "id": 9,
+                    "links": [],
+                    "title": "PVC capacity used",
+                    "vizConfig": {
+                        "group": "timeseries",
+                        "kind": "VizConfig",
+                        "spec": {
+                            "fieldConfig": {
+                                "defaults": {
+                                    "unit": "percent",
+                                    "color": {
+                                        "mode": "thresholds"
+                                    },
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "color": "green",
+                                                "value": 0
+                                            },
+                                            {
+                                                "color": "orange",
+                                                "value": 75
+                                            },
+                                            {
+                                                "color": "red",
+                                                "value": 90
+                                            }
+                                        ]
+                                    },
+                                    "custom": {
+                                        "axisCenteredZero": true,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 5,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 1,
+                                        "showPoints": "auto",
+                                        "spanNulls": false,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "line"
+                                        }
+                                    }
+                                },
+                                "overrides": []
+                            },
+                            "options": {
+                                "legend": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "bottom",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "mode": "multi",
+                                    "sort": "desc"
+                                }
+                            }
+                        },
+                        "version": "13.2.1"
+                    }
+                }
             }
         },
         "layout": {
@@ -642,6 +1002,58 @@
                             "width": 12,
                             "x": 0,
                             "y": 16
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-6"
+                            },
+                            "height": 8,
+                            "width": 12,
+                            "x": 12,
+                            "y": 16
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-7"
+                            },
+                            "height": 8,
+                            "width": 12,
+                            "x": 0,
+                            "y": 24
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-8"
+                            },
+                            "height": 8,
+                            "width": 12,
+                            "x": 12,
+                            "y": 24
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-9"
+                            },
+                            "height": 8,
+                            "width": 24,
+                            "x": 0,
+                            "y": 32
                         }
                     }
                 ]
