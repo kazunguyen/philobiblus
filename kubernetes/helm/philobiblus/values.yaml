@@ -112,3 +112,6 @@ monitoring:
     enabled: false
     interval: 30s
     scrapeTimeout: 10s
+  prometheusRule:
+    enabled: false
+    prometheusRelease: monitoring

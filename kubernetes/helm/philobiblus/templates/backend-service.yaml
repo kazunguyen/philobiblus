@@ -4,6 +4,7 @@ metadata:
   name: {{ include "philobiblus.fullname" . }}-backend
   labels:
     {{- include "philobiblus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
 spec:
   type: {{ .Values.backend.service.type }}
   selector:

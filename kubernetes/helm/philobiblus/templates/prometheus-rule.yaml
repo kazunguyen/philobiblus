@@ -1,0 +1,83 @@
+{{- if .Values.monitoring.prometheusRule.enabled }}
+{{- $fullname := include "philobiblus.fullname" . }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $fullname }}-alerts
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+    release: {{ required "monitoring.prometheusRule.prometheusRelease is required" .Values.monitoring.prometheusRule.prometheusRelease | quote }}
+spec:
+  groups:
+    - name: philobiblus.backend
+      rules:
+        - alert: PhilobiblusBackendTargetsBelowMinimum
+          expr: |
+            (sum(up{namespace="{{ .Release.Namespace }}",service="{{ $fullname }}-backend"} == 1) < {{ .Values.backend.autoscaling.minReplicas }})
+            or absent(up{namespace="{{ .Release.Namespace }}",service="{{ $fullname }}-backend"})
+          for: 2m
+          labels:
+            severity: critical
+            component: backend
+          annotations:
+            summary: Backend healthy targets are below the minimum replica count.
+            description: Prometheus has observed fewer healthy backend targets than the configured minimum for two minutes.
+            runbook_url: monitoring/alert-runbooks.md#backend-targets-below-minimum
+
+        - alert: PhilobiblusBackendHigh5xxRatio
+          expr: |
+            (
+              sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}",service="{{ $fullname }}-backend",status=~"5.."}[5m]))
+              /
+              clamp_min(sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}",service="{{ $fullname }}-backend"}[5m])), 0.001)
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+            component: backend
+          annotations:
+            summary: Backend 5xx ratio is above 5 percent.
+            description: The five-minute backend error ratio has exceeded the warning threshold.
+            runbook_url: monitoring/alert-runbooks.md#backend-5xx-ratio-high
+
+        - alert: PhilobiblusBackendHighP95Latency
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(http_request_duration_highr_seconds_bucket{namespace="{{ .Release.Namespace }}",service="{{ $fullname }}-backend"}[5m]))) > 1
+          for: 5m
+          labels:
+            severity: warning
+            component: backend
+          annotations:
+            summary: Backend p95 latency is above one second.
+            description: The five-minute p95 HTTP request duration is above one second.
+            runbook_url: monitoring/alert-runbooks.md#backend-p95-latency-high
+
+        - alert: PhilobiblusBackendRestartsDetected
+          expr: |
+            sum(increase(kube_pod_container_status_restarts_total{namespace="{{ .Release.Namespace }}",container="backend"}[10m])) > 0
+          for: 1m
+          labels:
+            severity: warning
+            component: backend
+          annotations:
+            summary: A backend container has restarted.
+            description: At least one backend container restart was observed during the previous ten minutes.
+            runbook_url: monitoring/alert-runbooks.md#backend-restarts-detected
+
+        - alert: PhilobiblusPostgresPVCUsageHigh
+          expr: |
+            (
+              max(kubelet_volume_stats_used_bytes{namespace="{{ .Release.Namespace }}",persistentvolumeclaim="{{ $fullname }}-postgres"})
+              /
+              max(kubelet_volume_stats_capacity_bytes{namespace="{{ .Release.Namespace }}",persistentvolumeclaim="{{ $fullname }}-postgres"})
+            ) > 0.80
+          for: 10m
+          labels:
+            severity: warning
+            component: postgres
+          annotations:
+            summary: PostgreSQL PVC usage is above 80 percent.
+            description: PostgreSQL persistent storage has remained above the warning threshold for ten minutes.
+            runbook_url: monitoring/alert-runbooks.md#postgres-pvc-usage-high
+{{- end }}
