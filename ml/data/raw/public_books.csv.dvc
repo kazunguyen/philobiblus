@@ -1,0 +1,6 @@
+outs:
+- md5: ec26a2a22b812234e6bafe073ca254a9
+  size: 25053
+  isexec: true
+  hash: md5
+  path: public_books.csv
