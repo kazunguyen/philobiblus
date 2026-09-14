@@ -1,7 +1,18 @@
+"""Create repeatable local demo data from the pinned book catalog source.
+
+The catalog is intentionally fetched in a bounded HTTP range instead of copying
+the 119 MB source CSV into the application image. The revision is pinned, so
+the first 100 records are stable and can be reproduced for the Week 13 MLOps
+exercise.
+"""
+
+import csv
+import io
 import logging
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, Iterable, List, Optional
+from urllib.request import Request, urlopen
 
 from sqlalchemy.orm import Session
 
@@ -12,17 +23,25 @@ from app.models import (
     BookStatus,
     BookVisibility,
     PublicationStatus,
+    ReadingHistory,
+    Review,
     User,
 )
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s: %(message)s",
-)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 DEFAULT_PASSWORD = "admin1111"
+
+CATALOG_DATASET = "nice-bill/book-recommender-artifacts"
+CATALOG_REVISION = "e77f106e47c4430d0acdeef23b1cb096b31812a1"
+CATALOG_URL = (
+    "https://huggingface.co/datasets/"
+    f"{CATALOG_DATASET}/resolve/{CATALOG_REVISION}/books_catalog.csv"
+)
+CATALOG_ROW_COUNT = 100
+CATALOG_MAX_BYTES = 5 * 1024 * 1024
 
 USER_SEEDS = [
     {"username": "admin", "email": "admin@gmail.com"},
@@ -30,248 +49,119 @@ USER_SEEDS = [
     {"username": "user2", "email": "user2@gmail.com"},
 ]
 
-BOOK_SEEDS = [
-    {
-        "owner": "admin",
-        "title": "Clean Code",
-        "author": "Robert C. Martin",
-        "genre": "Software Engineering",
-        "status": BookStatus.COMPLETED,
-        "rating": 5,
-        "volume": 1,
-        "pages_total": 464,
-        "pages_read": 464,
-        "date_started": date(2026, 1, 5),
-        "date_finished": date(2026, 1, 26),
-        "notes": "Practical principles for writing maintainable code.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9780132350884-L.jpg",
-    },
-    {
-        "owner": "admin",
-        "title": "The Pragmatic Programmer",
-        "author": "David Thomas and Andrew Hunt",
-        "genre": "Software Engineering",
-        "status": BookStatus.READING,
-        "rating": 5,
-        "volume": 1,
-        "pages_total": 352,
-        "pages_read": 210,
-        "date_started": date(2026, 2, 2),
-        "date_finished": None,
-        "notes": "Useful engineering habits and career-level advice.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9780201616224-L.jpg",
-    },
-    {
-        "owner": "admin",
-        "title": "Designing Data-Intensive Applications",
-        "author": "Martin Kleppmann",
-        "genre": "Distributed Systems",
-        "status": BookStatus.WANT_TO_READ,
-        "rating": None,
-        "volume": 1,
-        "pages_total": 616,
-        "pages_read": 0,
-        "date_started": None,
-        "date_finished": None,
-        "notes": "Queued for database and distributed systems study.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9781449373320-L.jpg",
-    },
-    {
-        "owner": "admin",
-        "title": "Kubernetes in Action",
-        "author": "Marko Luksa",
-        "genre": "DevOps",
-        "status": BookStatus.READING,
-        "rating": 4,
-        "volume": 1,
-        "pages_total": 624,
-        "pages_read": 180,
-        "date_started": date(2026, 3, 10),
-        "date_finished": None,
-        "notes": "Reference material for Kubernetes deployment practice.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9781617293726-L.jpg",
-    },
-    {
-        "owner": "admin",
-        "title": "Site Reliability Engineering",
-        "author": "Betsy Beyer",
-        "genre": "DevOps",
-        "status": BookStatus.WANT_TO_READ,
-        "rating": None,
-        "volume": 1,
-        "pages_total": 552,
-        "pages_read": 0,
-        "date_started": None,
-        "date_finished": None,
-        "notes": "Planned reading for observability and reliability topics.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9781491929124-L.jpg",
-    },
-    {
-        "owner": "user1",
-        "title": "Atomic Habits",
-        "author": "James Clear",
-        "genre": "Self Improvement",
-        "status": BookStatus.COMPLETED,
-        "rating": 5,
-        "volume": 1,
-        "pages_total": 320,
-        "pages_read": 320,
-        "date_started": date(2026, 1, 12),
-        "date_finished": date(2026, 1, 20),
-        "notes": "Simple habit systems with practical examples.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg",
-    },
-    {
-        "owner": "user1",
-        "title": "Deep Work",
-        "author": "Cal Newport",
-        "genre": "Productivity",
-        "status": BookStatus.READING,
-        "rating": 4,
-        "volume": 1,
-        "pages_total": 304,
-        "pages_read": 140,
-        "date_started": date(2026, 2, 18),
-        "date_finished": None,
-        "notes": "Focused work methods for difficult technical tasks.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9781455586691-L.jpg",
-    },
-    {
-        "owner": "user1",
-        "title": "Dune",
-        "author": "Frank Herbert",
-        "genre": "Science Fiction",
-        "status": BookStatus.COMPLETED,
-        "rating": 5,
-        "volume": 1,
-        "pages_total": 688,
-        "pages_read": 688,
-        "date_started": date(2026, 3, 1),
-        "date_finished": date(2026, 3, 25),
-        "notes": "Expansive science fiction worldbuilding.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9780441172719-L.jpg",
-    },
-    {
-        "owner": "user1",
-        "title": "Project Hail Mary",
-        "author": "Andy Weir",
-        "genre": "Science Fiction",
-        "status": BookStatus.READING,
-        "rating": 4,
-        "volume": 1,
-        "pages_total": 496,
-        "pages_read": 260,
-        "date_started": date(2026, 4, 5),
-        "date_finished": None,
-        "notes": "Fast-paced science fiction with engineering problem solving.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9780593135204-L.jpg",
-    },
-    {
-        "owner": "user1",
-        "title": "The Hobbit",
-        "author": "J. R. R. Tolkien",
-        "genre": "Fantasy",
-        "status": BookStatus.WANT_TO_READ,
-        "rating": None,
-        "volume": 1,
-        "pages_total": 310,
-        "pages_read": 0,
-        "date_started": None,
-        "date_finished": None,
-        "notes": "Classic fantasy queued for later reading.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9780547928227-L.jpg",
-    },
-    {
-        "owner": "user2",
-        "title": "The Phoenix Project",
-        "author": "Gene Kim",
-        "genre": "DevOps",
-        "status": BookStatus.COMPLETED,
-        "rating": 4,
-        "volume": 1,
-        "pages_total": 432,
-        "pages_read": 432,
-        "date_started": date(2026, 1, 8),
-        "date_finished": date(2026, 1, 30),
-        "notes": "DevOps concepts explained through a business narrative.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9780988262591-L.jpg",
-    },
-    {
-        "owner": "user2",
-        "title": "The DevOps Handbook",
-        "author": "Gene Kim",
-        "genre": "DevOps",
-        "status": BookStatus.READING,
-        "rating": 4,
-        "volume": 1,
-        "pages_total": 480,
-        "pages_read": 190,
-        "date_started": date(2026, 2, 15),
-        "date_finished": None,
-        "notes": "Implementation patterns for delivery and operations.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9781942788003-L.jpg",
-    },
-    {
-        "owner": "user2",
-        "title": "Zero Trust",
-        "author": "Evan Gilman and Doug Barth",
-        "genre": "Security",
-        "status": BookStatus.WANT_TO_READ,
-        "rating": None,
-        "volume": 1,
-        "pages_total": 240,
-        "pages_read": 0,
-        "date_started": None,
-        "date_finished": None,
-        "notes": "Security architecture reference for least privilege design.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9781491962190-L.jpg",
-    },
-    {
-        "owner": "user2",
-        "title": "Learning SQL",
-        "author": "Alan Beaulieu",
-        "genre": "Database",
-        "status": BookStatus.COMPLETED,
-        "rating": 4,
-        "volume": 1,
-        "pages_total": 384,
-        "pages_read": 384,
-        "date_started": date(2026, 3, 3),
-        "date_finished": date(2026, 3, 18),
-        "notes": "SQL fundamentals and relational database practice.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9781492057611-L.jpg",
-    },
-    {
-        "owner": "user2",
-        "title": "The Art of Monitoring",
-        "author": "James Turnbull",
-        "genre": "Observability",
-        "status": BookStatus.DROPPED,
-        "rating": 3,
-        "volume": 1,
-        "pages_total": 598,
-        "pages_read": 120,
-        "date_started": date(2026, 4, 1),
-        "date_finished": None,
-        "notes": "Paused because current focus shifted to Kubernetes manifests.",
-        "cover_url": "https://covers.openlibrary.org/b/isbn/9780988820241-L.jpg",
-    },
-]
+STATUS_CYCLE = (
+    BookStatus.COMPLETED,
+    BookStatus.READING,
+    BookStatus.WANT_TO_READ,
+)
+
 
 def apply_schema_updates(db: Session) -> None:
-    """Apply idempotent migrations before seeding data."""
+    """Apply idempotent migrations required by the demo relationships."""
     for migration_name in (
+        "add_book_visibility.sql",
+        "add_reading_history.sql",
         "add_reading_progress_fields.sql",
         "add_user_settings.sql",
     ):
         migration_path = Path(__file__).with_name(migration_name)
-        db.connection().exec_driver_sql(
-            migration_path.read_text(encoding="utf-8")
+        db.connection().exec_driver_sql(migration_path.read_text(encoding="utf-8"))
+
+
+def split_metadata(value: Optional[str]) -> List[str]:
+    """Turn the catalog's comma-separated values into a compact tag list."""
+    if not value:
+        return []
+
+    return [
+        item.strip()
+        for item in value.split(",")
+        if item.strip() and item.strip() != "..."
+    ]
+
+
+def parse_source_rating(value: Optional[str]) -> Optional[float]:
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def load_catalog_rows() -> List[dict]:
+    """Load exactly 100 rows from the immutable Hugging Face CSV revision."""
+    request = Request(
+        CATALOG_URL,
+        headers={
+            "Range": f"bytes=0-{CATALOG_MAX_BYTES - 1}",
+            "User-Agent": "philobiblus-demo-seed/1.0",
+        },
+    )
+
+    logger.info("Fetching %s seed books from %s", CATALOG_ROW_COUNT, CATALOG_DATASET)
+    with urlopen(request, timeout=30) as response:
+        text_stream = io.TextIOWrapper(response, encoding="utf-8", newline="")
+        reader = csv.DictReader(text_stream)
+        rows = []
+        for row in reader:
+            if not row.get("title") or not row.get("authors"):
+                continue
+            rows.append(row)
+            if len(rows) == CATALOG_ROW_COUNT:
+                break
+
+    if len(rows) != CATALOG_ROW_COUNT:
+        raise RuntimeError(
+            "The catalog response did not contain the required "
+            f"{CATALOG_ROW_COUNT} complete rows; database changes were not committed."
         )
+    return rows
+
+
+def build_book_seed(row: dict, index: int, owner_username: str) -> dict:
+    """Map catalog metadata to the public metadata fields of ``Book``."""
+    genres = split_metadata(row.get("genres"))
+    tags = list(dict.fromkeys(genres + split_metadata(row.get("tags"))))[:8]
+    genre = genres[0] if genres else "Uncategorized"
+    source_rating = parse_source_rating(row.get("rating"))
+    status = STATUS_CYCLE[index % len(STATUS_CYCLE)]
+    started_on = date(2026, 8, 1) + timedelta(days=index % 21)
+    finished_on = started_on + timedelta(days=7 + index % 14)
+
+    return {
+        "owner": owner_username,
+        "title": row["title"].strip(),
+        "author": row["authors"].strip(),
+        "genre": genre,
+        "tags": tags or ["Uncategorized"],
+        "visibility": BookVisibility.PUBLIC,
+        "publication_status": PublicationStatus.COMPLETED,
+        "status": status,
+        # This is a rounded public catalog score for fixture purposes, not a
+        # rating made by the Philobiblus owner.
+        "rating": (
+            min(5, max(1, round(source_rating)))
+            if source_rating and source_rating > 0
+            else None
+        ),
+        "volume": -1,
+        "pages_total": -1,
+        "pages_read": -1,
+        "date_started": started_on if status != BookStatus.WANT_TO_READ else None,
+        "date_finished": finished_on if status == BookStatus.COMPLETED else None,
+        "notes": (
+            f"Demo catalog fixture from {CATALOG_DATASET}@{CATALOG_REVISION}; "
+            f"source rating: {source_rating:.2f}"
+            if source_rating is not None
+            else f"Demo catalog fixture from {CATALOG_DATASET}@{CATALOG_REVISION}."
+        ),
+        "cover_url": (row.get("cover_image_url") or "").strip() or None,
+    }
 
 
 def build_book_values(book_data: dict, owner: User) -> dict:
-    """Fill every persisted book field, including the reading-progress fields."""
+    """Fill every persisted Book field with catalog or deterministic fixture data."""
     pages_read = book_data.get("pages_read", -1)
     chapters_read = book_data.get("chapters_read")
     if chapters_read is None:
@@ -282,36 +172,28 @@ def build_book_values(book_data: dict, owner: User) -> dict:
         "title": book_data["title"],
         "author": book_data["author"],
         "genre": book_data["genre"],
-        "tags": book_data.get("tags", [book_data["genre"]]),
-        "visibility": book_data.get("visibility", BookVisibility.PUBLIC),
+        "tags": book_data["tags"],
+        "visibility": book_data["visibility"],
         "share_token": None,
-        "publication_status": book_data.get(
-            "publication_status",
-            PublicationStatus.COMPLETED
-            if book_data["status"] == BookStatus.COMPLETED
-            else PublicationStatus.ONGOING,
-        ),
+        "publication_status": book_data["publication_status"],
         "status": book_data["status"],
-        "rating": book_data.get("rating"),
-        "volume": book_data.get("volume", -1),
-        "pages_total": book_data.get("pages_total", -1),
+        "rating": book_data["rating"],
+        "volume": book_data["volume"],
+        "pages_total": book_data["pages_total"],
         "pages_read": pages_read,
         "chapters_read": chapters_read,
-        "date_started": book_data.get("date_started"),
-        "date_finished": book_data.get("date_finished"),
-        "notes": book_data.get("notes"),
-        "cover_url": book_data.get("cover_url"),
+        "date_started": book_data["date_started"],
+        "date_finished": book_data["date_finished"],
+        "notes": book_data["notes"],
+        "cover_url": book_data["cover_url"],
     }
 
 
 def get_or_create_user(db: Session, username: str, email: str) -> User:
-    """Return an existing user or create one with the seed password."""
+    """Create a fixture user without overwriting existing credentials."""
     user = db.query(User).filter(User.username == username).first()
     if user:
-        user.email = email
-        user.hashed_password = get_password_hash(DEFAULT_PASSWORD)
-        user.is_active = True
-        logger.info("Updated seed user: %s", username)
+        logger.info("Using existing seed user: %s", username)
         return user
 
     user = User(
@@ -327,23 +209,16 @@ def get_or_create_user(db: Session, username: str, email: str) -> User:
 
 
 def get_seed_users(db: Session) -> Dict[str, User]:
-    """Create seed users and return them by username."""
     users = {}
     for user_data in USER_SEEDS:
-        user = get_or_create_user(
-            db=db,
-            username=user_data["username"],
-            email=user_data["email"],
-        )
+        user = get_or_create_user(db, **user_data)
         users[user.username] = user
     return users
 
 
 def upsert_book(db: Session, book_data: dict, users: Dict[str, User]) -> Book:
-    """Create or update a seed book for its assigned owner."""
-    owner_username = book_data["owner"]
-    owner = users[owner_username]
-
+    """Create or update by the deterministic owner/title/author fixture key."""
+    owner = users[book_data["owner"]]
     book = (
         db.query(Book)
         .filter(
@@ -353,41 +228,104 @@ def upsert_book(db: Session, book_data: dict, users: Dict[str, User]) -> Book:
         )
         .first()
     )
-
-    book_values = build_book_values(book_data, owner)
-
+    values = build_book_values(book_data, owner)
     if book:
-        for field, value in book_values.items():
+        for field, value in values.items():
             setattr(book, field, value)
-        logger.info("Updated seed book: %s", book.title)
         return book
 
-    book = Book(**book_values)
+    book = Book(**values)
     db.add(book)
-    logger.info("Created seed book: %s", book.title)
     return book
 
 
-def seed_books(db: Session, users: Dict[str, User]) -> None:
-    """Create or update all seed books."""
-    for book_data in BOOK_SEEDS:
-        upsert_book(db=db, book_data=book_data, users=users)
+def seed_books(
+    db: Session, users: Dict[str, User], catalog_rows: Iterable[dict]
+) -> List[Book]:
+    usernames = tuple(users)
+    books = []
+    for index, row in enumerate(catalog_rows):
+        seed = build_book_seed(row, index, usernames[index % len(usernames)])
+        books.append(upsert_book(db, seed, users))
+    db.flush()
+    return books
+
+
+def seed_related_records(
+    db: Session, books: List[Book], users: Dict[str, User]
+) -> tuple[int, int]:
+    """Add deterministic review and reading-history fixtures without duplicates."""
+    reviewers = tuple(users.values())
+    reviews_created = 0
+    history_created = 0
+
+    for index, book in enumerate(books):
+        reviewer = reviewers[(index + 1) % len(reviewers)]
+        existing_review = (
+            db.query(Review)
+            .filter(Review.book_id == book.id, Review.user_id == reviewer.id)
+            .first()
+        )
+        if not existing_review:
+            db.add(
+                Review(
+                    book_id=book.id,
+                    user_id=reviewer.id,
+                    rating=book.rating or 3,
+                    comment=(
+                        "Generated review fixture for the recommendation and social-flow demo."
+                    ),
+                )
+            )
+            reviews_created += 1
+
+        if book.status == BookStatus.WANT_TO_READ:
+            continue
+
+        read_on = date(2026, 9, 1) + timedelta(days=index % 7)
+        existing_history = (
+            db.query(ReadingHistory)
+            .filter(
+                ReadingHistory.book_id == book.id,
+                ReadingHistory.user_id == book.user_id,
+                ReadingHistory.read_on == read_on,
+            )
+            .first()
+        )
+        if not existing_history:
+            db.add(
+                ReadingHistory(
+                    book_id=book.id,
+                    user_id=book.user_id,
+                    read_on=read_on,
+                    pages_read=-1,
+                    chapters_read=-1.0,
+                    volume=-1,
+                    note="Generated catalog-fixture reading event.",
+                )
+            )
+            history_created += 1
+
+    return reviews_created, history_created
 
 
 def seed_database() -> None:
-    """Seed the database with sample users and books."""
+    """Seed users, 100 public catalog books, reviews, and reading history."""
+    catalog_rows = load_catalog_rows()
     Base.metadata.create_all(bind=engine)
 
     db = SessionLocal()
     try:
         apply_schema_updates(db)
         users = get_seed_users(db)
-        seed_books(db=db, users=users)
+        books = seed_books(db, users, catalog_rows)
+        reviews_created, history_created = seed_related_records(db, books, users)
         db.commit()
         logger.info(
-            "Seed completed with %s users and %s books.",
-            len(users),
-            len(BOOK_SEEDS),
+            "Seed completed: %s catalog books, %s new reviews, %s new reading-history rows.",
+            len(books),
+            reviews_created,
+            history_created,
         )
     except Exception:
         db.rollback()
