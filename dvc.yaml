@@ -16,6 +16,8 @@ stages:
     - ml/src/train.py
     params:
     - ml/params.yaml:
+      - train.experiment_name
+      - train.include_tags
       - train.min_df
       - train.model_version
       - train.ngram_range

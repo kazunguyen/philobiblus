@@ -32,13 +32,15 @@ stages:
       isexec: true
     - path: ml/src/train.py
       hash: md5
-      md5: 1a2d19031a4417c74443ee7a11043112
-      size: 1732
+      md5: e291bbe0c303c5e97174418fe3e8898a
+      size: 3298
       isexec: true
     params:
       ml/params.yaml:
+        train.experiment_name: philobiblus-content-recommender
+        train.include_tags: true
         train.min_df: 1
-        train.model_version: baseline-tfidf-v1
+        train.model_version: tfidf-with-tags-v1
         train.ngram_range:
         - 1
         - 2
@@ -46,7 +48,7 @@ stages:
     outs:
     - path: ml/models/tfidf_recommender.joblib
       hash: md5
-      md5: 2050fe62893ba40f3083c4ec38e4997c
+      md5: 786cdf332bb2b40f7c65a6f4c14da279
       size: 150918
       isexec: true
     - path: ml/reports/train_metrics.json
