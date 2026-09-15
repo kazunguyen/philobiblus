@@ -7,3 +7,5 @@ rendered.yaml
 implementation_plan.md
 dist/
 电信历史.txt
+ml/.venv
+skills-lock.json
