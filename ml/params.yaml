@@ -1,0 +1,5 @@
+train:
+  ngram_range: [1, 2]
+  min_df: 1
+  top_k: 5
+  model_version: baseline-tfidf-v1

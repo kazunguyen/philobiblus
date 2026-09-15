@@ -1,0 +1,27 @@
+stages:
+  prepare:
+    cmd: python ml/src/prepare.py --input ml/data/raw/public_books.csv --output 
+      ml/data/processed/books_features.csv
+    deps:
+    - ml/data/raw/public_books.csv
+    - ml/src/prepare.py
+    outs:
+    - ml/data/processed/books_features.csv
+  train:
+    cmd: python ml/src/train.py --input ml/data/processed/books_features.csv 
+      --params ml/params.yaml --model-output ml/models/tfidf_recommender.joblib 
+      --metrics-output ml/reports/train_metrics.json
+    deps:
+    - ml/data/processed/books_features.csv
+    - ml/src/train.py
+    params:
+    - ml/params.yaml:
+      - train.min_df
+      - train.model_version
+      - train.ngram_range
+      - train.top_k
+    outs:
+    - ml/models/tfidf_recommender.joblib
+    metrics:
+    - ml/reports/train_metrics.json:
+        cache: false
