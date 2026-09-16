@@ -19,9 +19,12 @@ from app.schemas import (
     BookCreate,
     BookOwnerOut,
     BookPublicOut,
+    BookRecommendationOut,
+    BookRecommendationsOut,
     BookStatsOut,
     BookUpdate,
 )
+from app.services.recommendation_client import fetch_recommendations
 
 router = APIRouter(
     prefix="/api/books",
@@ -326,3 +329,92 @@ def delete_book(
     db.delete(book)
     db.commit()
     return None
+
+@router.get(
+    "/public/{book_id}/recommendations",
+    response_model=BookRecommendationsOut,
+    summary="Get recommendations for a public book",
+)
+def get_public_book_recommendations(
+    book_id: int,
+    limit: int = Query(5, ge=1, le=5),
+    db: Session = Depends(get_db),
+) -> BookRecommendationsOut:
+    """Return only public recommendations for one public source book."""
+    source_book = (
+        db.query(Book)
+        .filter(
+            Book.id == book_id,
+            Book.visibility == BookVisibility.PUBLIC,
+        )
+        .first()
+    )
+    if not source_book:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Book not found",
+        )
+
+    ranked_items = fetch_recommendations(book_id=book_id, limit=limit)
+    seen_ids = {source_book.id}
+    candidate_ids = []
+
+    for item in ranked_items:
+        if item.book_id not in seen_ids:
+            candidate_ids.append(item.book_id)
+            seen_ids.add(item.book_id)
+
+    public_books_by_id = {}
+    if candidate_ids:
+        public_books = (
+            db.query(Book)
+            .filter(
+                Book.id.in_(candidate_ids),
+                Book.visibility == BookVisibility.PUBLIC,
+            )
+            .all()
+        )
+        public_books_by_id = {book.id: book for book in public_books}
+
+    model_books = [
+        (public_books_by_id[item.book_id], item.score)
+        for item in ranked_items
+        if item.book_id in public_books_by_id
+    ]
+
+    if model_books:
+        return BookRecommendationsOut(
+            source="model",
+            model_version=ranked_items[0].model_version,
+            books=[
+                BookRecommendationOut(
+                    **BookPublicOut.model_validate(book).model_dump(),
+                    score=score,
+                )
+                for book, score in model_books[:limit]
+            ],
+        )
+
+    fallback_books = (
+        db.query(Book)
+        .filter(
+            Book.id != source_book.id,
+            Book.visibility == BookVisibility.PUBLIC,
+            Book.genre == source_book.genre,
+        )
+        .order_by(Book.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return BookRecommendationsOut(
+        source="genre_fallback",
+        model_version=None,
+        books=[
+            BookRecommendationOut(
+                **BookPublicOut.model_validate(book).model_dump(),
+                score=None,
+            )
+            for book in fallback_books
+        ],
+    )

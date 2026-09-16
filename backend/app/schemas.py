@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional, List
+from typing import Optional, List, Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models import (
@@ -201,3 +201,16 @@ class ReadingHistoryOut(BaseModel):
     note: Optional[str] = None
     created_at: Optional[datetime] = None
     recorded_at: Optional[datetime] = None
+
+class BookRecommendationOut(BookPublicOut):
+    """Expose one public book with an optional model similarity score."""
+
+    score: Optional[float] = Field(None, ge=0)
+
+
+class BookRecommendationsOut(BaseModel):
+    """Return recommendations produced by the model or genre fallback."""
+
+    books: List[BookRecommendationOut]
+    model_version: Optional[str] = None
+    source: Literal["model", "genre_fallback"]
