@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, Eye, Pencil, Trash2, UserRound } from 'lucide-react';
+import { BookOpen, Eye, Pencil, Trash2, UserRound, UsersRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,12 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                             {tag}
                         </Badge>
                     ))}
+                    {isReadOnly && Number.isInteger(book.active_reader_count) && (
+                        <Badge variant="outline">
+                            <UsersRound />
+                            {book.active_reader_count} reading
+                        </Badge>
+                    )}
                 </div>
             </CardHeader>
 

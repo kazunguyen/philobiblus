@@ -127,6 +127,29 @@ class BookOwnerOut(BookOut):
     share_token: Optional[str] = None
 
 
+class BookReadingProgressUpdate(BaseModel):
+    status: Optional[BookStatus] = None
+    pages_read: Optional[int] = Field(None, ge=-1)
+    chapters_read: Optional[float] = Field(None, ge=-1)
+    volume: Optional[int] = Field(None, ge=-1)
+
+
+class BookReadingProgressOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    book_id: int
+    user_id: int
+    status: BookStatus
+    pages_read: int
+    chapters_read: float
+    volume: int
+    date_started: date
+    date_finished: Optional[date] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
 class BookStatsOut(BaseModel):
     total_books: int
     want_to_read: int
@@ -141,6 +164,8 @@ class BookStatsOut(BaseModel):
 
 class BookPublicOut(BookOut):
     owner: UserPublicOut
+    active_reader_count: int = Field(0, ge=0)
+    my_reading_progress: Optional[BookReadingProgressOut] = None
 
 
 # --- Review Schemas ---

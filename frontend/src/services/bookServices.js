@@ -107,6 +107,25 @@ export const bookService = {
     return fetchWithAuth(`${BOOKS_URL}/shared/${encodeURIComponent(shareToken)}`);
   },
 
+  async startReadingPublicBook(bookId, shareToken = null) {
+    const query = shareToken
+      ? `?share_token=${encodeURIComponent(shareToken)}`
+      : '';
+    return fetchWithAuth(`${BOOKS_URL}/public/${encodeURIComponent(bookId)}/reading-progress${query}`, {
+      method: 'POST',
+    });
+  },
+
+  async updatePublicBookProgress(bookId, progressData, shareToken = null) {
+    const query = shareToken
+      ? `?share_token=${encodeURIComponent(shareToken)}`
+      : '';
+    return fetchWithAuth(`${BOOKS_URL}/public/${encodeURIComponent(bookId)}/reading-progress${query}`, {
+      method: 'PUT',
+      body: JSON.stringify(progressData),
+    });
+  },
+
   async getReadingHistory(bookId) {
     return fetchWithAuth(`${BOOKS_URL}/${bookId}/reading-history`);
   },

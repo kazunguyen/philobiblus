@@ -63,6 +63,11 @@ class User(Base):
         back_populates="reviewer",
         cascade="all, delete-orphan",
     )
+    book_progress = relationship(
+        "BookReadingProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
     followers = relationship(
         "Follow",
         foreign_keys="Follow.following_id",
@@ -175,6 +180,60 @@ class Book(Base):
         back_populates="book",
         cascade="all, delete-orphan",
     )
+
+    reader_progress = relationship(
+        "BookReadingProgress",
+        back_populates="book",
+        cascade="all, delete-orphan",
+    )
+
+
+class BookReadingProgress(Base):
+    """Store one reader's current progress on another user's book."""
+
+    __tablename__ = "book_reading_progress"
+    __table_args__ = (
+        UniqueConstraint(
+            "book_id",
+            "user_id",
+            name="unique_book_reader_progress",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    book_id = Column(
+        Integer,
+        ForeignKey("books.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    status = Column(
+        Enum(
+            BookStatus,
+            name="book_reader_status_enum",
+            native_enum=False,
+            values_callable=lambda values: [member.value for member in values],
+        ),
+        default=BookStatus.READING,
+        server_default="reading",
+        nullable=False,
+    )
+    pages_read = Column(Integer, default=-1, server_default="-1", nullable=False)
+    chapters_read = Column(Float, default=-1.0, server_default="-1", nullable=False)
+    volume = Column(Integer, default=-1, server_default="-1", nullable=False)
+    date_started = Column(Date, nullable=False, server_default=func.current_date())
+    date_finished = Column(Date, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    book = relationship("Book", back_populates="reader_progress")
+    user = relationship("User", back_populates="book_progress")
 
 class ReadingHistory(Base):
     __tablename__ = "reading_history"

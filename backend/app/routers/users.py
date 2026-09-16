@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Book, BookVisibility, User
-from app.schemas import BookOut, UserPublicOut
+from app.models import Book, BookReadingProgress, BookStatus, BookVisibility, User
+from app.schemas import BookPublicOut, UserPublicOut
 
 
 router = APIRouter(
@@ -28,8 +29,26 @@ def get_user_profile(username: str, db: Session = Depends(get_db)):
         .order_by(Book.created_at.desc())
         .all()
     )
+    book_ids = [book.id for book in books]
+    reader_counts = {}
+    if book_ids:
+        reader_counts = dict(
+            db.query(
+                BookReadingProgress.book_id,
+                func.count(BookReadingProgress.id),
+            )
+            .filter(
+                BookReadingProgress.book_id.in_(book_ids),
+                BookReadingProgress.status == BookStatus.READING,
+            )
+            .group_by(BookReadingProgress.book_id)
+            .all()
+        )
+    for book in books:
+        owner_is_reading = book.status == BookStatus.READING or book.status == "reading"
+        book.active_reader_count = reader_counts.get(book.id, 0) + int(owner_is_reading)
 
     return {
         "user": UserPublicOut.model_validate(user),
-        "books": [BookOut.model_validate(book) for book in books],
+        "books": [BookPublicOut.model_validate(book) for book in books],
     }

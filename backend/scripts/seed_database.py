@@ -62,6 +62,7 @@ def apply_schema_updates(db: Session) -> None:
         "add_book_visibility.sql",
         "add_reading_history.sql",
         "add_reading_progress_fields.sql",
+        "add_book_reading_progress.sql",
         "add_user_settings.sql",
     ):
         migration_path = Path(__file__).with_name(migration_name)

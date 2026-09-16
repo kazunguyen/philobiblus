@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, Play, Save, Sparkles, UsersRound } from 'lucide-react';
 import BookCard from '../components/books/BookCard';
 import { bookService } from '../services/bookServices';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { getBookStatusLabel } from '@/lib/bookStatus';
 import { getPublicationStatusLabel } from '@/lib/publicationStatus';
@@ -13,12 +16,24 @@ import { getPublicationStatusLabel } from '@/lib/publicationStatus';
 const ReadOnlyBookDetail = () => {
   const { id, shareToken } = useParams();
   const navigate = useNavigate();
+  const { currentUser, isAuthenticated } = useAuth();
   const [book, setBook] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationSource, setRecommendationSource] = useState(null);
   const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
   const [hasRecommendationError, setHasRecommendationError] = useState(false);
   const [error, setError] = useState(null);
+  const [progressDraft, setProgressDraft] = useState(null);
+  const [progressError, setProgressError] = useState(null);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isSavingProgress, setIsSavingProgress] = useState(false);
+
+  const toProgressDraft = (progressData) => ({
+    status: progressData.status,
+    pages_read: progressData.pages_read >= 0 ? String(progressData.pages_read) : '',
+    chapters_read: progressData.chapters_read >= 0 ? String(progressData.chapters_read) : '',
+    volume: progressData.volume >= 0 ? String(progressData.volume) : '',
+  });
 
   useEffect(() => {
     const loadBook = async () => {
@@ -28,6 +43,11 @@ const ReadOnlyBookDetail = () => {
           ? await bookService.getSharedBook(shareToken)
           : await bookService.getPublicBookById(id);
         setBook(data);
+        setProgressDraft(
+          data.my_reading_progress
+            ? toProgressDraft(data.my_reading_progress)
+            : null,
+        );
       } catch (loadError) {
         setError(loadError.message);
       }
@@ -35,6 +55,67 @@ const ReadOnlyBookDetail = () => {
 
     loadBook();
   }, [id, shareToken]);
+
+  const handleStartReading = async () => {
+    setIsStarting(true);
+    setProgressError(null);
+    try {
+      const progressData = await bookService.startReadingPublicBook(
+        book.id,
+        shareToken,
+      );
+      setProgressDraft(toProgressDraft(progressData));
+      setBook((previous) => ({
+        ...previous,
+        my_reading_progress: progressData,
+        active_reader_count: previous.active_reader_count + 1,
+      }));
+    } catch (startError) {
+      setProgressError(startError.message);
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleProgressChange = (event) => {
+    const { name, value } = event.target;
+    setProgressDraft((previous) => ({ ...previous, [name]: value }));
+  };
+
+  const handleProgressSubmit = async (event) => {
+    event.preventDefault();
+    setIsSavingProgress(true);
+    setProgressError(null);
+    const payload = {
+      status: progressDraft.status,
+      pages_read: progressDraft.pages_read === '' ? -1 : Number(progressDraft.pages_read),
+      chapters_read: progressDraft.chapters_read === '' ? -1 : Number(progressDraft.chapters_read),
+      volume: progressDraft.volume === '' ? -1 : Number(progressDraft.volume),
+    };
+
+    try {
+      const wasReading = book.my_reading_progress?.status === 'reading';
+      const progressData = await bookService.updatePublicBookProgress(
+        book.id,
+        payload,
+        shareToken,
+      );
+      const isReading = progressData.status === 'reading';
+      setProgressDraft(toProgressDraft(progressData));
+      setBook((previous) => ({
+        ...previous,
+        my_reading_progress: progressData,
+        active_reader_count: Math.max(
+          0,
+          previous.active_reader_count + Number(isReading) - Number(wasReading),
+        ),
+      }));
+    } catch (saveError) {
+      setProgressError(saveError.message);
+    } finally {
+      setIsSavingProgress(false);
+    }
+  };
 
   useEffect(() => {
     if (!id || shareToken) {
@@ -161,6 +242,13 @@ const ReadOnlyBookDetail = () => {
                 {book.rating ? `${'★'.repeat(book.rating)}${'☆'.repeat(5 - book.rating)}` : 'Not rated'}
               </p>
             </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Currently reading</p>
+              <p className="flex items-center gap-1.5 font-medium">
+                <UsersRound className="size-4" />
+                {book.active_reader_count} {book.active_reader_count === 1 ? 'person' : 'people'}
+              </p>
+            </div>
             {hasVolume && (
               <div>
                 <p className="text-sm text-muted-foreground">Volume</p>
@@ -202,6 +290,103 @@ const ReadOnlyBookDetail = () => {
           )}
         </CardContent>
       </Card>
+
+      {currentUser?.id !== book.user_id && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Your reading progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {progressError && (
+              <p className="mb-4 text-sm text-destructive" role="alert">
+                {progressError}
+              </p>
+            )}
+
+            {!isAuthenticated ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                  Sign in to start reading and track your own progress.
+                </p>
+                <Button onClick={() => navigate('/login')}>
+                  Sign in to start reading
+                </Button>
+              </div>
+            ) : !progressDraft ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                  This creates progress for your account without changing the owner's data.
+                </p>
+                <Button onClick={handleStartReading} disabled={isStarting}>
+                  <Play />
+                  {isStarting ? 'Starting...' : 'Start reading'}
+                </Button>
+              </div>
+            ) : (
+              <form className="space-y-4" onSubmit={handleProgressSubmit}>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reader-status">Status</Label>
+                    <select
+                      id="reader-status"
+                      name="status"
+                      value={progressDraft.status}
+                      onChange={handleProgressChange}
+                      className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
+                    >
+                      <option value="reading">Reading</option>
+                      <option value="completed">Completed</option>
+                      <option value="dropped">Dropped</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reader-pages">Pages read</Label>
+                    <Input
+                      id="reader-pages"
+                      name="pages_read"
+                      type="number"
+                      min="0"
+                      max={book.pages_total >= 0 ? book.pages_total : undefined}
+                      value={progressDraft.pages_read}
+                      onChange={handleProgressChange}
+                      placeholder="Not set"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reader-chapters">Chapters read</Label>
+                    <Input
+                      id="reader-chapters"
+                      name="chapters_read"
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      value={progressDraft.chapters_read}
+                      onChange={handleProgressChange}
+                      placeholder="Not set"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reader-volume">Volume</Label>
+                    <Input
+                      id="reader-volume"
+                      name="volume"
+                      type="number"
+                      min="0"
+                      value={progressDraft.volume}
+                      onChange={handleProgressChange}
+                      placeholder="Not set"
+                    />
+                  </div>
+                </div>
+                <Button type="submit" disabled={isSavingProgress}>
+                  <Save />
+                  {isSavingProgress ? 'Saving...' : 'Save my progress'}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {!shareToken && (
         <section
