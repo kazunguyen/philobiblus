@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
+import BookCard from '../components/books/BookCard';
 import { bookService } from '../services/bookServices';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,10 @@ const ReadOnlyBookDetail = () => {
   const { id, shareToken } = useParams();
   const navigate = useNavigate();
   const [book, setBook] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendationSource, setRecommendationSource] = useState(null);
+  const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
+  const [hasRecommendationError, setHasRecommendationError] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -29,6 +34,48 @@ const ReadOnlyBookDetail = () => {
     };
 
     loadBook();
+  }, [id, shareToken]);
+
+  useEffect(() => {
+    if (!id || shareToken) {
+      setRecommendations([]);
+      setRecommendationSource(null);
+      return undefined;
+    }
+
+    let isCurrent = true;
+
+    const loadRecommendations = async () => {
+      setIsRecommendationsLoading(true);
+      setHasRecommendationError(false);
+
+      try {
+        const data = await bookService.getPublicBookRecommendations(id);
+
+        if (!isCurrent) {
+          return;
+        }
+
+        setRecommendations(Array.isArray(data.books) ? data.books : []);
+        setRecommendationSource(data.source);
+      } catch {
+        if (isCurrent) {
+          setRecommendations([]);
+          setRecommendationSource(null);
+          setHasRecommendationError(true);
+        }
+      } finally {
+        if (isCurrent) {
+          setIsRecommendationsLoading(false);
+        }
+      }
+    };
+
+    loadRecommendations();
+
+    return () => {
+      isCurrent = false;
+    };
   }, [id, shareToken]);
 
   if (error) {
@@ -121,10 +168,10 @@ const ReadOnlyBookDetail = () => {
               </div>
             )}
             {hasChaptersRead && (
-            <div>
-              <p className="text-sm text-muted-foreground">Chapters read</p>
-              <p className="font-medium">{book.chapters_read}</p>
-            </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Chapters read</p>
+                <p className="font-medium">{book.chapters_read}</p>
+              </div>
             )}
             {book.date_started && (
               <div>
@@ -155,6 +202,59 @@ const ReadOnlyBookDetail = () => {
           )}
         </CardContent>
       </Card>
+
+      {!shareToken && (
+        <section
+          className="mt-8 rounded-xl border bg-card p-5"
+          aria-labelledby="recommendations-heading"
+        >
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-4 text-amber-500" />
+                <h2 id="recommendations-heading" className="font-semibold">
+                  Recommended for this book
+                </h2>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {recommendationSource === "model"
+                  ? "Matched from title, author, genre, and tags."
+                  : "More public books from the same genre."}
+              </p>
+            </div>
+
+            {recommendationSource && (
+              <Badge variant="outline">
+                {recommendationSource === "model"
+                  ? "Content matched"
+                  : "Genre fallback"}
+              </Badge>
+            )}
+          </div>
+
+          {isRecommendationsLoading ? (
+            <p className="text-sm text-muted-foreground">
+              Finding related books...
+            </p>
+          ) : hasRecommendationError ? (
+            <p className="text-sm text-muted-foreground">
+              Recommendations are unavailable right now.
+            </p>
+          ) : recommendations.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No public recommendations are available yet.
+            </p>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {recommendations.map((recommendedBook) => (
+                <div key={recommendedBook.id} className="shrink-0">
+                  <BookCard book={recommendedBook} isReadOnly />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 };

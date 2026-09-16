@@ -94,6 +94,15 @@ export const bookService = {
     return fetchWithAuth(`${BOOKS_URL}/public/${id}`);
   },
 
+  async getPublicBookRecommendations(id, limit = 5) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 5, 1), 5);
+    const bookId = encodeURIComponent(id);
+
+    return fetchWithAuth(
+      `${BOOKS_URL}/public/${bookId}/recommendations?limit=${safeLimit}`,
+    );
+  },
+
   async getSharedBook(shareToken) {
     return fetchWithAuth(`${BOOKS_URL}/shared/${encodeURIComponent(shareToken)}`);
   },
