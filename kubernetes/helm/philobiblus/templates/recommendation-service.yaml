@@ -1,0 +1,18 @@
+{{- if .Values.recommendation.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "philobiblus.fullname" . }}-recommendation
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: recommendation
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "philobiblus.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: recommendation
+  ports:
+    - name: http
+      port: {{ .Values.recommendation.service.port }}
+      targetPort: http
+{{- end }}

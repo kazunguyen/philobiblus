@@ -72,6 +72,12 @@ spec:
               value: {{ .Values.backend.accessTokenExpireMinutes | quote }}
             - name: ALLOWED_ORIGINS
               value: {{ required "backend.allowedOrigins is required" .Values.backend.allowedOrigins | quote }}
+            {{ if .Values.recommendation.enabled }}
+            - name: RECOMMENDATION_SERVICE_URL
+              value: "http://{{ include "philobiblus.fullname" . }}-recommendation:{{ .Values.recommendation.service.port }}"
+            - name: RECOMMENDATION_TIMEOUT_SECONDS
+              value: {{ .Values.recommendation.timeoutSeconds | quote }}
+            {{ end }}
           readinessProbe:
             httpGet:
               path: /health

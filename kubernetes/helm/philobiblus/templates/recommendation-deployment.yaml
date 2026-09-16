@@ -1,0 +1,57 @@
+{{- if .Values.recommendation.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "philobiblus.fullname" . }}-recommendation
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: recommendation
+spec:
+  replicas: {{ .Values.recommendation.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "philobiblus.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: recommendation
+  template:
+    metadata:
+      labels:
+        {{- include "philobiblus.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: recommendation
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: recommendation
+          image: "{{ .Values.recommendation.image.repository }}:{{ .Values.recommendation.image.tag }}"
+          imagePullPolicy: {{ .Values.recommendation.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.recommendation.service.port }}
+          env:
+            - name: MODEL_PATH
+              value: {{ .Values.recommendation.modelPath | quote }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: {{ .Values.recommendation.probe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.recommendation.probe.periodSeconds }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: {{ add .Values.recommendation.probe.initialDelaySeconds 10 }}
+            periodSeconds: {{ .Values.recommendation.probe.periodSeconds }}
+          resources:
+            {{- toYaml .Values.recommendation.resources | nindent 12 }}
+{{- end }}
