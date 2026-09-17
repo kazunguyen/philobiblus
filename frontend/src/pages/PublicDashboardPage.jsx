@@ -8,7 +8,6 @@ import { Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useSettings } from '../context/SettingsContext';
 
 const PublicDashboardPage = () => {
@@ -21,7 +20,6 @@ const PublicDashboardPage = () => {
     const { isAuthenticated } = useAuth();
 
     const [recommendations, setRecommendations] = useState([]);
-    const [recommendationSource, setRecommendationSource] = useState(null);
     const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
     const [hasRecommendationError, setHasRecommendationError] = useState(false);
 
@@ -30,7 +28,6 @@ const PublicDashboardPage = () => {
             fetchRecommendations();
         } else {
             setRecommendations([]);
-            setRecommendationSource(null);
         }
     }, [isAuthenticated]);
 
@@ -40,10 +37,11 @@ const PublicDashboardPage = () => {
             setHasRecommendationError(false);
             const data = await bookService.getRecommendationsForMe(5);
             setRecommendations(Array.isArray(data.books) ? data.books : []);
-            setRecommendationSource(data.source);
+            if (import.meta.env.DEV && data.source) {
+                console.debug('[PublicDashboard] Recommendation source:', data.source);
+            }
         } catch (err) {
             setRecommendations([]);
-            setRecommendationSource(null);
             setHasRecommendationError(true);
         } finally {
             setIsRecommendationsLoading(false);
@@ -94,43 +92,6 @@ const PublicDashboardPage = () => {
                     <BookViewToggle view={bookView} onViewChange={setBookView} />
                 </div>
 
-                {isAuthenticated && (
-                    <Card className="mb-6">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Sparkles className="text-yellow-500" />
-                                For you
-                                {recommendationSource && (
-                                    <Badge variant="outline" className="ml-2 font-normal">
-                                        Source: {recommendationSource}
-                                    </Badge>
-                                )}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {isRecommendationsLoading ? (
-                                <p className="text-muted-foreground">Loading recommendations...</p>
-                            ) : hasRecommendationError ? (
-                                <p className="text-sm text-destructive">Failed to load recommendations.</p>
-                            ) : recommendations.length === 0 ? (
-                                <p className="text-muted-foreground">Start reading to get personalized recommendations.</p>
-                            ) : (
-                                <div className={bookView === 'grid'
-                                    ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                                    : 'space-y-3'}>
-                                    {recommendations.map((book) => (
-                                        bookView === 'grid' ? (
-                                            <BookCard key={book.id} book={book} isReadOnly />
-                                        ) : (
-                                            <BookListItem key={book.id} book={book} isReadOnly />
-                                        )
-                                    ))}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-
                 <Card className="mb-6">
                     <CardHeader>
                         <CardTitle>Find books</CardTitle>
@@ -160,29 +121,69 @@ const PublicDashboardPage = () => {
                     </CardContent>
                 </Card>
 
-                {error && (
-                    <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                        {error}
-                    </div>
-                )}
+                <div className={isAuthenticated ? 'grid gap-6 lg:grid-cols-[minmax(17.5rem,0.8fr)_minmax(0,2.4fr)] lg:items-start' : ''}>
+                    {isAuthenticated && (
+                        <aside className="lg:sticky lg:top-20">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Sparkles className="text-yellow-500" />
+                                        For you
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {isRecommendationsLoading ? (
+                                        <p className="text-muted-foreground">Loading recommendations...</p>
+                                    ) : hasRecommendationError ? (
+                                        <p className="text-sm text-destructive">Failed to load recommendations.</p>
+                                    ) : recommendations.length === 0 ? (
+                                        <p className="text-muted-foreground">Start reading to get personalized recommendations.</p>
+                                    ) : (
+                                        <div className={bookView === 'grid'
+                                            ? 'grid justify-items-center gap-5'
+                                            : 'space-y-3'}>
+                                            {recommendations.map((book) => (
+                                                bookView === 'grid' ? (
+                                                    <BookCard key={book.id} book={book} isReadOnly />
+                                                ) : (
+                                                    <BookListItem key={book.id} book={book} isReadOnly />
+                                                )
+                                            ))}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </aside>
+                    )}
 
-                {isLoading ? (
-                    <p className="text-muted-foreground">Loading public books...</p>
-                ) : books.length === 0 ? (
-                    <p className="text-muted-foreground">No public books found.</p>
-                ) : (
-                    <div className={bookView === 'grid'
-                        ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                        : 'space-y-3'}>
-                        {books.map((book) => (
-                            bookView === 'grid' ? (
-                                <BookCard key={book.id} book={book} isReadOnly />
-                            ) : (
-                                <BookListItem key={book.id} book={book} isReadOnly />
-                            )
-                        ))}
-                    </div>
-                )}
+                    <section className="min-w-0">
+                        <h2 className="mb-4 text-xl font-semibold">Public books</h2>
+
+                        {error && (
+                            <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                                {error}
+                            </div>
+                        )}
+
+                        {isLoading ? (
+                            <p className="text-muted-foreground">Loading public books...</p>
+                        ) : books.length === 0 ? (
+                            <p className="text-muted-foreground">No public books found.</p>
+                        ) : (
+                            <div className={bookView === 'grid'
+                                ? 'grid gap-5 sm:grid-cols-2 xl:grid-cols-3'
+                                : 'space-y-3'}>
+                                {books.map((book) => (
+                                    bookView === 'grid' ? (
+                                        <BookCard key={book.id} book={book} isReadOnly />
+                                    ) : (
+                                        <BookListItem key={book.id} book={book} isReadOnly />
+                                    )
+                                ))}
+                            </div>
+                        )}
+                    </section>
+                </div>
             </main>
         </div>
 
