@@ -27,7 +27,7 @@ from app.schemas import (
     BookStatsOut,
     BookUpdate,
 )
-from app.services.recommendation_client import fetch_recommendations
+from app.services.recommendation_client import fetch_recommendations, fetch_profile_recommendations
 
 router = APIRouter(
     prefix="/api/books",
@@ -412,6 +412,100 @@ def get_book_stats(
         total_pages_read=total_pages_read,
         average_rating=average_rating,
         reading_progress=reading_progress,
+    )
+
+
+@router.get(
+    "/recommendations/for-me",
+    response_model=BookRecommendationsOut,
+    summary="Get personalized recommendations",
+)
+def get_personal_recommendations(
+    limit: int = Query(5, ge=1, le=5),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> BookRecommendationsOut:
+    """Return personalized recommendations based on reading progress."""
+    owned_ids = {
+        row[0]
+        for row in db.query(Book.id).filter(
+            Book.user_id == current_user.id,
+            Book.status == BookStatus.READING,
+        )
+    }
+    followed_ids = {
+        row[0]
+        for row in db.query(BookReadingProgress.book_id).filter(
+            BookReadingProgress.user_id == current_user.id,
+            BookReadingProgress.status == BookStatus.READING,
+        )
+    }
+    source_ids = sorted(owned_ids | followed_ids)
+
+    ranked_items = fetch_profile_recommendations(book_ids=source_ids, limit=limit) if source_ids else []
+
+    candidate_ids = []
+    for item in ranked_items:
+        candidate_ids.append(item.book_id)
+
+    public_books_by_id = {}
+    if candidate_ids:
+        public_books = (
+            db.query(Book)
+            .filter(
+                Book.id.in_(candidate_ids),
+                Book.visibility == BookVisibility.PUBLIC,
+            )
+            .all()
+        )
+        public_books_by_id = {book.id: book for book in public_books}
+
+    model_books = [
+        (public_books_by_id[item.book_id], item.score)
+        for item in ranked_items
+        if item.book_id in public_books_by_id and item.book_id not in source_ids
+    ]
+    
+    if model_books:
+        _enrich_public_books(
+            db,
+            [book for book, _score in model_books[:limit]],
+            current_user,
+        )
+        return BookRecommendationsOut(
+            source="model",
+            model_version=ranked_items[0].model_version,
+            books=[
+                BookRecommendationOut(
+                    **BookPublicOut.model_validate(book).model_dump(),
+                    score=score,
+                )
+                for book, score in model_books[:limit]
+            ],
+        )
+
+    fallback_books = (
+        db.query(Book)
+        .filter(
+            Book.visibility == BookVisibility.PUBLIC,
+            ~Book.id.in_(source_ids) if source_ids else True,
+        )
+        .order_by(Book.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    _enrich_public_books(db, fallback_books, current_user)
+
+    return BookRecommendationsOut(
+        source="catalog_fallback",
+        model_version=None,
+        books=[
+            BookRecommendationOut(
+                **BookPublicOut.model_validate(book).model_dump(),
+                score=None,
+            )
+            for book in fallback_books
+        ],
     )
 
 

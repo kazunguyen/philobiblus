@@ -91,3 +91,35 @@ def _parse_recommendation(item: Any) -> ModelRecommendation | None:
         score=normalized_score,
         model_version=model_version,
     )
+
+def fetch_profile_recommendations(
+    book_ids: list[int],
+    limit: int,
+) -> list[ModelRecommendation]:
+    """Return model profile recommendations, or an empty list when unavailable."""
+    url = f"{RECOMMENDATION_SERVICE_URL}/recommendations/profiles"
+
+    try:
+        response = httpx.post(
+            url,
+            json={"book_ids": book_ids, "limit": limit},
+            timeout=RECOMMENDATION_TIMEOUT_SECONDS,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except (httpx.HTTPError, ValueError) as error:
+        logger.warning("Recommendation service is unavailable for profile: %s", error)
+        return []
+
+    if not isinstance(payload, list):
+        logger.warning("Recommendation service returned an invalid profile payload")
+        return []
+
+    recommendations = [
+        recommendation
+        for item in payload
+        if (
+            recommendation := _parse_recommendation(item)
+        ) is not None
+    ]
+    return recommendations

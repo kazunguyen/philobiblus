@@ -103,6 +103,13 @@ export const bookService = {
     );
   },
 
+  async getRecommendationsForMe(limit = 5) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 5, 1), 5);
+    return fetchWithAuth(
+      `${BOOKS_URL}/recommendations/for-me?limit=${safeLimit}`,
+    );
+  },
+
   async getSharedBook(shareToken) {
     return fetchWithAuth(`${BOOKS_URL}/shared/${encodeURIComponent(shareToken)}`);
   },

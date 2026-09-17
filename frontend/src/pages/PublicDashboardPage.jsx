@@ -3,10 +3,12 @@ import BookCard from '../components/books/BookCard';
 import BookListItem from '../components/books/BookListItem';
 import BookViewToggle from '../components/books/BookViewToggle';
 import { bookService } from '../services/bookServices';
-import { Search } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useSettings } from '../context/SettingsContext';
 
 const PublicDashboardPage = () => {
@@ -16,6 +18,37 @@ const PublicDashboardPage = () => {
     const [error, setError] = useState(null);
     const { defaultBookView } = useSettings();
     const [bookView, setBookView] = useState(defaultBookView);
+    const { isAuthenticated } = useAuth();
+
+    const [recommendations, setRecommendations] = useState([]);
+    const [recommendationSource, setRecommendationSource] = useState(null);
+    const [isRecommendationsLoading, setIsRecommendationsLoading] = useState(false);
+    const [hasRecommendationError, setHasRecommendationError] = useState(false);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchRecommendations();
+        } else {
+            setRecommendations([]);
+            setRecommendationSource(null);
+        }
+    }, [isAuthenticated]);
+
+    const fetchRecommendations = async () => {
+        try {
+            setIsRecommendationsLoading(true);
+            setHasRecommendationError(false);
+            const data = await bookService.getRecommendationsForMe(5);
+            setRecommendations(Array.isArray(data.books) ? data.books : []);
+            setRecommendationSource(data.source);
+        } catch (err) {
+            setRecommendations([]);
+            setRecommendationSource(null);
+            setHasRecommendationError(true);
+        } finally {
+            setIsRecommendationsLoading(false);
+        }
+    };
 
     useEffect(() => {
         setBookView(defaultBookView);
@@ -60,6 +93,43 @@ const PublicDashboardPage = () => {
                     </div>
                     <BookViewToggle view={bookView} onViewChange={setBookView} />
                 </div>
+
+                {isAuthenticated && (
+                    <Card className="mb-6">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Sparkles className="text-yellow-500" />
+                                For you
+                                {recommendationSource && (
+                                    <Badge variant="outline" className="ml-2 font-normal">
+                                        Source: {recommendationSource}
+                                    </Badge>
+                                )}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {isRecommendationsLoading ? (
+                                <p className="text-muted-foreground">Loading recommendations...</p>
+                            ) : hasRecommendationError ? (
+                                <p className="text-sm text-destructive">Failed to load recommendations.</p>
+                            ) : recommendations.length === 0 ? (
+                                <p className="text-muted-foreground">Start reading to get personalized recommendations.</p>
+                            ) : (
+                                <div className={bookView === 'grid'
+                                    ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                    : 'space-y-3'}>
+                                    {recommendations.map((book) => (
+                                        bookView === 'grid' ? (
+                                            <BookCard key={book.id} book={book} isReadOnly />
+                                        ) : (
+                                            <BookListItem key={book.id} book={book} isReadOnly />
+                                        )
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card className="mb-6">
                     <CardHeader>
