@@ -25,12 +25,12 @@ frontend:
       cpu: 500m
       memory: 512Mi
   apiUrl: /api
-  grafanaUrl: http://127.0.0.1:3000
-  prometheusUrl: http://127.0.0.1:9090
   devHost: 0.0.0.0
   devPort: 5173
   service:
     port: 5173
+  grafanaUrl: http://127.0.0.1:3000
+  prometheusUrl: http://127.0.0.1:9090
 
 postgres:
   service:
@@ -38,3 +38,9 @@ postgres:
 
 ingress:
   host: localhost
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
