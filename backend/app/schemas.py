@@ -239,7 +239,7 @@ class BookRecommendationsOut(BaseModel):
 
     books: List[BookRecommendationOut]
     model_version: Optional[str] = None
-    source: Literal["model", "genre_fallback"]
+    source: Literal["model", "genre_fallback", "catalog_fallback"]
 
 # --- Admin Schemas ---
 
