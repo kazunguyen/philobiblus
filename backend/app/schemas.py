@@ -26,6 +26,7 @@ class UserOut(UserBase):
 
     id: int
     is_active: bool
+    is_admin: bool = False
     created_at: Optional[datetime] = None
 
 
@@ -118,7 +119,7 @@ class BookOut(BookBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    user_id: int
+    user_id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -163,7 +164,7 @@ class BookStatsOut(BaseModel):
 
 
 class BookPublicOut(BookOut):
-    owner: UserPublicOut
+    owner: Optional[UserPublicOut] = None
     active_reader_count: int = Field(0, ge=0)
     my_reading_progress: Optional[BookReadingProgressOut] = None
 
@@ -239,3 +240,47 @@ class BookRecommendationsOut(BaseModel):
     books: List[BookRecommendationOut]
     model_version: Optional[str] = None
     source: Literal["model", "genre_fallback"]
+
+# --- Admin Schemas ---
+
+class AdminUserOut(UserOut):
+    updated_at: Optional[datetime] = None
+    book_count: int = Field(0, ge=0)
+
+
+class AdminBookOut(BookOwnerOut):
+    owner: Optional[UserPublicOut] = None
+    active_reader_count: int = Field(0, ge=0)
+
+
+class AdminUserDetailOut(BaseModel):
+    user: AdminUserOut
+    books: List[AdminBookOut]
+
+
+class AdminBookDetailOut(BaseModel):
+    book: AdminBookOut
+    reviews: List[ReviewOut]
+    reading_history: List[ReadingHistoryOut]
+
+
+class AdminPasswordReset(BaseModel):
+    password: str = Field(..., min_length=6, max_length=100)
+
+
+class AdminUserStatusUpdate(BaseModel):
+    is_active: bool
+
+
+class AdminUserDeletionOut(BaseModel):
+    deleted_username: str
+    retained_book_count: int = Field(0, ge=0)
+
+
+class AdminOverviewOut(BaseModel):
+    total_users: int = Field(0, ge=0)
+    active_users: int = Field(0, ge=0)
+    total_books: int = Field(0, ge=0)
+    public_books: int = Field(0, ge=0)
+    restricted_books: int = Field(0, ge=0)
+    private_books: int = Field(0, ge=0)

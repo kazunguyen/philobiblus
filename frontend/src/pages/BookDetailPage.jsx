@@ -18,7 +18,9 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '../context/AuthContext';
+import { useViewMode } from '../context/ViewModeContext';
 import { reviewService } from '../services/reviewServices';
+import { adminService } from '../services/adminServices';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -34,6 +36,8 @@ const BookDetailPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const { isAuthenticated, currentUser } = useAuth();
+    const { viewMode } = useViewMode();
+    const isAdminView = Boolean(currentUser?.is_admin && viewMode === 'admin');
     const [deletingReviewId, setDeletingReviewId] = useState(null);
 
     const [reviews, setReviews] = useState([]);
@@ -58,15 +62,22 @@ const BookDetailPage = () => {
                 setError(null);
                 setReviewError(null);
 
-                const [bookData, reviewData, historyData] = await Promise.all([
-                    bookService.getBookById(id),
-                    reviewService.getReviews(id),
-                    bookService.getReadingHistory(id),
-                ]);
+                if (isAdminView) {
+                    const adminDetail = await adminService.getBookDetail(id);
+                    setBook(adminDetail.book);
+                    setReviews(adminDetail.reviews);
+                    setReadingHistory(adminDetail.reading_history);
+                } else {
+                    const [bookData, reviewData, historyData] = await Promise.all([
+                        bookService.getBookById(id),
+                        reviewService.getReviews(id),
+                        bookService.getReadingHistory(id),
+                    ]);
 
-                setBook(bookData);
-                setReviews(reviewData);
-                setReadingHistory(historyData);
+                    setBook(bookData);
+                    setReviews(reviewData);
+                    setReadingHistory(historyData);
+                }
             } catch (loadError) {
                 setError(loadError.message);
             } finally {
@@ -77,7 +88,7 @@ const BookDetailPage = () => {
         };
 
         loadBookPage();
-    }, [id]);
+    }, [id, isAdminView]);
 
     const handleDelete = async () => {
         if (!window.confirm('Are you sure you want to delete this book?')) {
@@ -253,7 +264,7 @@ const BookDetailPage = () => {
                 <Button
                     variant="ghost"
                     className="mb-4"
-                    onClick={() => navigate('/books')}
+                    onClick={() => navigate(isAdminView ? '/admin/books' : '/books')}
                 >
                     <ArrowLeft />
                     Back to library
@@ -271,7 +282,7 @@ const BookDetailPage = () => {
                                 </p>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className={isAdminView ? 'hidden' : 'flex gap-2'}>
                                 <Button
                                     variant="outline"
                                     onClick={() =>
@@ -389,7 +400,7 @@ const BookDetailPage = () => {
                         <section className="space-y-4 rounded-lg border bg-background p-4">
                             <div className="flex items-center justify-between gap-3">
                                 <h2 className="font-medium">Reading history</h2>
-                                {readingHistory.length > 0 && (
+                                {!isAdminView && readingHistory.length > 0 && (
                                     <Button
                                         variant="destructive"
                                         size="sm"
@@ -453,7 +464,7 @@ const BookDetailPage = () => {
                                                         </Badge>
                                                     )}
 
-                                                    {!entry.isStartEntry && (
+                                                    {!isAdminView && !entry.isStartEntry && (
                                                         <Button
                                                             type="button"
                                                             variant="ghost"
@@ -513,7 +524,7 @@ const BookDetailPage = () => {
                         <h2 className="text-xl font-semibold">Reviews</h2>
                     </div>
 
-                    {isAuthenticated && (
+                    {isAuthenticated && !isAdminView && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-base">
@@ -587,7 +598,7 @@ const BookDetailPage = () => {
                                                     {'⭐'.repeat(review.rating)}
                                                 </Badge>
 
-                                                {currentUser?.username === review.reviewer?.username && (
+                                                {!isAdminView && currentUser?.username === review.reviewer?.username && (
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"

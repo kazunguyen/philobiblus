@@ -37,6 +37,8 @@ jobs:
       - name: Build frontend
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_GRAFANA_URL: ${{ vars.VITE_GRAFANA_URL }}
+          VITE_PROMETHEUS_URL: ${{ vars.VITE_PROMETHEUS_URL }}
           VITE_DEV_HOST: 0.0.0.0
           VITE_DEV_PORT: 5173
         run: npm run build

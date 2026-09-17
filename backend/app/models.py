@@ -46,6 +46,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False, server_default="false", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -57,7 +58,10 @@ class User(Base):
     )
 
     # One-to-many relationship with books table
-    books = relationship("Book", back_populates="owner", cascade="all, delete-orphan")
+    # Books are explicitly handled when an account is removed. A book currently
+    # being read by somebody else is retained without an owner, so this
+    # relationship must not implicitly delete every book with its owner.
+    books = relationship("Book", back_populates="owner", cascade="save-update, merge")
     reviews = relationship(
         "Review",
         back_populates="reviewer",
@@ -111,7 +115,7 @@ class Book(Base):
     __tablename__ = "books"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     
     title = Column(String(255), nullable=False, index=True)
     author = Column(String(255), nullable=False, index=True)

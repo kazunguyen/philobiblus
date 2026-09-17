@@ -64,6 +64,7 @@ def apply_schema_updates(db: Session) -> None:
         "add_reading_progress_fields.sql",
         "add_book_reading_progress.sql",
         "add_user_settings.sql",
+        "add_admin_resources.sql",
     ):
         migration_path = Path(__file__).with_name(migration_name)
         db.connection().exec_driver_sql(migration_path.read_text(encoding="utf-8"))
@@ -202,6 +203,7 @@ def get_or_create_user(db: Session, username: str, email: str) -> User:
         email=email,
         hashed_password=get_password_hash(DEFAULT_PASSWORD),
         is_active=True,
+        is_admin=username == "admin",
     )
     db.add(user)
     db.flush()

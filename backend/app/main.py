@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.database import Base, engine
-from app.routers import auth, books, reviews, social, users, reading_history, settings, uploads
+from app.routers import admin, auth, books, reviews, social, users, reading_history, settings, uploads
 
 
 @asynccontextmanager
@@ -55,6 +55,7 @@ Instrumentator(
 
 # Include API routers
 app.include_router(auth.router)
+app.include_router(admin.router)
 app.include_router(books.router)
 app.include_router(users.router)
 app.include_router(reviews.router)
