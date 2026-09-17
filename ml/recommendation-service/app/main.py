@@ -23,6 +23,10 @@ REQUESTS_TOTAL = Counter(
 )
 
 
+class UserProfileRecommendationIn(BaseModel):
+    book_ids: list[int] = Field(min_length=1, max_length=100)
+    limit: int = Field(default=5, ge=1, le=5)
+
 class RecommendationOut(BaseModel):
     """Return one model-ranked book without private catalog metadata."""
 
@@ -84,7 +88,18 @@ def create_app(model_path: Path) -> FastAPI:
             for item in recommendations
         ]
 
+    @app.post(
+        "/recommendations/profiles",
+        response_model=list[RecommendationOut],
+    )
+    def get_profile_recommendations(
+        request: UserProfileRecommendationIn,
+    ) -> list[RecommendationOut]:
+        items = engine.recommend_for_books(request.book_ids, request.limit)
+        return [RecommendationOut(**item.__dict__) for item in items]
+
     return app
+
 
 
 model_path = Path(
