@@ -1,0 +1,134 @@
+Tuần 9:
+
+[START]
+Em chào thầy ạ,
+
+Em là Nguyễn Quang Dũng, mã số sinh viên: 23021497, thuộc lớp chính khóa K68I-CS3.
+
+Em xin phép được báo cáo tiến độ thực tập của em tính đến tuần thứ 9 ạ.
+
+Tuần này em tiếp tục phát triển dự án Philobiblus từ những gì đã làm được ở tuần 8, tập trung vào hai mảng chính: tiếp tục xây dựng giao diện frontend và backend cho các chức năng mới và cải tiến CI/CD.
+
+Về mặt CI/CD, em đã thiết lập và cải tiến hai workflow GitHub Actions. Workflow thứ nhất là pipeline kiểm tra tự động, mỗi khi có push hoặc pull request lên nhánh, pipeline sẽ khởi động container PostgreSQL, cài đặt các thư viện Python, rồi chạy toàn bộ 14 test case trong thư mục backend/tests bằng pytest. Mục đích của workflow này là đảm bảo rằng mỗi thay đổi code được push lên đều không làm hỏng các chức năng đang hoạt động trước đó.  Workflow thứ hai là workflow mirror, có nhiệm vụ tự động đồng bộ code từ branch philobiblus trong repo em sử dụng khi thực tập sang branch main của repo dự án Philobiblus riêng, giúp em có thể đồng thời push code lên cả repo dùng để thực tập và repo riêng của dự án, là  kazunguyen/philobiblus ạ.
+
+Về phần frontend, em tiếp tục xây dựng hệ thống với chức năng thêm, sửa và xóa sách. Các chức năng này đều đảm bảo tính xác thực và toàn vẹn cho hệ thống bằng cách kiểm tra JWT Token để xác thực người dùng hợp lệ. Và các thông tin được người dùng điền vào khi thêm hoặc sửa sách đều được kiểm tra định dạng hợp lệ từ frontend đến backend, rồi mới được add vào database. 
+
+So với thiết kế database ban đầu, em đã mở rộng thêm hai trường dữ liệu vào schema sách: trường volume lưu số tập đang đọc đến và trường cover_url lưu đường dẫn ảnh bìa sách. Thay đổi này giúp người dùng có thể dễ dàng theo dõi hơn các bộ sách có nhiều tập, và việc thêm ảnh bìa làm tăng tính thẩm mỹ và khả năng tiếp cận của bộ sách đến với những người dùng khác.
+
+Trong tuần tới, em dự kiến sẽ tiếp tục phát triển thêm các tính năng mới cho ứng dụng như trang dashboard cho phép người dùng xem tổng quan các sách đang có trên hệ thống, tính năng chia sẻ sách, đánh giá, bình luận, xem trang cá nhân của người dùng khác và kết bạn. Đồng thời em cũng sẽ bắt đầu thử nghiệm triển khai ứng dụng lên cụm Kubernetes local ạ.
+
+Em cảm ơn thầy đã đọc bản báo cáo của em ạ.
+
+Trân trọng, 
+Nguyễn Quang Dũng
+[END]
+
+================
+
+Tuần 10
+
+[START]
+Em chào thầy ạ,
+
+Em là Nguyễn Quang Dũng, mã số sinh viên: 23021497, thuộc lớp chính khóa K68I-CS3.
+
+Em xin phép được báo cáo tiến độ thực tập của em tính đến tuần thứ 10 ạ.
+
+Tuần này em tiếp tục phát triển dự án Philobiblus từ những gì đã làm được ở tuần 9, tập trung vào việc mở rộng các chức năng tương tác giữa người dùng, hoàn thiện trải nghiệm giao diện ở các màn hình chính và triển khai ứng dụng lên cụm Kubernetes local.
+
+Về các chức năng mới, em đã xây dựng trang dashboard công khai cho phép người dùng xem danh sách sách trên hệ thống, tìm kiếm theo tên hoặc tác giả và lọc theo thể loại. Em cũng bổ sung trang hồ sơ công khai để xem thông tin cơ bản cùng danh sách sách của từng người dùng mà không làm lộ các thông tin riêng tư như email hoặc mật khẩu đã mã hóa. Các chức năng quản lý sách riêng vẫn được bảo vệ bằng JWT Token để đảm bảo mỗi người dùng chỉ có thể thao tác với dữ liệu thuộc về mình.
+
+image.png
+
+Em tiếp tục bổ sung tính năng đánh giá và bình luận sách. Phần backend có thêm bảng reviews cùng các API tạo, xem và xóa đánh giá. Phần frontend hiển thị danh sách review và form gửi đánh giá trong trang chi tiết sách. Khi người dùng đăng nhập, hệ thống chỉ hiển thị nút xóa đối với review do chính người dùng đó tạo; đồng thời backend tiếp tục kiểm tra quyền sở hữu trước khi thực hiện thao tác xóa để tránh việc xóa dữ liệu của người dùng khác.
+
+image.png
+
+Song song với việc phát triển chức năng, em hoàn thiện việc thống nhất giao diện tại các màn hình chính để các luồng đăng nhập, quản lý sách, xem chi tiết sách và các tính năng mới có cách hiển thị nhất quán hơn. Em áp dụng Tailwind CSS và shadcn/ui cho các component giao diện dùng chung, đồng thời kiểm tra lại toàn bộ frontend bằng lệnh npm run build. Kết quả build thành công với 2075 modules được xử lý.
+
+Về phần triển khai, em đã viết Kubernetes manifests cho toàn bộ ứng dụng, bao gồm PostgreSQL, PersistentVolumeClaim, Secret, backend, frontend, Service và Ingress. Sau khi build và import image vào cụm k3d local, em apply các manifest và kiểm tra được 2 node ở trạng thái Ready; PostgreSQL, backend và frontend đều Running. Frontend truy cập qua Ingress phản hồi HTTP 200, API public books phản hồi HTTP 200 và endpoint health của backend cũng phản hồi HTTP 200 khi kiểm tra trong Pod.
+
+image.png
+
+Trong quá trình kiểm thử backend, em gặp lỗi Python không nhận diện được module app khi chạy pytest trực tiếp. Em đã xử lý bằng cách thiết lập PYTHONPATH=. trước khi chạy test. Kết quả kiểm thử toàn bộ backend là 23 test pass, trong đó có các test cho chức năng review và kiểm tra quyền xóa review của người dùng.
+
+image.png
+
+Trong tuần tới, em dự kiến sẽ tiếp tục hoàn thiện các chức năng còn lại của ứng dụng, trước mắt là xây dựng tính năng kết bạn và theo dõi giữa người dùng. Em cũng sẽ tiếp tục cải thiện các luồng tương tác hiện có như xem hồ sơ công khai, đánh giá sách và hiển thị dữ liệu sách, đồng thời kiểm tra lại toàn bộ chức năng của ứng dụng trong các hình thức triển khai khác nhau, gồm chạy local bằng Docker Compose, triển khai trên cụm Kubernetes local bằng manifests và triển khai trên các cụm Kubernetes khác thông qua Helm chart, nhằm đảm bảo ứng dụng hoạt động ổn định và liền mạch trên mọi nền tảng. Bên cạnh việc phát triển ứng dụng, em sẽ tìm hiểu và cấu hình monitoring với Prometheus và Grafana ạ.
+
+Em cảm ơn thầy đã đọc bản báo cáo của em ạ.
+
+Trân trọng,
+Nguyễn Quang Dũng
+[END]
+
+=========
+
+Tuần 11
+
+[START]
+Em chào thầy ạ,
+
+Em là Nguyễn Quang Dũng, mã số sinh viên: 23021497, thuộc lớp chính khóa K68I-CS3.
+
+Em xin phép được báo cáo tiến độ thực tập của em tính đến tuần thứ 11 ạ.
+
+Tuần này em tiếp tục phát triển dự án Philobiblus (link github:  kazunguyen/philobiblus) từ những gì đã làm được từ những tuần trước, tập trung vào hoàn thiện các chức năng tương tác giữa người dùng, cải thiện trải nghiệm quản lý và theo dõi sách, đồng thời hoàn thiện việc triển khai ứng dụng bằng Helm chart trên cụm Kubernetes local.
+
+Về phần social, em đã hoàn thiện các luồng theo dõi và kết bạn giữa người dùng. Phần backend bổ sung API follow, unfollow, xem danh sách followers/following, gửi lời mời kết bạn, xem lời mời đến hoặc đã gửi, chấp nhận và hủy quan hệ kết bạn. Các API đều yêu cầu JWT Token và kiểm tra quyền của người dùng trước khi thay đổi dữ liệu. Trên frontend, em bổ sung các nút theo dõi và kết bạn trong trang hồ sơ công khai, đồng thời xây dựng trang Social để quản lý lời mời kết bạn, followers và following.
+
+image.png
+Em cũng tiếp tục cải thiện trải nghiệm quản lý sách. Người dùng có thể đánh giá bằng cách chọn số sao trực tiếp, chọn nhiều tag cho một sách và chuyển đổi cách hiển thị thư viện giữa dạng card và dạng list. Hệ thống bổ sung các mức hiển thị sách Public, Restricted và Private; đồng thời thống nhất cách hiển thị trạng thái đọc để không còn xuất hiện giá trị kỹ thuật như want_to_read trên giao diện. Navbar được cải thiện để giữ nguyên khi chuyển trang, thể hiện rõ trang hiện tại và có menu tài khoản khi người dùng nhấn vào avatar.
+
+Về theo dõi tiến độ đọc, em bổ sung số chương đã đọc dưới dạng số thực, trạng thái phát hành sách, trạng thái đọc Dropped và ngày bắt đầu đọc. Hệ thống tự động tạo lịch sử đọc khi người dùng cập nhật số trang, chương hoặc tập đang đọc; phần Book Detail hiển thị lịch sử này dưới dạng danh sách cuộn, cho phép xóa từng mốc hoặc xóa toàn bộ các mốc do hệ thống tạo. Các trường số liệu không được nhập sẽ lưu giá trị quy ước trong database và không hiển thị trên frontend.
+
+image.png
+Để có thể deploy lên các cụm k8s khác nhau một cách tiện lợi nhất, em đã hoàn thiện Helm chart (link github:  philobiblus/kubernetes/helm/philobiblus at main · kazunguyen/philobiblus) cho toàn bộ hệ thống, gồm PostgreSQL, PersistentVolumeClaim, Secret, backend FastAPI, frontend React, Service, Ingress Traefik và Helm test. Hiện tại thì em mới deploy lên cụm k8s local, kết quả đã thành công và hệ thống đã bắt đầu hoạt động.
+
+image.png
+
+
+image.png
+
+
+Trong tuần tới, em dự kiến sẽ tiếp tục triển khai phần observability cho hệ thống, gồm cài đặt Prometheus và Grafana trên Kubernetes local, cấu hình thu thập metrics từ backend và xây dựng dashboard theo dõi request, lỗi, độ trễ cùng trạng thái các workload. Em cũng dự kiến triển khai frontend lên GitHub Pages và thử nghiệm kết nối đến backend đang chạy local thông qua một endpoint HTTPS hoặc tunnel phù hợp ạ.
+
+Em cảm ơn thầy đã đọc bản báo cáo của em ạ.
+
+Trân trọng,
+Nguyễn Quang Dũng
+[END]
+
+=============
+
+Tuần 12
+
+[START]
+Em chào thầy ạ,
+
+Em là Nguyễn Quang Dũng, mã số sinh viên: 23021497, thuộc lớp chính khóa K68I-CS3.
+
+Em xin phép được báo cáo tiến độ thực tập của em tính đến tuần thứ 12 ạ.
+
+Tuần này em tiếp tục phát triển dự án Philobiblus (link github: kazunguyen/philobiblus) từ những gì đã làm được từ những tuần trước, tập trung vào triển khai observability cho hệ thống Kubernetes local, cấu hình autoscaling cho backend và hoàn thiện kết nối frontend được deploy trên GitHub Pages với backend đang chạy local thông qua endpoint HTTPS.
+
+Về phần monitoring, em đã bổ sung endpoint /metrics cho backend, sau đó cài đặt kube-prometheus-stack trên Kubernetes local và cấu hình ServiceMonitor để Prometheus thu thập metrics từ backend. Target backend đã được Prometheus nhận ở trạng thái UP.  
+Em cũng xây dựng Grafana dashboard để theo dõi số backend target đang hoạt động, request rate, lỗi 4xx/5xx, p95 latency, restart pod, CPU, memory và mức sử dụng PersistentVolumeClaim của PostgreSQL.
+ 
+
+Để hệ thống có thể tự điều chỉnh theo tải, em bổ sung HorizontalPodAutoscaler cho backend vào Helm chart. Backend được giữ tối thiểu 3 replica, có thể tăng tối đa 6 replica khi CPU trung bình vượt ngưỡng 70%. Khi chạy stress test từ trong cluster, em đã quan sát được backend scale từ 3 lên 6 replica. Sau khi dừng tải, HPA giữ số replica cao hơn trong một khoảng thời gian rồi giảm dần về mức tối thiểu để tránh scale lên xuống liên tục.
+ 
+
+Em cũng triển khai PrometheusRule gồm năm cảnh báo cho các tình huống backend healthy target thấp hơn mức tối thiểu, tỷ lệ lỗi 5xx cao, p95 latency cao, backend restart và PostgreSQL PVC sử dụng trên 80%. Với mỗi cảnh báo, em viết runbook mô tả dấu hiệu nhận biết sự cố, lệnh kiểm tra và hướng xử lý tương ứng. Em đã kiểm thử có kiểm soát việc restart một backend pod, PrometheusRule chuyển sang trạng thái firing và Alertmanager đã nhận được alert.
+
+ 
+
+Bên cạnh đó, em đã hoàn tất kết nối frontend triển khai trên GitHub Pages với backend local thông qua Cloudflare Quick Tunnel. Frontend nhận VITE_API_URL trong workflow build, còn backend sử dụng CORS allow-list để chỉ chấp nhận các origin cần thiết. Cách triển khai này giúp frontend có thể gọi API qua HTTPS trong khi backend vẫn hoạt động trong cụm Kubernetes local.
+
+Trong tuần tới, em dự kiến hoàn thiện việc ứng dụng Terraform để quản lý các tài nguyên Kubernetes và triển khai hệ thống bằng Helm trên môi trường local. Em cũng sẽ xây dựng chức năng gợi ý sách theo nội dung, sử dụng DVC để quản lý dữ liệu, MLflow để ghi lại và so sánh kết quả giữa các lần huấn luyện, sau đó đóng gói mô hình thành một service để tích hợp với backend và frontend. Bên cạnh đó, em sẽ tiếp tục hoàn thiện các cấu hình bảo mật cho Kubernetes và tích hợp Gitleaks, Semgrep cùng Trivy vào CI để phát hiện secret bị lộ, lỗi bảo mật trong mã nguồn và lỗ hổng của container image. Sau khi hoàn thành các hạng mục trên, em sẽ tổng hợp kết quả kiểm thử, thu thập ảnh minh chứng và bắt đầu viết báo cáo cho toàn bộ kỳ thực tập ạ.  
+
+Em cảm ơn thầy đã đọc bản báo cáo của em ạ.
+
+Trân trọng,
+Nguyễn Quang Dũng
+[END]
