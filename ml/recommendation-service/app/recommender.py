@@ -95,3 +95,42 @@ class RecommendationEngine:
                 break
 
         return recommendations
+
+    def recommend_for_books(
+        self,
+        book_ids: list[int],
+        limit: int,
+    ) -> list[Recommendation]:
+        if self._similarity is None:
+            raise RuntimeError("Recommendation model has not been loaded")
+
+        source_positions = [
+            self._book_positions[book_id]
+            for book_id in dict.fromkeys(book_ids)
+            if book_id in self._book_positions
+        ]
+        if not source_positions:
+            return []
+
+        scores = self._similarity[source_positions].mean(axis=0)
+        excluded = set(source_positions)
+        ranked_positions = np.argsort(scores)[::-1]
+
+        recommendations = []
+        for position in ranked_positions:
+            position = int(position)
+            score = float(scores[position])
+            if position in excluded or not math.isfinite(score) or score < 0:
+                continue
+
+            recommendations.append(
+                Recommendation(
+                    book_id=int(self._catalog[position]["book_id"]),
+                    score=score,
+                    model_version=self.model_version,
+                )
+            )
+            if len(recommendations) == limit:
+                break
+
+        return recommendations
