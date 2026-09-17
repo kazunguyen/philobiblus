@@ -131,7 +131,7 @@ const PublicDashboardPage = () => {
                                         For you
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="max-h-[calc(100vh-12rem)] overflow-y-auto px-4 pb-4 custom-scrollbar">
                                     {isRecommendationsLoading ? (
                                         <p className="text-muted-foreground">Loading recommendations...</p>
                                     ) : hasRecommendationError ? (
@@ -144,9 +144,9 @@ const PublicDashboardPage = () => {
                                             : 'space-y-3'}>
                                             {recommendations.map((book) => (
                                                 bookView === 'grid' ? (
-                                                    <BookCard key={book.id} book={book} isReadOnly />
+                                                    <BookCard key={book.id} book={book} isReadOnly compact />
                                                 ) : (
-                                                    <BookListItem key={book.id} book={book} isReadOnly />
+                                                    <BookListItem key={book.id} book={book} isReadOnly compact />
                                                 )
                                             ))}
                                         </div>

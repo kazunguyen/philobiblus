@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { getBookStatusLabel } from '@/lib/bookStatus';
 import { getPublicationStatusLabel } from '@/lib/publicationStatus';
 
-const BookListItem = ({ book, onDelete, onEdit, isReadOnly = false }) => {
+const BookListItem = ({ book, onDelete, onEdit, isReadOnly = false, compact = false }) => {
     const navigate = useNavigate();
     const hasPagesRead = book.pages_read >= 0;
     const hasPagesTotal = book.pages_total >= 0;
@@ -29,7 +29,7 @@ const BookListItem = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                 : 'bg-muted-foreground';
 
     return (
-        <article className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center">
+        <article className={`flex flex-col gap-4 rounded-xl border bg-card p-4 ${compact ? "" : "sm:flex-row sm:items-center"}`}>
             <div className="flex h-20 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
                 {book.cover_url ? (
                     <img
@@ -79,13 +79,9 @@ const BookListItem = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                 {!isReadOnly ? (
                     <>
                         <Button variant="outline" size="sm" onClick={() => navigate(`/books/${book.id}`)}>
-                            <Eye />
-                            View
-                        </Button>
+                            <Eye /> {!compact && <span className="ml-2">View</span>} </Button>
                         <Button variant="secondary" size="sm" onClick={onEdit}>
-                            <Pencil />
-                            Edit
-                        </Button>
+                            <Pencil /> {!compact && <span className="ml-2">Edit</span>} </Button>
                         <Button variant="destructive" size="icon-sm" onClick={onDelete} aria-label="Delete book">
                             <Trash2 />
                         </Button>
@@ -93,14 +89,10 @@ const BookListItem = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                 ) : (
                     <>
                         <Button variant="outline" size="sm" onClick={() => navigate(`/public/books/${book.id}`)}>
-                            <Eye />
-                            View details
-                        </Button>
+                            <Eye /> {!compact && <span className="ml-2">View details</span>} </Button>
                         {book.owner?.username && (
                             <Button variant="secondary" size="sm" onClick={() => navigate(`/users/${book.owner.username}`)}>
-                                <UserRound />
-                                View profile
-                            </Button>
+                                <UserRound /> {!compact && <span className="ml-2">View profile</span>} </Button>
                         )}
                     </>
                 )}

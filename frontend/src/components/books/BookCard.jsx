@@ -14,7 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { getBookStatusLabel } from '@/lib/bookStatus';
 import { getPublicationStatusLabel } from '@/lib/publicationStatus';
 
-const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
+const BookCard = ({ book, onDelete, onEdit, isReadOnly = false, compact = false }) => {
     const navigate = useNavigate();
 
     const hasVolume = book.volume >= 0;
@@ -43,7 +43,7 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                 : 'bg-muted-foreground';
 
     return (
-        <Card className="flex h-full w-[280px] flex-col overflow-hidden">
+        <Card className="flex h-full w-full max-w-[280px] flex-col overflow-hidden">
             <div className="flex h-56 w-full items-center justify-center border-b bg-muted/40">
                 {book.cover_url ? (
                     <img
@@ -133,13 +133,9 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                             size="sm"
                             onClick={() => navigate(`/books/${book.id}`)}
                         >
-                            <Eye />
-                            View
-                        </Button>
+                            <Eye /> {!compact && <span className="ml-2">View</span>} </Button>
                         <Button className="flex-1" variant="secondary" size="sm" onClick={onEdit}>
-                            <Pencil />
-                            Edit
-                        </Button>
+                            <Pencil /> {!compact && <span className="ml-2">Edit</span>} </Button>
                         <Button variant="destructive" size="icon-sm" onClick={onDelete}>
                             <Trash2 />
                         </Button>
@@ -152,9 +148,7 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                             size="sm"
                             onClick={() => navigate(`/public/books/${book.id}`)}
                         >
-                            <Eye />
-                            View details
-                        </Button>
+                            <Eye /> {!compact && <span className="ml-2">View details</span>} </Button>
                         {book.owner?.username && (
                             <Button
                                 className="flex-1"
@@ -162,9 +156,7 @@ const BookCard = ({ book, onDelete, onEdit, isReadOnly = false }) => {
                                 size="sm"
                                 onClick={() => navigate(`/users/${book.owner.username}`)}
                             >
-                                <UserRound />
-                                View profile
-                            </Button>
+                                <UserRound /> {!compact && <span className="ml-2">View profile</span>} </Button>
                         )}
                     </>
                 )}
