@@ -4,9 +4,14 @@ package-lock.json
 .env
 values.local.yaml
 rendered.yaml
-implementation_plan.md
 dist/
-电信历史.txt
 ml/.venv
 skills-lock.json
 ml/tracking/
+# Terraform local state and provider cache
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
