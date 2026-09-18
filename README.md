@@ -226,16 +226,34 @@ kubectl port-forward -n monitoring \
 
 Mở `http://127.0.0.1:9090/targets`; target backend phải `UP`.
 
-### 3.2. Truy cập Grafana và import dashboard
+### 3.2. Truy cập monitoring local và import Grafana dashboard
 
-Lấy mật khẩu admin trước, sau đó port-forward Grafana trong terminal riêng:
+Mở Grafana và Prometheus bằng một script duy nhất. Script tự đọc Service port
+hiện có, kiểm tra health endpoint, in URL local và giữ hai port-forward chạy
+cho đến khi nhấn `Ctrl+C`:
+
+```bash
+bash ./scripts/expose-monitoring.sh
+```
+
+URL mặc định là `http://127.0.0.1:3000` cho Grafana và
+`http://127.0.0.1:9090` cho Prometheus. Override local port khi bị trùng:
+
+```bash
+GRAFANA_LOCAL_PORT=3300 PROMETHEUS_LOCAL_PORT=9191 \
+  bash ./scripts/expose-monitoring.sh
+```
+
+Trang **System health** chỉ liên kết Grafana. Với frontend chạy local, build
+frontend cùng URL Grafana mà script in ra; không cấu hình URL Prometheus cho
+trình duyệt.
+
+Lấy mật khẩu admin trước khi đăng nhập Grafana:
 
 ```bash
 kubectl get secret -n monitoring monitoring-grafana \
   -o jsonpath='{.data.admin-password}' | base64 --decode
 printf '\n'
-
-kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
 ```
 
 Mở `http://127.0.0.1:3000` và đăng nhập với username `admin`. Datasource

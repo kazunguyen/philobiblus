@@ -37,8 +37,6 @@ spec:
               value: {{ required "frontend.devPort is required" .Values.frontend.devPort | quote }}
             - name: VITE_GRAFANA_URL
               value: {{ .Values.frontend.grafanaUrl | quote }}
-            - name: VITE_PROMETHEUS_URL
-              value: {{ .Values.frontend.prometheusUrl | quote }}
           readinessProbe:
             httpGet:
               path: /

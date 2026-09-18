@@ -23,7 +23,7 @@ spec:
           annotations:
             summary: Backend healthy targets are below the minimum replica count.
             description: Prometheus has observed fewer healthy backend targets than the configured minimum for two minutes.
-            runbook_url: monitoring/alert-runbooks.md#backend-targets-below-minimum
+            runbook_url: docs/monitoring/alert-runbooks.md#backend-targets-below-minimum
 
         - alert: PhilobiblusBackendHigh5xxRatio
           expr: |
@@ -39,7 +39,7 @@ spec:
           annotations:
             summary: Backend 5xx ratio is above 5 percent.
             description: The five-minute backend error ratio has exceeded the warning threshold.
-            runbook_url: monitoring/alert-runbooks.md#backend-5xx-ratio-high
+            runbook_url: docs/monitoring/alert-runbooks.md#backend-5xx-ratio-high
 
         - alert: PhilobiblusBackendHighP95Latency
           expr: |
@@ -51,7 +51,7 @@ spec:
           annotations:
             summary: Backend p95 latency is above one second.
             description: The five-minute p95 HTTP request duration is above one second.
-            runbook_url: monitoring/alert-runbooks.md#backend-p95-latency-high
+            runbook_url: docs/monitoring/alert-runbooks.md#backend-p95-latency-high
 
         - alert: PhilobiblusBackendRestartsDetected
           expr: |
@@ -63,7 +63,7 @@ spec:
           annotations:
             summary: A backend container has restarted.
             description: At least one backend container restart was observed during the previous ten minutes.
-            runbook_url: monitoring/alert-runbooks.md#backend-restarts-detected
+            runbook_url: docs/monitoring/alert-runbooks.md#backend-restarts-detected
 
         - alert: PhilobiblusPostgresPVCUsageHigh
           expr: |
@@ -79,5 +79,5 @@ spec:
           annotations:
             summary: PostgreSQL PVC usage is above 80 percent.
             description: PostgreSQL persistent storage has remained above the warning threshold for ten minutes.
-            runbook_url: monitoring/alert-runbooks.md#postgres-pvc-usage-high
+            runbook_url: docs/monitoring/alert-runbooks.md#postgres-pvc-usage-high
 {{- end }}

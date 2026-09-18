@@ -20,7 +20,7 @@ const AdminHomePage = () => {
     { label: 'Users', value: overview?.total_users, detail: `${overview?.active_users ?? 0} active`, icon: Users, route: '/admin/users' },
     { label: 'Books', value: overview?.total_books, detail: `${overview?.private_books ?? 0} private`, icon: BookOpen, route: '/admin/books' },
     { label: 'Restricted books', value: overview?.restricted_books, detail: 'Link-only visibility', icon: LockKeyhole, route: '/admin/books' },
-    { label: 'System health', value: 'Open', detail: 'Prometheus and Grafana', icon: Activity, route: '/admin/health' },
+    { label: 'System health', value: 'Open', detail: 'Grafana dashboards', icon: Activity, route: '/admin/health' },
   ];
 
   return (
