@@ -1,0 +1,5 @@
+project_id    = ""
+region        = "asia-southeast1"
+environment   = "dev"
+database_tier = "db-f1-micro"
+protect_data  = true

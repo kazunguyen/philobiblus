@@ -1,0 +1,9 @@
+project_id           = "your-gcp-project-id"
+region               = "asia-southeast1"
+state_bucket_name    = "your-gcp-project-id-terraform-state"
+environment          = "prod"
+backend_image        = "asia-southeast1-docker.pkg.dev/your-gcp-project-id/philobiblus/backend@sha256:..."
+recommendation_image = "asia-southeast1-docker.pkg.dev/your-gcp-project-id/philobiblus/recommendation@sha256:..."
+allowed_origins      = ["https://your-user.github.io"]
+alert_email          = "operator@example.com"
+protect_runtime      = true

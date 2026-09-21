@@ -15,3 +15,5 @@ ml/tracking/
 *.tfplan
 crash.log
 crash.*.log
+# Local deployment outputs and account-specific image references
+docs/DEPLOYMENT_IMAGE_DIGESTS.md
