@@ -6,6 +6,7 @@ import { SettingsProvider } from './context/SettingsContext';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import PublicDashboardPage from './pages/PublicDashboardPage';
+import NotFoundPage from './pages/NotFoundPage';
 import UserProfilePage from './pages/UserProfilePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -87,6 +88,7 @@ function App() {
               <Route path="/admin/users/:username" element={<AdminPage><AdminUserDetailPage /></AdminPage>} />
               <Route path="/admin/users/:username/:action" element={<AdminPage><AdminUserActionPage /></AdminPage>} />
               <Route path="/admin/health" element={<AdminPage><AdminHealthPage /></AdminPage>} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </BrowserRouter>
         </SettingsProvider>
