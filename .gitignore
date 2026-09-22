@@ -1,4 +1,4 @@
-.pytest_cache/
+**/.pytest_cache/
 node_modules/
 package-lock.json
 .env
@@ -6,7 +6,6 @@ values.local.yaml
 rendered.yaml
 dist/
 ml/.venv
-skills-lock.json
 ml/tracking/
 # Terraform local state and provider cache
 **/.terraform/
@@ -16,10 +15,10 @@ ml/tracking/
 crash.log
 crash.*.log
 # Local deployment outputs and account-specific image references
-docs/DEPLOYMENT_IMAGE_DIGESTS.md
+docs/deployments/gcp-cloud-run/DEPLOYMENT_IMAGE_DIGESTS.md
 
 # Local GKE credentials, generated configuration, and progress logs
-scripts/k8s-terraform/.local/
+scripts/gcp-gke/.local/
 
 # Office / temporary files
 ~$*

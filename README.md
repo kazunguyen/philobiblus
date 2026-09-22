@@ -25,6 +25,17 @@ GitHub Pages ──► Cloudflare Quick Tunnel ──► Backend Service  # demo
 | Monitoring | `kube-prometheus-stack` và `ServiceMonitor` của Helm chart |
 | NGINX | Chỉ có trong Docker Compose tại `nginx/nginx.conf`; chart Helm hiện **không** có NGINX Deployment/Service |
 
+## Bản đồ artefact triển khai
+
+| Hướng triển khai | Cấu hình chính | Script và tài liệu |
+|---|---|---|
+| Docker Compose local | `docker-compose.yaml`, `nginx/` | Cấu hình chạy local của ứng dụng |
+| Kubernetes raw manifests | `kubernetes/manifests/` | `kubernetes/manifests/README.md` |
+| Kubernetes local bằng Helm | `kubernetes/helm/philobiblus/`, `monitoring/` | `scripts/local-kubernetes/` |
+| GCP dùng chung | `infrastructure/terraform/bootstrap/`, `infrastructure/terraform/foundation/` | `scripts/gcp-shared/` |
+| GCP Cloud Run | `infrastructure/terraform/runtime/` | `scripts/gcp-cloud-run/`, `docs/deployments/gcp-cloud-run/` |
+| GCP GKE + Helm | `infrastructure/terraform/gke-*`, `infrastructure/terraform/https-proxy/` | `scripts/gcp-gke/`, `docs/deployments/gcp-gke/` |
+
 Traefik Ingress thay vai trò route `/` và `/api` trong môi trường Kubernetes.
 Không áp dụng riêng các YAML trong `kubernetes/helm/philobiblus/templates/` bằng
 `kubectl apply`: Helm render và quản lý các resource này.
@@ -141,7 +152,7 @@ Script kiểm tra Service backend và CORS trước khi tạo pod `cloudflared` 
 thời. Giữ terminal này mở để tunnel tiếp tục hoạt động.
 
 ```bash
-PAGES_ORIGIN=https://kazunguyen.github.io bash ./expose-backend.sh
+PAGES_ORIGIN=https://kazunguyen.github.io bash scripts/local-kubernetes/expose-backend.sh
 ```
 
 Lấy URL `https://<random>.trycloudflare.com` xuất hiện trong log. Backend đã
@@ -187,7 +198,7 @@ Script dưới đây cài/nâng cấp `kube-prometheus-stack`, bật ServiceMoni
 release Philobiblus, đợi backend target `UP`, rồi tự đóng port-forward tạm.
 
 ```bash
-bash ./setup-monitoring.sh
+bash scripts/local-kubernetes/setup-monitoring.sh
 ```
 
 Phiên bản thủ công tương đương dùng values không chứa secret:
@@ -233,7 +244,7 @@ hiện có, kiểm tra health endpoint, in URL local và giữ hai port-forward 
 cho đến khi nhấn `Ctrl+C`:
 
 ```bash
-bash ./scripts/expose-monitoring.sh
+bash scripts/local-kubernetes/expose-monitoring.sh
 ```
 
 URL mặc định là `http://127.0.0.1:3000` cho Grafana và
@@ -241,7 +252,7 @@ URL mặc định là `http://127.0.0.1:3000` cho Grafana và
 
 ```bash
 GRAFANA_LOCAL_PORT=3300 PROMETHEUS_LOCAL_PORT=9191 \
-  bash ./scripts/expose-monitoring.sh
+  bash scripts/local-kubernetes/expose-monitoring.sh
 ```
 
 Trang **System health** chỉ liên kết Grafana. Với frontend chạy local, build

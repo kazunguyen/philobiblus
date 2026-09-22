@@ -42,7 +42,7 @@ const AdminHealthPage = () => (
         <CardHeader><CardTitle className="flex items-center gap-2"><Server className="size-5 text-primary" /> Local access</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>The Helm chart already exposes backend metrics internally through its ServiceMonitor.</p>
-          <p>For a local cluster, run <code>scripts/expose-monitoring.sh</code> and configure VITE_GRAFANA_URL with the Grafana address it prints before building the frontend.</p>
+          <p>For a local cluster, run <code>scripts/local-kubernetes/expose-monitoring.sh</code> and configure VITE_GRAFANA_URL with the Grafana address it prints before building the frontend.</p>
         </CardContent>
       </Card>
     </main>
