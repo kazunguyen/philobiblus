@@ -17,3 +17,10 @@ crash.log
 crash.*.log
 # Local deployment outputs and account-specific image references
 docs/DEPLOYMENT_IMAGE_DIGESTS.md
+
+# Local GKE credentials, generated configuration, and progress logs
+scripts/k8s-terraform/.local/
+
+# Office / temporary files
+~$*
+*.tmp

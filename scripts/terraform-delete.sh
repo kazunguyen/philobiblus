@@ -2,9 +2,12 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DESTROY_GUARD="${SCRIPT_DIR}/.terraform-destroy-in-progress"
 BOOTSTRAP_DIR="${SCRIPT_DIR}/../infrastructure/terraform/bootstrap"
 FOUNDATION_DIR="${SCRIPT_DIR}/../infrastructure/terraform/foundation"
 RUNTIME_DIR="${SCRIPT_DIR}/../infrastructure/terraform/runtime"
+GKE_PLATFORM_DIR="${SCRIPT_DIR}/../infrastructure/terraform/gke-platform"
+GKE_DEPLOY_LOCK="${SCRIPT_DIR}/k8s-terraform/.local/deploy.lock"
 OVERRIDE_FILE="${BOOTSTRAP_DIR}/delete_override.tf"
 PLAN_FILES=()
 PEERING_DELETE_RETRY_ATTEMPTS="${PEERING_DELETE_RETRY_ATTEMPTS:-30}"
@@ -25,6 +28,12 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+if [[ -f "${GKE_DEPLOY_LOCK}" ]]; then
+  echo "Refusing to destroy while GKE deployment is active: ${GKE_DEPLOY_LOCK}" >&2
+  echo "Wait for the deployment to finish, then remove the lock through its runner." >&2
+  exit 1
+fi
 
 state_contains() {
   terraform state list | grep -Fxq "$1"
@@ -114,6 +123,65 @@ remove_empty_runtime_state() {
   gcloud storage rm "${runtime_state_object}"
 }
 
+destroy_gke_platform() {
+  local gke_state_object="gs://${STATE_BUCKET_NAME}/philobiblus/gke-platform/default.tfstate"
+  local gke_resources managed_resources unprotect_plan destroy_plan
+
+  if ! gcloud storage ls "${gke_state_object}" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  [[ -f "${GKE_PLATFORM_DIR}/backend.tf" ]] || {
+    echo "GKE platform state exists but its Terraform module is unavailable." >&2
+    echo "Destroy GKE platform resources before retrying." >&2
+    return 1
+  }
+
+  terraform -chdir="${GKE_PLATFORM_DIR}" init \
+    -input=false \
+    -backend-config="bucket=${STATE_BUCKET_NAME}" >/dev/null
+
+  if ! gke_resources="$(terraform -chdir="${GKE_PLATFORM_DIR}" state list)"; then
+    echo "Could not inspect GKE platform state before foundation destruction." >&2
+    return 1
+  fi
+
+  managed_resources="$(printf '%s\n' "${gke_resources}" | grep -v '^data\.' || true)"
+
+  if grep -Fxq 'google_container_cluster.main' <<<"${managed_resources}"; then
+    unprotect_plan="$(mktemp "${TMPDIR:-/tmp}/philobiblus-gke-unprotect.XXXXXX")"
+    PLAN_FILES+=("${unprotect_plan}")
+
+    terraform -chdir="${GKE_PLATFORM_DIR}" plan \
+      -input=false \
+      -target=google_container_cluster.main \
+      -var='protect_cluster=false' \
+      -out="${unprotect_plan}"
+    terraform -chdir="${GKE_PLATFORM_DIR}" apply -input=false "${unprotect_plan}"
+  fi
+
+  if [[ -n "${managed_resources}" ]]; then
+    destroy_plan="$(mktemp "${TMPDIR:-/tmp}/philobiblus-gke-destroy.XXXXXX")"
+    PLAN_FILES+=("${destroy_plan}")
+
+    terraform -chdir="${GKE_PLATFORM_DIR}" plan -destroy \
+      -input=false \
+      -var='protect_cluster=false' \
+      -out="${destroy_plan}"
+    terraform -chdir="${GKE_PLATFORM_DIR}" apply -input=false "${destroy_plan}"
+
+    managed_resources="$(terraform -chdir="${GKE_PLATFORM_DIR}" state list | grep -v '^data\.' || true)"
+    if [[ -n "${managed_resources}" ]]; then
+      echo "GKE platform state still manages resources after destroy:" >&2
+      printf '%s\n' "${managed_resources}" >&2
+      return 1
+    fi
+  fi
+
+  echo "Removing the empty GKE platform state object."
+  gcloud storage rm "${gke_state_object}"
+}
+
 for required_command in terraform gcloud; do
   if ! command -v "${required_command}" >/dev/null 2>&1; then
     echo "Missing required command: ${required_command}" >&2
@@ -142,7 +210,28 @@ if [[ -z "${STATE_BUCKET_NAME}" || -z "${PROJECT_ID}" ]]; then
   exit 1
 fi
 
+[[ -r /dev/tty ]] || {
+  echo "An interactive terminal is required to confirm destruction." >&2
+  exit 1
+}
+
+printf "Type DESTROY %s to destroy GKE, foundation, and bootstrap: " "${PROJECT_ID}" >/dev/tty
+if ! IFS= read -r confirmation </dev/tty; then
+  echo "Could not read destruction confirmation from the terminal." >&2
+  exit 1
+fi
+
+confirmation="${confirmation%$'\r'}"
+
+if [[ "${confirmation}" != "DESTROY ${PROJECT_ID}" ]]; then
+  echo "Deletion cancelled."
+  exit 1
+fi
+
+touch "${DESTROY_GUARD}"
+
 remove_empty_runtime_state
+destroy_gke_platform
 
 BUCKET_OBJECTS="$(gcloud storage ls --recursive "gs://${STATE_BUCKET_NAME}/**" 2>/dev/null || true)"
 
@@ -155,24 +244,6 @@ if [[ -n "${BUCKET_OBJECTS}" ]]; then
     echo "Destroy runtime and migrate any other state before retrying." >&2
     exit 1
   fi
-fi
-
-[[ -r /dev/tty ]] || {
-  echo "An interactive terminal is required to confirm destruction." >&2
-  exit 1
-}
-
-printf "Type DESTROY %s to destroy foundation and bootstrap: " "${PROJECT_ID}" >/dev/tty
-if ! IFS= read -r confirmation </dev/tty; then
-  echo "Could not read destruction confirmation from the terminal." >&2
-  exit 1
-fi
-
-confirmation="${confirmation%$'\r'}"
-
-if [[ "${confirmation}" != "DESTROY ${PROJECT_ID}" ]]; then
-  echo "Deletion cancelled."
-  exit 1
 fi
 
 cd -- "${FOUNDATION_DIR}"
@@ -265,3 +336,4 @@ BOOTSTRAP_PLAN="$(mktemp "${TMPDIR:-/tmp}/philobiblus-bootstrap-destroy.XXXXXX")
 PLAN_FILES+=("${BOOTSTRAP_PLAN}")
 terraform plan -destroy -input=false -out="${BOOTSTRAP_PLAN}"
 terraform apply -input=false "${BOOTSTRAP_PLAN}"
+rm -f -- "${DESTROY_GUARD}"

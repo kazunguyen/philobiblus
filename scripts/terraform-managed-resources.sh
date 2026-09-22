@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+if [[ -d /snap/bin ]]; then
+  export PATH="/snap/bin:$PATH"
+fi
+
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 BOOTSTRAP_DIR="${SCRIPT_DIR}/../infrastructure/terraform/bootstrap"
 FOUNDATION_DIR="${SCRIPT_DIR}/../infrastructure/terraform/foundation"

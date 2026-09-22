@@ -15,9 +15,9 @@ DB_USER="${DB_USER:-philobiblus_app}"
 
 MODE="${1:-all}"
 case "$MODE" in
-  all|--imgbb-only) ;;
+  all|--core-only|--imgbb-only) ;;
   *)
-    echo "Usage: bash scripts/terraform-secrets-apply.sh [--imgbb-only]" >&2
+    echo "Usage: bash scripts/terraform-secrets-apply.sh [--core-only|--imgbb-only]" >&2
     exit 2
     ;;
 esac
@@ -107,12 +107,12 @@ else
     --password="$DB_PASSWORD"
 fi
 
-if [[ -z "${IMGBB_API_KEY:-}" ]]; then
+if [[ "$MODE" != "--core-only" && -z "${IMGBB_API_KEY:-}" ]]; then
   read -rsp "Enter ImgBB API key: " IMGBB_API_KEY
   echo
 fi
 
-[[ -n "$IMGBB_API_KEY" ]] || {
+[[ "$MODE" == "--core-only" || -n "${IMGBB_API_KEY:-}" ]] || {
   echo "ImgBB API key cannot be empty." >&2
   exit 1
 }
@@ -128,13 +128,18 @@ printf '%s' "$JWT_VALUE" | gcloud secrets versions add "$JWT_SECRET" \
   --project="$PROJECT_ID" \
   --data-file=- >/dev/null
 
-printf '%s' "$IMGBB_API_KEY" | gcloud secrets versions add "$IMGBB_SECRET" \
-  --project="$PROJECT_ID" \
-  --data-file=- >/dev/null
+if [[ "$MODE" != "--core-only" ]]; then
+  printf '%s' "$IMGBB_API_KEY" | gcloud secrets versions add "$IMGBB_SECRET" \
+    --project="$PROJECT_ID" \
+    --data-file=- >/dev/null
+fi
 
 unset DB_PASSWORD DATABASE_URL JWT_VALUE IMGBB_API_KEY
 
-echo "Created new Secret Manager versions for database URL, JWT key, and ImgBB API key."
+echo "Created new Secret Manager versions for database URL and JWT key."
 gcloud secrets versions list "$DB_SECRET" --project="$PROJECT_ID"
 gcloud secrets versions list "$JWT_SECRET" --project="$PROJECT_ID"
-gcloud secrets versions list "$IMGBB_SECRET" --project="$PROJECT_ID"
+if [[ "$MODE" != "--core-only" ]]; then
+  echo "Created a new ImgBB API key secret version."
+  gcloud secrets versions list "$IMGBB_SECRET" --project="$PROJECT_ID"
+fi
