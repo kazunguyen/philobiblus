@@ -24,6 +24,7 @@ spec:
                 name: {{ include "philobiblus.fullname" . }}-backend
                 port:
                   name: http
+          {{- if .Values.frontend.enabled }}
           - path: /
             pathType: Prefix
             backend:
@@ -31,4 +32,5 @@ spec:
                 name: {{ include "philobiblus.fullname" . }}-frontend
                 port:
                   name: http
+          {{- end }}
 {{- end }}

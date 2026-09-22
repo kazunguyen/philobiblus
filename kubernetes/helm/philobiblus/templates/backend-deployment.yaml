@@ -17,11 +17,41 @@ spec:
         {{- include "philobiblus.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: backend
     spec:
+      serviceAccountName: {{ include "philobiblus.backendServiceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 2000
+        seccompProfile:
+          type: RuntimeDefault
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
+        {{- if .Values.externalDatabase.enabled }}
+        - name: cloud-sql-proxy
+          image: {{ .Values.externalDatabase.proxy.image | quote }}
+          restartPolicy: Always
+          args:
+            - "--structured-logs"
+            {{- if .Values.externalDatabase.proxy.privateIp }}
+            - "--private-ip"
+            {{- end }}
+            - "--unix-socket=/cloudsql"
+            - {{ required "externalDatabase.connectionName is required" .Values.externalDatabase.connectionName | quote }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: cloudsql
+              mountPath: /cloudsql
+          resources:
+            {{- toYaml .Values.externalDatabase.proxy.resources | nindent 12 }}
+        {{- else }}
         - name: wait-for-postgres
           image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
           imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
@@ -29,14 +59,22 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "philobiblus.secretName" . }}
+        {{- end }}
       containers:
         - name: backend
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          image: {{ include "philobiblus.backendImage" . | quote }}
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ required "backend.service.port is required" .Values.backend.service.port }}
           env:
+            {{- if .Values.externalDatabase.enabled }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "philobiblus.secretName" . }}
+                  key: DATABASE_URL
+            {{- else }}
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
@@ -52,6 +90,9 @@ spec:
                 secretKeyRef:
                   name: {{ include "philobiblus.secretName" . }}
                   key: POSTGRES_DB
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ include "philobiblus.fullname" . }}-postgres:{{ required "postgres.service.port is required" .Values.postgres.service.port }}/$(POSTGRES_DB)"
+            {{- end }}
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
@@ -62,8 +103,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "philobiblus.secretName" . }}
                   key: IMGBB_API
-            - name: DATABASE_URL
-              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ include "philobiblus.fullname" . }}-postgres:{{ required "postgres.service.port is required" .Values.postgres.service.port }}/$(POSTGRES_DB)"
+                  optional: true
             - name: APP_HOST
               value: {{ required "backend.bindHost is required" .Values.backend.bindHost | quote }}
             - name: APP_PORT
@@ -92,3 +132,17 @@ spec:
             periodSeconds: {{ .Values.backend.probe.periodSeconds }}
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          {{- if .Values.externalDatabase.enabled }}
+          volumeMounts:
+            - name: cloudsql
+              mountPath: /cloudsql
+          {{- end }}
+      {{- if .Values.externalDatabase.enabled }}
+      volumes:
+        - name: cloudsql
+          emptyDir: {}
+      {{- end }}

@@ -15,6 +15,7 @@ backend:
   image:
     repository: philobiblus-backend
     tag: local
+    digest: ""
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -34,6 +35,7 @@ backend:
     periodSeconds: 5
 
 frontend:
+  enabled: true
   replicaCount: 1
   image:
     repository: philobiblus-frontend
@@ -58,6 +60,7 @@ frontend:
     periodSeconds: 5
 
 postgres:
+  enabled: true
   image:
     repository: postgres
     tag: 16-alpine
@@ -107,22 +110,13 @@ ingress:
 tests:
   enabled: true
 
-monitoring:
-  # Enable only after the Prometheus Operator CRDs are installed in the cluster.
-  serviceMonitor:
-    enabled: false
-    interval: 30s
-    scrapeTimeout: 10s
-  prometheusRule:
-    enabled: false
-    prometheusRelease: monitoring
-
 recommendation:
   enabled: true
   replicaCount: 1
   image:
     repository: philobiblus-recommendation
     tag: tfidf-with-tags-v1
+    digest: ""
     pullPolicy: IfNotPresent
   service:
     port: 8080
@@ -138,3 +132,61 @@ recommendation:
   probe:
     initialDelaySeconds: 5
     periodSeconds: 10
+
+serviceAccounts:
+  backend:
+    create: true
+    name: ""
+    annotations: {}
+  recommendation:
+    create: true
+    name: ""
+    annotations: {}
+  seed:
+    create: true
+    name: ""
+    annotations: {}
+
+externalDatabase:
+  enabled: false
+  connectionName: ""
+  proxy:
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.25.4
+    privateIp: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+
+gcpSecrets:
+  enabled: false
+  includeImgbb: false
+  projectId: ""
+  databaseUrlSecret: ""
+  jwtSecret: ""
+  imgbbApiSecret: ""
+
+gateway:
+  enabled: false
+  className: gke-l7-global-external-managed
+  addressName: ""
+  host: ""
+  https:
+    enabled: false
+    certificateMapName: ""
+  httpToHttpsRedirect: false
+
+monitoring:
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+  prometheusRule:
+    enabled: false
+    prometheusRelease: monitoring
+  podMonitoring:
+    enabled: false
+    interval: 30s

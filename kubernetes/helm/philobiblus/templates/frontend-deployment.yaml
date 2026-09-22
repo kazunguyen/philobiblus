@@ -1,3 +1,4 @@
+{{- if .Values.frontend.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,3 +52,4 @@ spec:
             periodSeconds: {{ .Values.frontend.probe.periodSeconds }}
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
+{{- end }}

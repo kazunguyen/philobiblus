@@ -18,11 +18,41 @@ spec:
         app.kubernetes.io/component: seed
     spec:
       restartPolicy: OnFailure
+      serviceAccountName: {{ include "philobiblus.seedServiceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 2000
+        seccompProfile:
+          type: RuntimeDefault
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
+        {{- if .Values.externalDatabase.enabled }}
+        - name: cloud-sql-proxy
+          image: {{ .Values.externalDatabase.proxy.image | quote }}
+          restartPolicy: Always
+          args:
+            - "--structured-logs"
+            {{- if .Values.externalDatabase.proxy.privateIp }}
+            - "--private-ip"
+            {{- end }}
+            - "--unix-socket=/cloudsql"
+            - {{ required "externalDatabase.connectionName is required" .Values.externalDatabase.connectionName | quote }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: cloudsql
+              mountPath: /cloudsql
+          resources:
+            {{- toYaml .Values.externalDatabase.proxy.resources | nindent 12 }}
+        {{- else }}
         - name: wait-for-postgres
           image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
           imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
@@ -30,19 +60,44 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ include "philobiblus.secretName" . }}
+        {{- end }}
       containers:
         - name: seed
-          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          image: {{ include "philobiblus.backendImage" . | quote }}
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           command: ["python", "-m", "scripts.seed_database"]
-          envFrom:
-            - secretRef:
-                name: {{ include "philobiblus.secretName" . }}
           env:
             - name: PYTHONPATH
               value: /app
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "philobiblus.secretName" . }}
+                  key: SECRET_KEY
+            {{- if .Values.externalDatabase.enabled }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "philobiblus.secretName" . }}
+                  key: DATABASE_URL
+            {{- else }}
             - name: DATABASE_URL
               value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ include "philobiblus.fullname" . }}-postgres:{{ required "postgres.service.port is required" .Values.postgres.service.port }}/$(POSTGRES_DB)"
+            {{- end }}
           resources:
             {{- toYaml .Values.seed.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          {{- if .Values.externalDatabase.enabled }}
+          volumeMounts:
+            - name: cloudsql
+              mountPath: /cloudsql
+          {{- end }}
+      {{- if .Values.externalDatabase.enabled }}
+      volumes:
+        - name: cloudsql
+          emptyDir: {}
+      {{- end }}
 {{- end }}
