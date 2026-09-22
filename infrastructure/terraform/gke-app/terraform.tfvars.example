@@ -1,0 +1,14 @@
+project_id           = "your-gcp-project-id"
+region               = "asia-southeast1"
+environment          = "dev"
+state_bucket_name    = "your-terraform-state-bucket"
+namespace            = "philobiblus"
+backend_image        = "your-registry/philobiblus-backend@sha256:replace-with-digest"
+recommendation_image = "your-registry/philobiblus-recommendation@sha256:replace-with-digest"
+frontend_origin      = "https://your-user.github.io"
+gateway_host                   = ""
+gateway_https_enabled          = false
+gateway_certificate_map_name   = ""
+gateway_http_to_https_redirect = false
+include_imgbb_secret           = false
+
