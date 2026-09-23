@@ -15,13 +15,12 @@ RUN groupadd --gid 1001 appuser \
 
 COPY --from=builder /install /usr/local
 COPY ml/recommendation-service/app /app/app
-COPY ml/models/tfidf_recommender.joblib /app/model/tfidf_recommender.joblib
 
 RUN chown -R appuser:appuser /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    MODEL_PATH=/app/model/tfidf_recommender.joblib
+    MODEL_PATH=/model/model.joblib
 
 USER 1001:1001
 
