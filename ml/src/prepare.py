@@ -34,7 +34,7 @@ if missing:
 for column in ["title", "author", "genre"]:
     books[column] = books[column].fillna("").astype(str).str.strip()
 
-books["book_id"] = books["book_id"].astype(str)
+# book_id is kept as integer
 books["tags_text"] = books["tags"].apply(tags_to_text)
 books["feature_text"] = (
     books["title"] + " "

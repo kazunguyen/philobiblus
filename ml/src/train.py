@@ -43,14 +43,22 @@ vectorizer = TfidfVectorizer(
     min_df=config["min_df"],
 )
 feature_matrix = vectorizer.fit_transform(books["feature_text"])
-similarity = cosine_similarity(feature_matrix)
 
-np.fill_diagonal(similarity, -1.0)
+top_k = min(config["top_k"], len(books) - 1)
+mean_sims = []
+if top_k > 0:
+    for i in range(feature_matrix.shape[0]):
+        sims = feature_matrix[i].dot(feature_matrix.T).toarray().ravel()
+        top_k_sims = np.sort(sims)[-(top_k+1):-1]
+        mean_sims.append(top_k_sims.mean())
+mean_top_k_similarity = float(np.mean(mean_sims)) if mean_sims else 0.0
 
 artifact = {
+    "schema_version": 2,
     "model_version": config["model_version"],
+    "snapshot_id": os.environ.get("SNAPSHOT_ID", "local-dev"),
     "vectorizer": vectorizer,
-    "similarity_matrix": similarity,
+    "feature_matrix": feature_matrix,
     "catalog": books[
         ["book_id", "title", "author", "genre", "cover_url"]
     ].to_dict(orient="records"),
@@ -60,13 +68,10 @@ model_output = Path(args.model_output)
 model_output.parent.mkdir(parents=True, exist_ok=True)
 joblib.dump(artifact, model_output)
 
-top_k = min(config["top_k"], len(books) - 1)
 metrics = {
     "catalog_size": len(books),
     "vocabulary_size": len(vectorizer.vocabulary_),
-    "mean_top_k_similarity": float(
-        np.sort(similarity, axis=1)[:, -top_k:].mean()
-    ),
+    "mean_top_k_similarity": mean_top_k_similarity,
 }
 
 metrics_output = Path(args.metrics_output)
@@ -105,6 +110,7 @@ with mlflow.start_run(run_name=config["model_version"]):
         {
             "model_type": "tfidf-cosine",
             "dataset_dvc_file": "ml/data/raw/public_books.csv.dvc",
+            "artifact_schema_version": "2",
         }
     )
     mlflow.log_metrics(metrics)
