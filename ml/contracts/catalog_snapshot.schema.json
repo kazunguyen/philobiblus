@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "snapshot_id": { "type": "string" },
+    "sha256": { "type": "string" },
+    "row_count": { "type": "integer" },
+    "extracted_at": { "type": "string", "format": "date-time" },
+    "source_query_version": { "type": "string" },
+    "training_image_digest": { "type": "string" },
+    "git_sha": { "type": "string" }
+  },
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "sha256",
+    "row_count",
+    "extracted_at",
+    "source_query_version",
+    "training_image_digest",
+    "git_sha"
+  ]
+}
