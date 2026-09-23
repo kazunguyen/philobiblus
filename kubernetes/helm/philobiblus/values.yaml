@@ -31,8 +31,16 @@ backend:
   accessTokenExpireMinutes: 1440
   allowedOrigins: ""
   probe:
-    initialDelaySeconds: 10
-    periodSeconds: 5
+    startupFailureThreshold: 12
+    startupPeriodSeconds: 5
+    readinessInitialDelaySeconds: 10
+    readinessPeriodSeconds: 5
+    readinessTimeoutSeconds: 5
+    readinessFailureThreshold: 3
+    livenessInitialDelaySeconds: 30
+    livenessPeriodSeconds: 10
+    livenessTimeoutSeconds: 5
+    livenessFailureThreshold: 6
 
 frontend:
   enabled: true
@@ -118,6 +126,9 @@ recommendation:
     tag: tfidf-with-tags-v1
     digest: ""
     pullPolicy: IfNotPresent
+  fetcherImage:
+    repository: us-central1-docker.pkg.dev/PROJECT_ID/philobiblus/model-fetcher
+    tag: latest
   service:
     port: 8080
   modelPath: /app/model/tfidf_recommender.joblib

@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: philobiblus-trainer
+  namespace: philobiblus # We need to patch the app deployment in another namespace!
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["philobiblus-recommendation"]
+    verbs: ["get", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["model-release"]
+    verbs: ["get", "patch", "update", "create"]

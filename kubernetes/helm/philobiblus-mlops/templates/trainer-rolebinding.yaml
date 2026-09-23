@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: philobiblus-trainer
+  namespace: philobiblus # Bind in the app namespace
+subjects:
+  - kind: ServiceAccount
+    name: philobiblus-trainer
+    namespace: {{ .Values.namespace }}
+roleRef:
+  kind: Role
+  name: philobiblus-trainer
+  apiGroup: rbac.authorization.k8s.io

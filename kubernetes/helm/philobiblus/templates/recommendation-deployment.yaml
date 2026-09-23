@@ -8,12 +8,19 @@ metadata:
     app.kubernetes.io/component: recommendation
 spec:
   replicas: {{ .Values.recommendation.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       {{- include "philobiblus.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: recommendation
   template:
     metadata:
+      annotations:
+        mlops.philobiblus.io/model-version: "v1" # Patched by promote.py
       labels:
         {{- include "philobiblus.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: recommendation
@@ -25,6 +32,21 @@ spec:
         runAsGroup: 1001
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        - name: model-fetcher
+          image: "{{ .Values.recommendation.fetcherImage.repository }}:{{ .Values.recommendation.fetcherImage.tag }}"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: model-release
+          volumeMounts:
+            - name: model-volume
+              mountPath: /model
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
       containers:
         - name: recommendation
           image: {{ include "philobiblus.recommendationImage" . | quote }}
@@ -34,7 +56,11 @@ spec:
               containerPort: {{ .Values.recommendation.service.port }}
           env:
             - name: MODEL_PATH
-              value: {{ .Values.recommendation.modelPath | quote }}
+              value: "/model/model.joblib"
+          volumeMounts:
+            - name: model-volume
+              mountPath: /model
+              readOnly: true
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -55,4 +81,7 @@ spec:
             periodSeconds: {{ .Values.recommendation.probe.periodSeconds }}
           resources:
             {{- toYaml .Values.recommendation.resources | nindent 12 }}
+      volumes:
+        - name: model-volume
+          emptyDir: {}
 {{- end }}

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.mlflow.replicaCount }}
+  selector:
+    matchLabels:
+      app: mlflow
+  template:
+    metadata:
+      labels:
+        app: mlflow
+    spec:
+      serviceAccountName: philobiblus-mlflow
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: mlflow
+          image: "{{ .Values.mlflow.image.repository }}:{{ .Values.mlflow.image.tag }}"
+          command:
+            - mlflow
+            - server
+            - --host=0.0.0.0
+            - --port=5000
+            - --backend-store-uri=$(MLFLOW_BACKEND_STORE_URI)
+            - --default-artifact-root=gs://$(MLOPS_BUCKET)/mlflow
+          env:
+            - name: MLFLOW_BACKEND_STORE_URI
+              value: "postgresql://mlflow@127.0.0.1:5432/mlflow"
+            - name: MLOPS_BUCKET
+              value: "{{ .Values.trainer.mlops_bucket }}"
+          ports:
+            - containerPort: 5000
+          resources:
+            {{- toYaml .Values.mlflow.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+        # Sidecar for Cloud SQL Auth Proxy should be added here

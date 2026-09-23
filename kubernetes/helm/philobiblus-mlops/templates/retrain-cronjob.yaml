@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: philobiblus-retrain
+  namespace: {{ .Values.namespace }}
+spec:
+  schedule: "{{ .Values.trainer.schedule }}"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 1800
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  suspend: {{ .Values.trainer.suspend }}
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            app: philobiblus-trainer
+        spec:
+          serviceAccountName: philobiblus-trainer
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+          containers:
+            - name: trainer
+              image: "{{ .Values.trainer.image.repository }}:{{ .Values.trainer.image.tag }}"
+              env:
+                - name: MLFLOW_TRACKING_URI
+                  value: "http://mlflow.{{ .Values.namespace }}.svc.cluster.local:5000"
+                - name: GCP_PROJECT_ID
+                  value: "philobiblus-project" # Should come from values
+                - name: MLOPS_BUCKET
+                  value: "{{ .Values.trainer.mlops_bucket }}"
+                - name: DB_URI
+                  value: "{{ .Values.trainer.db_uri }}" # Needs secret or sidecar injection
+              command: ["python", "src/pipeline.py"]
+              args:
+                - "--db-uri"
+                - "$(DB_URI)"
+                - "--mlops-bucket"
+                - "$(MLOPS_BUCKET)"
+                - "--workspace-dir"
+                - "/workspace"
+              volumeMounts:
+                - name: workspace
+                  mountPath: "/workspace"
+              resources:
+                {{- toYaml .Values.trainer.resources | nindent 16 }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+          volumes:
+            - name: workspace
+              emptyDir: {}
