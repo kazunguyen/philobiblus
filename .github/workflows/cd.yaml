@@ -1,50 +1,100 @@
-name: CD Pipeline
+name: Deploy MLOps to GKE
 
 on:
-  push:
-    branches:
-      - main
-    # Ideally trigger only on tags, but for this training we'll just mock it on push to main
-    # after CI passes.
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply Terraform and deploy the chart (requires protected environment approval)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  REGION: ${{ vars.GCP_REGION }}
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  AR_REPOSITORY: ${{ vars.ARTIFACT_REGISTRY_REPOSITORY }}
 
 jobs:
-  deploy:
-    name: Deploy to GKE
+  build-and-push:
+    if: ${{ inputs.apply }}
     runs-on: ubuntu-latest
-    # needs: [test-backend, test-ml, build-trainer, build-model-fetcher] # Skipping needs for demo
+    environment: gke-production
+    outputs:
+      trainer_digest: ${{ steps.digest.outputs.trainer_digest }}
+      fetcher_digest: ${{ steps.digest.outputs.fetcher_digest }}
+      mlflow_digest: ${{ steps.digest.outputs.mlflow_digest }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Auth to Google Cloud
-        uses: google-github-actions/auth@v2
+      - uses: actions/checkout@v4
+      - name: Check protected deployment configuration
+        run: test -n "$PROJECT_ID" && test -n "$REGION" && test -n "$AR_REPOSITORY"
+      - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: 'projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/my-repo'
-          service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
-
-      - name: Configure Docker for GCP
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev
-
-      - name: Build and Push Images
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+      - name: Build and push immutable MLOps images
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          export DIGEST=$(git rev-parse --short HEAD)
-          # Mock building and pushing...
-          echo "Building backend, frontend, recommendation, trainer, model-fetcher..."
-          # docker push ...
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Apply
+          IMAGE_BASE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPOSITORY}"
+          docker build --pull -t "${IMAGE_BASE}/philobiblus-trainer:${IMAGE_TAG}" -f ml/training/Dockerfile ml
+          docker push "${IMAGE_BASE}/philobiblus-trainer:${IMAGE_TAG}"
+          docker build --pull -t "${IMAGE_BASE}/philobiblus-model-fetcher:${IMAGE_TAG}" -f ml/model-fetcher/Dockerfile ml/model-fetcher
+          docker push "${IMAGE_BASE}/philobiblus-model-fetcher:${IMAGE_TAG}"
+          docker build --pull -t "${IMAGE_BASE}/philobiblus-mlflow:${IMAGE_TAG}" -f ml/mlflow/Dockerfile ml/mlflow
+          docker push "${IMAGE_BASE}/philobiblus-mlflow:${IMAGE_TAG}"
+      - id: digest
+        name: Resolve pushed image digests
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          cd infrastructure/terraform/gke-mlops
-          terraform init
-          terraform apply -auto-approve
+          IMAGE_BASE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPOSITORY}"
+          echo "trainer_digest=$(gcloud artifacts docker images describe "${IMAGE_BASE}/philobiblus-trainer:${IMAGE_TAG}" --format='value(image_summary.digest)')" >> "$GITHUB_OUTPUT"
+          echo "fetcher_digest=$(gcloud artifacts docker images describe "${IMAGE_BASE}/philobiblus-model-fetcher:${IMAGE_TAG}" --format='value(image_summary.digest)')" >> "$GITHUB_OUTPUT"
+          echo "mlflow_digest=$(gcloud artifacts docker images describe "${IMAGE_BASE}/philobiblus-mlflow:${IMAGE_TAG}" --format='value(image_summary.digest)')" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy Helm Charts
+  deploy:
+    if: ${{ inputs.apply }}
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: gke-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - uses: hashicorp/setup-terraform@v3
+      - uses: azure/setup-helm@v4
+      - name: Apply MLOps foundation
+        env:
+          TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          SQL_INSTANCE: ${{ vars.CLOUD_SQL_INSTANCE }}
+          MLFLOW_DB_SECRET: ${{ vars.MLFLOW_DATABASE_URL_SECRET }}
+          TRAINER_DB_SECRET: ${{ vars.TRAINER_DATABASE_URL_SECRET }}
         run: |
-          # Deploy MLOps components
-          helm upgrade --install philobiblus-mlops kubernetes/helm/philobiblus-mlops -n philobiblus-mlops --create-namespace
-          
-          # Deploy Application (Decoupled from ML pipeline retraining)
-          helm upgrade --install philobiblus kubernetes/helm/philobiblus -n philobiblus
+          terraform -chdir=infrastructure/terraform/gke-mlops init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="prefix=philobiblus/gke-mlops"
+          terraform -chdir=infrastructure/terraform/gke-mlops apply -auto-approve -input=false -var="project_id=${PROJECT_ID}" -var="region=${REGION}" -var="sql_instance_name=${SQL_INSTANCE}" -var="mlflow_database_url_secret_id=${MLFLOW_DB_SECRET}" -var="trainer_database_url_secret_id=${TRAINER_DB_SECRET}"
+      - name: Deploy MLflow and the suspended retraining CronJob
+        env:
+          CLUSTER: ${{ vars.GKE_CLUSTER_NAME }}
+          ZONE: ${{ vars.GKE_CLUSTER_LOCATION }}
+        run: |
+          gcloud container clusters get-credentials "$CLUSTER" --location "$ZONE" --project "$PROJECT_ID"
+          IMAGE_BASE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPOSITORY}"
+          helm upgrade --install philobiblus-mlops kubernetes/helm/philobiblus-mlops --namespace philobiblus-mlops --create-namespace --wait --timeout 10m \
+            --set gcp.projectId="$PROJECT_ID" --set gcp.sqlConnectionName="${{ vars.CLOUD_SQL_CONNECTION_NAME }}" \
+            --set trainer.artifactBucket="${PROJECT_ID}-philobiblus-mlops" --set secretSync.enabled=true \
+            --set secretSync.mlflowDatabaseUrlSecret="${{ vars.MLFLOW_DATABASE_URL_SECRET }}" --set secretSync.trainerDatabaseUrlSecret="${{ vars.TRAINER_DATABASE_URL_SECRET }}" \
+            --set mlflow.image.repository="${IMAGE_BASE}/philobiblus-mlflow" --set mlflow.image.digest="${{ needs.build-and-push.outputs.mlflow_digest }}" \
+            --set trainer.image.repository="${IMAGE_BASE}/philobiblus-trainer" --set trainer.image.digest="${{ needs.build-and-push.outputs.trainer_digest }}" \
+            --set mlflow.serviceAccount.gcpServiceAccount="philobiblus-mlflow@${PROJECT_ID}.iam.gserviceaccount.com" \
+            --set trainer.serviceAccount.gcpServiceAccount="philobiblus-trainer@${PROJECT_ID}.iam.gserviceaccount.com" \
+            --set trainer.gitSha="${GITHUB_SHA}" --set trainer.imageDigest="${{ needs.build-and-push.outputs.trainer_digest }}"
+          kubectl rollout status deployment/mlflow -n philobiblus-mlops --timeout=5m

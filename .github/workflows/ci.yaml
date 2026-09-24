@@ -1,75 +1,58 @@
-name: CI Pipeline
+name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  test-backend:
-    name: Run Backend Pytest
+  backend-tests:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
+    defaults: { run: { working-directory: backend } }
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run unit tests
-        env:
-          PYTHONPATH: .
-        run: |
-          pytest -v
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: backend/requirements.txt }
+      - run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - run: pytest -v
+        env: { PYTHONPATH: . }
 
-  test-ml:
-    name: Run ML Pytest
+  ml-tests:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./ml
+    defaults: { run: { working-directory: ml } }
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      - name: Install ML dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-training.txt
-      - name: Run ML tests
-        run: |
-          pytest recommendation-service/tests -v
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip, cache-dependency-path: "ml/requirements-training.txt" }
+      - run: python -m pip install --upgrade pip && pip install pytest -r requirements-training.txt -r recommendation-service/requirements.txt
+      - run: python -m compileall -q src model-fetcher recommendation-service/app
+      - run: pytest -v recommendation-service/tests tests
+        env: { PYTHONPATH: recommendation-service:src }
+      - run: pip install "dvc>=3.0,<4.0" && dvc repro --dry train
 
-  build-trainer:
-    name: Build Trainer Image
+  manifests-and-terraform:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Build Trainer
-        run: docker build -t trainer:test -f ml/training/Dockerfile ml
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Render Helm charts with non-secret fixtures
+        run: |
+          helm lint kubernetes/helm/philobiblus --set backend.service.port=8000 --set backend.bindHost=0.0.0.0 --set backend.allowedOrigins=https://example.com --set frontend.service.port=80 --set frontend.apiUrl=/api --set frontend.devHost=0.0.0.0 --set frontend.devPort=5173 --set postgres.service.port=5432 --set ingress.host=example.com --set recommendation.fetcherImage.repository=example.com/fetcher --set recommendation.fetcherImage.tag=test
+          helm template philobiblus kubernetes/helm/philobiblus --set backend.service.port=8000 --set backend.bindHost=0.0.0.0 --set backend.allowedOrigins=https://example.com --set frontend.service.port=80 --set frontend.apiUrl=/api --set frontend.devHost=0.0.0.0 --set frontend.devPort=5173 --set postgres.service.port=5432 --set ingress.host=example.com --set recommendation.fetcherImage.repository=example.com/fetcher --set recommendation.fetcherImage.tag=test >/dev/null
+          helm lint kubernetes/helm/philobiblus-mlops --set gcp.sqlConnectionName=project:region:instance --set trainer.artifactBucket=fixture-bucket --set mlflow.image.repository=example.com/mlflow --set mlflow.image.tag=test --set trainer.image.repository=example.com/trainer --set trainer.image.tag=test --set mlflow.serviceAccount.gcpServiceAccount=mlflow@example.iam.gserviceaccount.com --set trainer.serviceAccount.gcpServiceAccount=trainer@example.iam.gserviceaccount.com
+          helm template philobiblus-mlops kubernetes/helm/philobiblus-mlops --set gcp.sqlConnectionName=project:region:instance --set trainer.artifactBucket=fixture-bucket --set mlflow.image.repository=example.com/mlflow --set mlflow.image.tag=test --set trainer.image.repository=example.com/trainer --set trainer.image.tag=test --set mlflow.serviceAccount.gcpServiceAccount=mlflow@example.iam.gserviceaccount.com --set trainer.serviceAccount.gcpServiceAccount=trainer@example.iam.gserviceaccount.com >/dev/null
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform -chdir=infrastructure/terraform/gke-mlops fmt -check -recursive
+      - run: terraform -chdir=infrastructure/terraform/gke-mlops init -backend=false && terraform -chdir=infrastructure/terraform/gke-mlops validate
 
-  build-model-fetcher:
-    name: Build Model Fetcher Image
+  build-ml-images:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Build Fetcher
-        run: docker build -t fetcher:test -f ml/model-fetcher/Dockerfile ml/model-fetcher
+      - uses: actions/checkout@v4
+      - run: docker build -t philobiblus-trainer:test -f ml/training/Dockerfile ml
+      - run: docker build -t philobiblus-model-fetcher:test -f ml/model-fetcher/Dockerfile ml/model-fetcher
+      - run: docker build -t philobiblus-mlflow:test -f ml/mlflow/Dockerfile ml/mlflow
