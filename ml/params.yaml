@@ -5,3 +5,9 @@ train:
   include_tags: true
   model_version: tfidf-with-tags-v1
   experiment_name: philobiblus-content-recommender
+  diagnostic_sample_size: 200
+promotion:
+  min_evaluated_profiles: 100
+  min_hit_rate_at_5: 0.01
+  min_catalog_coverage_at_5: 0.01
+  max_hit_rate_regression: 0.02

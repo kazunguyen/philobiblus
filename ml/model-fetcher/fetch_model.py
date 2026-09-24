@@ -72,7 +72,10 @@ def main():
         print(f"Failed to load or validate artifact: {e}", file=sys.stderr)
         sys.exit(1)
 
-    # Write meta
+    # Atomic rename
+    tmp_path.rename(final_path)
+
+    # Metadata is only visible after the verified artifact has been made current.
     meta = {
         "model_version": model_version,
         "model_uri": model_uri,
@@ -80,9 +83,6 @@ def main():
     }
     with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2)
-
-    # Atomic rename
-    tmp_path.rename(final_path)
 
     print(f"Successfully fetched and validated model {model_version}.")
     sys.exit(0)

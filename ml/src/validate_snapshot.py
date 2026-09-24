@@ -1,3 +1,5 @@
+"""Validate a catalog snapshot before any training resources are consumed."""
+
 import argparse
 import json
 import sys
@@ -6,81 +8,115 @@ from pathlib import Path
 import pandas as pd
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--snapshot-dir", required=True)
-    parser.add_argument("--champion-manifest", required=False)
-    args = parser.parse_args()
+REQUIRED_COLUMNS = {"book_id", "title", "author", "genre", "tags", "cover_url", "created_at", "updated_at"}
 
-    snapshot_dir = Path(args.snapshot_dir)
-    catalog_path = snapshot_dir / "catalog.parquet"
-    manifest_path = snapshot_dir / "manifest.json"
 
-    if not catalog_path.is_file() or not manifest_path.is_file():
-        print("Missing catalog.parquet or manifest.json", file=sys.stderr)
-        sys.exit(1)
+def fail(message: str) -> None:
+    print(f"Validation failed: {message}", file=sys.stderr)
+    raise SystemExit(1)
 
-    df = pd.read_parquet(catalog_path)
-    
-    # Validation bắt buộc:
-    # - book_id là integer duy nhất, không null.
-    if df["book_id"].isnull().any():
-        print("Validation failed: book_id contains nulls", file=sys.stderr)
-        sys.exit(1)
-        
-    if not pd.api.types.is_integer_dtype(df["book_id"]):
-        print("Validation failed: book_id is not integer", file=sys.stderr)
-        sys.exit(1)
-        
-    if not df["book_id"].is_unique:
-        print("Validation failed: book_id is not unique", file=sys.stderr)
-        sys.exit(1)
 
-    # - title và author sau trim không rỗng.
-    df["title"] = df["title"].astype(str).str.strip()
-    df["author"] = df["author"].astype(str).str.strip()
-    
-    if (df["title"] == "").any() or (df["title"].str.lower() == "nan").any():
-        print("Validation failed: title contains empty values", file=sys.stderr)
-        sys.exit(1)
-        
-    if (df["author"] == "").any() or (df["author"].str.lower() == "nan").any():
-        print("Validation failed: author contains empty values", file=sys.stderr)
-        sys.exit(1)
+def _non_empty(series: pd.Series) -> bool:
+    values = series.fillna("").astype(str).str.strip()
+    return bool((values == "").any() or (values.str.lower() == "nan").any())
 
-    # - Catalog không rỗng.
-    if len(df) == 0:
-        print("Validation failed: catalog is empty", file=sys.stderr)
-        sys.exit(1)
 
-    # Báo cáo số sách duplicate title-author
-    duplicates = df.duplicated(subset=["title", "author"], keep=False).sum()
+def _invalid_tags(value: object) -> bool:
+    # Pandas/Parquet materializes PostgreSQL ARRAY columns as ndarray while a
+    # direct SQL read returns a list. Normalize both before scalar checks.
+    if hasattr(value, "tolist"):
+        value = value.tolist()  # type: ignore[union-attr]
+    if isinstance(value, (list, tuple)):
+        return not all(isinstance(item, str) for item in value)
+    if value is None:
+        return False
+    if not isinstance(value, str):
+        try:
+            missing = pd.isna(value)
+            if getattr(missing, "ndim", 0) == 0 and bool(missing):
+                return False
+        except (TypeError, ValueError):
+            pass
+        return True
+    if value == "":
+        return False
+    try:
+        if bool(pd.isna(value)):
+            return False
+    except (TypeError, ValueError):
+        return True
+    try:
+        decoded = json.loads(value)
+    except json.JSONDecodeError:
+        return False  # Legacy comma-separated tags remain supported.
+    return not isinstance(decoded, list) or not all(isinstance(item, str) for item in decoded)
 
-    report = {
-        "status": "passed",
-        "total_books": len(df),
-        "duplicates_title_author": int(duplicates)
+
+def validate_catalog(catalog: pd.DataFrame) -> dict[str, int]:
+    missing = REQUIRED_COLUMNS - set(catalog.columns)
+    if missing:
+        fail(f"missing columns: {sorted(missing)}")
+    if catalog.empty:
+        fail("catalog is empty")
+    if catalog["book_id"].isnull().any() or not pd.api.types.is_integer_dtype(catalog["book_id"]):
+        fail("book_id must be a non-null integer")
+    if not catalog["book_id"].is_unique:
+        fail("book_id must be unique")
+    for column in ("title", "author"):
+        if _non_empty(catalog[column]):
+            fail(f"{column} contains an empty value")
+    if catalog["tags"].map(_invalid_tags).any():
+        fail("tags must be null, text, or a JSON list of text values")
+    return {
+        "total_books": int(len(catalog)),
+        "duplicates_title_author": int(catalog.duplicated(subset=["title", "author"], keep=False).sum()),
     }
 
-    # - Catalog không giảm quá 20% so với champion
-    if args.champion_manifest:
-        champion_path = Path(args.champion_manifest)
-        if champion_path.is_file():
-            with open(champion_path) as f:
-                champion = json.load(f)
-                champion_count = champion.get("row_count", 0)
-                if champion_count > 0:
-                    drop_ratio = (champion_count - len(df)) / champion_count
-                    if drop_ratio > 0.2:
-                        print(f"Validation failed: Catalog dropped by {drop_ratio*100:.1f}% (>20%)", file=sys.stderr)
-                        sys.exit(1)
 
-    report_path = snapshot_dir / "validation_report.json"
-    with open(report_path, "w") as f:
-        json.dump(report, f, indent=2)
-        
-    print(json.dumps(report))
-    sys.exit(0)
+def compare_catalogs(current: pd.DataFrame, champion: pd.DataFrame | None) -> dict[str, int]:
+    if champion is None:
+        return {"new_books": 0, "updated_books": 0, "removed_books": 0}
+    current_index = current.set_index("book_id")
+    champion_index = champion.set_index("book_id")
+    shared_ids = current_index.index.intersection(champion_index.index)
+    fields = ["title", "author", "genre", "tags", "cover_url", "updated_at"]
+    changed = (current_index.loc[shared_ids, fields].fillna("").astype(str) !=
+               champion_index.loc[shared_ids, fields].fillna("").astype(str)).any(axis=1)
+    return {
+        "new_books": int(len(current_index.index.difference(champion_index.index))),
+        "updated_books": int(changed.sum()),
+        "removed_books": int(len(champion_index.index.difference(current_index.index))),
+    }
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--snapshot-dir", required=True)
+    parser.add_argument("--champion-manifest")
+    parser.add_argument("--champion-catalog")
+    parser.add_argument("--max-catalog-drop-ratio", type=float, default=0.20)
+    args = parser.parse_args()
+    snapshot_dir = Path(args.snapshot_dir)
+    catalog_path, manifest_path = snapshot_dir / "catalog.parquet", snapshot_dir / "manifest.json"
+    if not catalog_path.is_file() or not manifest_path.is_file():
+        fail("catalog.parquet or manifest.json is missing")
+    catalog = pd.read_parquet(catalog_path)
+    report = {"status": "passed", **validate_catalog(catalog)}
+    champion_catalog, champion_count = None, 0
+    if args.champion_manifest and Path(args.champion_manifest).is_file():
+        champion_count = int(json.loads(Path(args.champion_manifest).read_text(encoding="utf-8")).get("row_count", 0))
+    if args.champion_catalog and Path(args.champion_catalog).is_file():
+        champion_catalog = pd.read_parquet(args.champion_catalog)
+        champion_count = len(champion_catalog)
+    if champion_count:
+        drop_ratio = (champion_count - len(catalog)) / champion_count
+        if drop_ratio > args.max_catalog_drop_ratio:
+            fail(f"catalog dropped {drop_ratio:.1%}; limit is {args.max_catalog_drop_ratio:.1%}")
+    report.update(compare_catalogs(catalog, champion_catalog))
+    report["champion_row_count"] = int(champion_count)
+    (snapshot_dir / "validation_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(json.dumps(report, sort_keys=True))
+
 
 if __name__ == "__main__":
     main()

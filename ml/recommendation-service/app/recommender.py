@@ -127,12 +127,13 @@ class RecommendationEngine:
         if not source_positions:
             return []
 
-        profile_vector = self._feature_matrix[source_positions].mean(axis=0)
+        # ``mean`` yields a dense 1xN matrix; catalog vector dimensionality is
+        # vocabulary-sized, not catalog-sized, so this keeps serving memory bounded.
+        profile_vector = np.asarray(self._feature_matrix[source_positions].mean(axis=0)).ravel()
         norm = np.linalg.norm(profile_vector)
         if norm > 0:
-            profile_vector = profile_vector / norm
-            
-        scores = self._feature_matrix.dot(np.asarray(profile_vector).T).ravel()
+            profile_vector /= norm
+        scores = self._feature_matrix.dot(profile_vector).ravel()
         excluded = set(source_positions)
 
         k = min(len(scores), limit + len(excluded))

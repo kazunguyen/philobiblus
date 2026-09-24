@@ -22,6 +22,7 @@ stages:
       - train.model_version
       - train.ngram_range
       - train.top_k
+      - train.diagnostic_sample_size
     outs:
     - ml/models/tfidf_recommender.joblib
     metrics:
