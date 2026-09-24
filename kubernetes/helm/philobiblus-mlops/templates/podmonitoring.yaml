@@ -1,3 +1,4 @@
+{{- if .Values.monitoring.podMonitoring }}
 apiVersion: monitoring.googleapis.com/v1
 kind: PodMonitoring
 metadata:
@@ -6,7 +7,8 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: mlflow
+      app.kubernetes.io/name: mlflow
   endpoints:
     - port: 5000
       interval: 30s
+{{- end }}

@@ -46,6 +46,16 @@ variable "recommendation_image" {
   }
 }
 
+variable "model_fetcher_image" {
+  type        = string
+  description = "Immutable model-fetcher image reference used by the recommender initContainer."
+
+  validation {
+    condition     = can(regex("@sha256:[0-9a-f]{64}$", var.model_fetcher_image))
+    error_message = "model_fetcher_image must use an immutable sha256 digest."
+  }
+}
+
 variable "frontend_origin" {
   type        = string
   description = "Allowed GitHub Pages origin without a trailing path."
@@ -85,4 +95,3 @@ variable "include_imgbb_secret" {
   description = "Sync the ImgBB secret after it has an enabled Secret Manager version."
   default     = false
 }
-

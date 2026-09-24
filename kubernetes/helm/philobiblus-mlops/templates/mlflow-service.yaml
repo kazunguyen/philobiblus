@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   selector:
-    app: mlflow
+    app.kubernetes.io/name: mlflow
   ports:
     - protocol: TCP
       port: 5000

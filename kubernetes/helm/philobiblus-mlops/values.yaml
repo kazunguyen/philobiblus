@@ -1,34 +1,63 @@
+# All empty values below are intentional: production values are supplied by CI
+# from protected GitHub environment variables, never committed to this chart.
 namespace: philobiblus-mlops
+# Helm creates the release namespace with --create-namespace.  Keeping the
+# Namespace object disabled avoids a Helm ownership conflict on first install.
+namespaceResource:
+  create: false
+appNamespace: philobiblus
+
+gcp:
+  projectId: ""
+  sqlConnectionName: ""
+  cloudSqlProxyImage: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.25.4
 
 mlflow:
   image:
-    repository: ghcr.io/mlflow/mlflow
-    tag: v2.10.0
+    repository: ""
+    tag: ""
+    digest: ""
   replicaCount: 1
+  serviceAccount:
+    name: philobiblus-mlflow
+    gcpServiceAccount: ""
+  databaseSecretName: philobiblus-mlflow-db
+  databaseSecretKey: database_url
   resources:
-    requests:
-      cpu: "250m"
-      memory: "512Mi"
-      ephemeral-storage: "1Gi"
-    limits:
-      cpu: "500m"
-      memory: "1Gi"
-      ephemeral-storage: "2Gi"
+    # MLflow 3.x loads the model-registry/DB stack in its server process.
+    # 2Gi avoids OOMKilled while retaining a single worker for this dev cluster.
+    requests: { cpu: 250m, memory: 1Gi, ephemeral-storage: 1Gi }
+    limits: { cpu: 500m, memory: 2Gi, ephemeral-storage: 2Gi }
 
 trainer:
   image:
-    repository: us-central1-docker.pkg.dev/PROJECT_ID/philobiblus/training
-    tag: latest
+    repository: ""
+    tag: ""
+    digest: ""
+  serviceAccount:
+    name: philobiblus-trainer
+    gcpServiceAccount: ""
+  databaseSecretName: philobiblus-trainer-db
+  databaseSecretKey: database_url
+  artifactBucket: ""
   schedule: "0 20 * * *"
   suspend: true
+  allowBootstrap: false
+  maxChampionAgeHours: 168
+  recommendationServiceName: philobiblus-recommendation
+  recommendationServicePort: 8080
+  gitSha: unknown
+  imageDigest: unknown
   resources:
-    requests:
-      cpu: "1"
-      memory: "2Gi"
-      ephemeral-storage: "2Gi"
-    limits:
-      cpu: "2"
-      memory: "4Gi"
-      ephemeral-storage: "4Gi"
-  db_uri: "" # injected via secret sync or env
-  mlops_bucket: "" # injected via value
+    requests: { cpu: "1", memory: 2Gi, ephemeral-storage: 2Gi }
+    limits: { cpu: "2", memory: 4Gi, ephemeral-storage: 4Gi }
+
+# Enable only after the GKE Secret Manager add-on is enabled. The CSI volumes
+# mount the two URI secrets directly into the MLflow and trainer containers.
+secretSync:
+  enabled: false
+  mlflowDatabaseUrlSecret: ""
+  trainerDatabaseUrlSecret: ""
+
+monitoring:
+  podMonitoring: false

@@ -4,7 +4,7 @@ metadata:
   name: philobiblus-retrain
   namespace: {{ .Values.namespace }}
 spec:
-  schedule: "{{ .Values.trainer.schedule }}"
+  schedule: {{ .Values.trainer.schedule | quote }}
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 1800
   successfulJobsHistoryLimit: 3
@@ -14,45 +14,76 @@ spec:
     spec:
       backoffLimit: 1
       activeDeadlineSeconds: 1800
+      ttlSecondsAfterFinished: 86400
       template:
         metadata:
-          labels:
-            app: philobiblus-trainer
+          labels: { app.kubernetes.io/name: philobiblus-trainer }
         spec:
-          serviceAccountName: philobiblus-trainer
+          serviceAccountName: {{ .Values.trainer.serviceAccount.name }}
           restartPolicy: Never
           securityContext:
             runAsNonRoot: true
-          containers:
-            - name: trainer
-              image: "{{ .Values.trainer.image.repository }}:{{ .Values.trainer.image.tag }}"
-              env:
-                - name: MLFLOW_TRACKING_URI
-                  value: "http://mlflow.{{ .Values.namespace }}.svc.cluster.local:5000"
-                - name: GCP_PROJECT_ID
-                  value: "philobiblus-project" # Should come from values
-                - name: MLOPS_BUCKET
-                  value: "{{ .Values.trainer.mlops_bucket }}"
-                - name: DB_URI
-                  value: "{{ .Values.trainer.db_uri }}" # Needs secret or sidecar injection
-              command: ["python", "src/pipeline.py"]
-              args:
-                - "--db-uri"
-                - "$(DB_URI)"
-                - "--mlops-bucket"
-                - "$(MLOPS_BUCKET)"
-                - "--workspace-dir"
-                - "/workspace"
-              volumeMounts:
-                - name: workspace
-                  mountPath: "/workspace"
-              resources:
-                {{- toYaml .Values.trainer.resources | nindent 16 }}
+            seccompProfile: { type: RuntimeDefault }
+          initContainers:
+            - name: cloud-sql-proxy
+              image: {{ .Values.gcp.cloudSqlProxyImage | quote }}
+              restartPolicy: Always
+              args: ["--structured-logs", "--private-ip", "--address=127.0.0.1", "--port=5432", {{ required "gcp.sqlConnectionName is required" .Values.gcp.sqlConnectionName | quote }}]
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true
-                capabilities:
-                  drop: ["ALL"]
+                capabilities: { drop: ["ALL"] }
+              resources:
+                requests: { cpu: 100m, memory: 128Mi }
+                limits: { cpu: 250m, memory: 256Mi }
+          containers:
+            - name: trainer
+              image: {{ include "philobiblus-mlops.image" .Values.trainer.image | quote }}
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  {{- if .Values.secretSync.enabled }}
+                  export DB_URI="$(cat /mnt/secrets-store/database_url)"
+                  {{- end }}
+                  mkdir -p /workspace/tmp
+                  export TMPDIR=/workspace/tmp
+                  exec python src/pipeline.py --db-uri "$DB_URI" --mlops-bucket "$MLOPS_BUCKET" --workspace-dir /workspace --namespace {{ .Values.appNamespace | quote }} --max-champion-age-hours {{ .Values.trainer.maxChampionAgeHours | quote }} --recommendation-service-url {{ printf "http://%s.%s.svc.cluster.local:%v" .Values.trainer.recommendationServiceName .Values.appNamespace .Values.trainer.recommendationServicePort | quote }} {{ if .Values.trainer.allowBootstrap }}--allow-bootstrap{{ end }}
+              env:
+                {{- if not .Values.secretSync.enabled }}
+                - name: DB_URI
+                  valueFrom:
+                    secretKeyRef: { name: {{ .Values.trainer.databaseSecretName | quote }}, key: {{ .Values.trainer.databaseSecretKey | quote }} }
+                {{- end }}
+                - name: MLOPS_BUCKET
+                  value: {{ required "trainer.artifactBucket is required" .Values.trainer.artifactBucket | quote }}
+                - name: MLFLOW_TRACKING_URI
+                  value: {{ printf "http://mlflow.%s.svc.cluster.local:5000" .Values.namespace | quote }}
+                - name: GIT_SHA
+                  value: {{ .Values.trainer.gitSha | quote }}
+                - name: IMAGE_DIGEST
+                  value: {{ .Values.trainer.imageDigest | quote }}
+                - name: GIT_PYTHON_REFRESH
+                  value: quiet
+              volumeMounts:
+                - name: workspace
+                  mountPath: /workspace
+                {{- if .Values.secretSync.enabled }}
+                - name: trainer-secrets
+                  mountPath: /mnt/secrets-store
+                  readOnly: true
+                {{- end }}
+              resources: {{- toYaml .Values.trainer.resources | nindent 16 }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: ["ALL"] }
           volumes:
             - name: workspace
               emptyDir: {}
+            {{- if .Values.secretSync.enabled }}
+            - name: trainer-secrets
+              csi:
+                driver: secrets-store-gke.csi.k8s.io
+                readOnly: true
+                volumeAttributes: { secretProviderClass: philobiblus-trainer-db }
+            {{- end }}

@@ -3,10 +3,12 @@ locals {
 
   backend_image_parts        = split("@", var.backend_image)
   recommendation_image_parts = split("@", var.recommendation_image)
+  model_fetcher_image_parts  = split("@", var.model_fetcher_image)
 
   backend_ksa        = "philobiblus-backend"
   recommendation_ksa = "philobiblus-recommendation"
   seed_ksa           = "philobiblus-seed"
+  recommendation_gsa = "philobiblus-recommend@${var.project_id}.iam.gserviceaccount.com"
 }
 
 data "google_project" "current" {
@@ -103,6 +105,10 @@ resource "kubernetes_service_account_v1" "recommendation" {
   metadata {
     name      = local.recommendation_ksa
     namespace = kubernetes_namespace_v1.app.metadata[0].name
+
+    annotations = {
+      "iam.gke.io/gcp-service-account" = local.recommendation_gsa
+    }
   }
 }
 
@@ -128,6 +134,13 @@ resource "google_service_account_iam_member" "seed_workload_identity" {
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${local.seed_ksa}]"
 }
+
+resource "google_service_account_iam_member" "recommendation_workload_identity" {
+  service_account_id = "projects/${var.project_id}/serviceAccounts/${local.recommendation_gsa}"
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${local.recommendation_ksa}]"
+}
+
 
 resource "helm_release" "philobiblus" {
   name      = local.name
@@ -180,6 +193,11 @@ resource "helm_release" "philobiblus" {
         }
         service = {
           port = 8080
+        }
+        fetcherImage = {
+          repository = local.model_fetcher_image_parts[0]
+          tag        = ""
+          digest     = local.model_fetcher_image_parts[1]
         }
       }
       serviceAccounts = {
@@ -247,6 +265,7 @@ resource "helm_release" "philobiblus" {
   depends_on = [
     google_service_account_iam_member.backend_workload_identity,
     google_service_account_iam_member.seed_workload_identity,
+    google_service_account_iam_member.recommendation_workload_identity,
     kubernetes_limit_range_v1.app,
     kubernetes_resource_quota_v1.app,
     kubernetes_service_account_v1.backend,

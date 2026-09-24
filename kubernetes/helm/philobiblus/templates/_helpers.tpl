@@ -18,6 +18,14 @@
 {{- end -}}
 {{- end }}
 
+{{- define "philobiblus.fetcherImage" -}}
+{{- if .Values.recommendation.fetcherImage.digest -}}
+{{- printf "%s@%s" .Values.recommendation.fetcherImage.repository .Values.recommendation.fetcherImage.digest -}}
+{{- else -}}
+{{- printf "%s:%s" .Values.recommendation.fetcherImage.repository .Values.recommendation.fetcherImage.tag -}}
+{{- end -}}
+{{- end }}
+
 {{- define "philobiblus.backendServiceAccountName" -}}
 {{- default (printf "%s-backend" (include "philobiblus.fullname" .)) .Values.serviceAccounts.backend.name -}}
 {{- end }}

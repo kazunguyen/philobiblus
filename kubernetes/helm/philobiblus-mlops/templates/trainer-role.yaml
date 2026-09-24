@@ -1,14 +1,19 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: philobiblus-trainer
-  namespace: philobiblus # We need to patch the app deployment in another namespace!
+  name: philobiblus-trainer-promoter
+  namespace: {{ .Values.appNamespace }}
 rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
-    resourceNames: ["philobiblus-recommendation"]
-    verbs: ["get", "patch", "update"]
+    resourceNames: [{{ .Values.trainer.recommendationServiceName | quote }}]
+    verbs: ["get", "patch"]
   - apiGroups: [""]
     resources: ["configmaps"]
     resourceNames: ["model-release"]
-    verbs: ["get", "patch", "update", "create"]
+    verbs: ["get", "patch", "update"]
+  # Bootstrap creation is necessary only once and is protected by
+  # trainer.allowBootstrap plus a suspended CronJob by default.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]

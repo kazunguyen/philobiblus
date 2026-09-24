@@ -5,39 +5,90 @@ metadata:
   namespace: {{ .Values.namespace }}
 spec:
   replicas: {{ .Values.mlflow.replicaCount }}
+  revisionHistoryLimit: 2
   selector:
-    matchLabels:
-      app: mlflow
+    matchLabels: { app.kubernetes.io/name: mlflow }
   template:
     metadata:
-      labels:
-        app: mlflow
+      labels: { app.kubernetes.io/name: mlflow }
     spec:
-      serviceAccountName: philobiblus-mlflow
+      serviceAccountName: {{ .Values.mlflow.serviceAccount.name }}
       securityContext:
         runAsNonRoot: true
-      containers:
-        - name: mlflow
-          image: "{{ .Values.mlflow.image.repository }}:{{ .Values.mlflow.image.tag }}"
-          command:
-            - mlflow
-            - server
-            - --host=0.0.0.0
-            - --port=5000
-            - --backend-store-uri=$(MLFLOW_BACKEND_STORE_URI)
-            - --default-artifact-root=gs://$(MLOPS_BUCKET)/mlflow
-          env:
-            - name: MLFLOW_BACKEND_STORE_URI
-              value: "postgresql://mlflow@127.0.0.1:5432/mlflow"
-            - name: MLOPS_BUCKET
-              value: "{{ .Values.trainer.mlops_bucket }}"
-          ports:
-            - containerPort: 5000
-          resources:
-            {{- toYaml .Values.mlflow.resources | nindent 12 }}
+        seccompProfile: { type: RuntimeDefault }
+      initContainers:
+        - name: cloud-sql-proxy
+          image: {{ .Values.gcp.cloudSqlProxyImage | quote }}
+          restartPolicy: Always
+          args: ["--structured-logs", "--private-ip", "--address=127.0.0.1", "--port=5432", {{ required "gcp.sqlConnectionName is required" .Values.gcp.sqlConnectionName | quote }}]
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
-            capabilities:
-              drop: ["ALL"]
-        # Sidecar for Cloud SQL Auth Proxy should be added here
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 250m, memory: 256Mi }
+      containers:
+        - name: mlflow
+          image: {{ include "philobiblus-mlops.image" .Values.mlflow.image | quote }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              {{- if .Values.secretSync.enabled }}
+              export MLFLOW_BACKEND_STORE_URI="$(cat /mnt/secrets-store/database_url)"
+              {{- end }}
+              exec mlflow server --host 0.0.0.0 --port 5000 --workers 1 --allowed-hosts "mlflow,mlflow:5000,mlflow.{{ .Values.namespace }}.svc,mlflow.{{ .Values.namespace }}.svc:5000,mlflow.{{ .Values.namespace }}.svc.cluster.local,mlflow.{{ .Values.namespace }}.svc.cluster.local:5000" --backend-store-uri "$MLFLOW_BACKEND_STORE_URI" --artifacts-destination "$MLFLOW_ARTIFACT_ROOT"
+          env:
+            {{- if not .Values.secretSync.enabled }}
+            - name: MLFLOW_BACKEND_STORE_URI
+              valueFrom:
+                secretKeyRef: { name: {{ .Values.mlflow.databaseSecretName | quote }}, key: {{ .Values.mlflow.databaseSecretKey | quote }} }
+            {{- end }}
+            - name: MLFLOW_ARTIFACT_ROOT
+              value: {{ printf "gs://%s/mlflow" (required "trainer.artifactBucket is required" .Values.trainer.artifactBucket) | quote }}
+          ports: [{ name: http, containerPort: 5000 }]
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: mlflow
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: mlflow
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 4
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.secretSync.enabled }}
+            - name: mlflow-secrets
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            {{- end }}
+          resources: {{- toYaml .Values.mlflow.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.secretSync.enabled }}
+        - name: mlflow-secrets
+          csi:
+            driver: secrets-store-gke.csi.k8s.io
+            readOnly: true
+            volumeAttributes: { secretProviderClass: philobiblus-mlflow-db }
+        {{- end }}

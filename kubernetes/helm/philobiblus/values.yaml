@@ -120,15 +120,20 @@ tests:
 
 recommendation:
   enabled: true
-  replicaCount: 1
+  replicaCount: 2
+  progressDeadlineSeconds: 300
+  # Empty prevents a later Helm upgrade from replacing the version patched by
+  # promote.py. Bootstrap model-release before enabling the fetcher rollout.
+  initialModelVersion: ""
   image:
     repository: philobiblus-recommendation
     tag: tfidf-with-tags-v1
     digest: ""
     pullPolicy: IfNotPresent
   fetcherImage:
-    repository: us-central1-docker.pkg.dev/PROJECT_ID/philobiblus/model-fetcher
-    tag: latest
+    repository: ""
+    tag: ""
+    digest: ""
   service:
     port: 8080
   modelPath: /app/model/tfidf_recommender.joblib
