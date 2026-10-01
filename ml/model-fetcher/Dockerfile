@@ -2,7 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir google-cloud-storage joblib scipy numpy
+RUN pip install --no-cache-dir \
+    google-cloud-storage \
+    joblib==1.4.2 \
+    scikit-learn==1.5.2
 
 COPY fetch_model.py /app/fetch_model.py
 
