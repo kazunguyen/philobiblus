@@ -1,41 +1,45 @@
-\clearpage
 \reportchapter{III. TÓM TẮT LÝ THUYẾT, GIẢI PHÁP, THUẬT TOÁN}
 \reportsection{a. Các lý thuyết, giải pháp và thuật toán liên quan}
-Phần này chỉ giới thiệu những khái niệm trực tiếp chi phối cách thiết kế Philobiblus; chi tiết cấu hình được trình bày ở phần triển khai.
 
 \reportsubsection{Các lý thuyết nền tảng}
-\textbf{CI/CD.} CI/CD tự động hóa chuỗi kiểm thử, đóng gói và phát hành, giúp mỗi thay đổi được kiểm tra trước khi đi vào môi trường chạy.
+\textbf{DevOps.} DevOps là phương pháp kết nối hoạt động phát triển và vận hành thông qua một quy trình liên tục gồm viết mã, kiểm thử, đóng gói, triển khai và theo dõi hệ thống. Trong dự án, DevOps được thể hiện qua CI/CD, container, Infrastructure as Code, Helm và Kubernetes để giảm thao tác thủ công và bảo đảm mỗi phiên bản được triển khai theo cùng một quy trình.
 
-\textbf{Infrastructure as Code.} Infrastructure as Code biểu diễn hạ tầng bằng mã có phiên bản, từ đó tạo môi trường nhất quán và cho phép xem xét thay đổi trước khi áp dụng.
+\textbf{DevSecOps.} DevSecOps mở rộng DevOps bằng cách đưa bảo mật vào từng bước của quy trình phát triển, thay vì chỉ kiểm tra trước khi đưa hệ thống lên production. Các nội dung kiểm tra gồm mã nguồn, dependency, container image, secret, cấu hình hạ tầng và quyền truy cập. Với Philobiblus, các bước kiểm tra này được tích hợp vào CI/CD để phát hiện sớm rủi ro trước khi artifact được phát hành.
 
-\textbf{Containerization.} Container đóng gói ứng dụng cùng dependency trong image bất biến, giảm khác biệt giữa môi trường phát triển, kiểm thử và production \cite{docker}.
+\textbf{CI/CD.} tự động hóa chuỗi kiểm thử, đóng gói và phát hành, giúp mỗi thay đổi được kiểm tra trước khi đi vào môi trường chạy.
 
-\textbf{Điều phối workload.} Kubernetes quản lý Pod, Deployment, Service, probe, rollout và autoscaling để workload có thể tự phục hồi và mở rộng theo chính sách đã khai báo \cite{kubernetes}.
+\textbf{Infrastructure as Code.} biểu diễn hạ tầng bằng code có thể được quản lý bằng git, giúp quản lý hạ tầng được nhất quán.
 
-\textbf{MLOps.} MLOps mở rộng quy trình DevOps cho dữ liệu và model, bao gồm versioning snapshot, tracking run, đánh giá candidate, promotion và rollback.
+\textbf{Containerization.} giúp đóng gói ứng dụng cùng dependency trong image bất biến, giảm khác biệt giữa môi trường phát triển, kiểm thử và production \cite{docker}.
 
-\textbf{DevSecOps.} DevSecOps đưa kiểm tra bảo mật vào cùng pipeline phát triển, thay vì chờ đến cuối chu kỳ mới quét image, dependency hoặc cấu hình.
+\textbf{Điều phối workload.} Kubernetes quản lý Pod, Deployment, Service, probe, rollout và autoscaling để workload có thể tự phục hồi và mở rộng khi lượng người dùng biến động\cite{kubernetes}.
 
-\textbf{Observability.} Observability kết hợp metric, log và trạng thái trace để suy luận nguyên nhân sự cố từ dữ liệu vận hành thay vì chỉ dựa vào mã phản hồi.
+\textbf{MLOps.} là tập hợp các thực hành kết hợp giữa phát triển mô hình ML và vận hành hệ thống nhằm tự động hóa, chuẩn hóa và quản lý vòng đời mô hình một cách hiệu quả
+
+\textbf{Observability.} là việc đo lường và theo dõi trạng thái bên trong của một hệ thống phần mềm dựa trên các dữ liệu đầu ra mà nó tạo ra trong quá trình hoạt động
 
 \reportsubsection{Các giải pháp và công cụ áp dụng}
-\textbf{Terraform.} Terraform quản lý GKE, mạng, IAM và các tài nguyên Cloud SQL theo mô hình khai báo, giúp tái tạo hạ tầng mà không phải cấu hình từng bước trên giao diện.
+\textbf{Terraform.} là một công cụ giúp quản lý và tự động hóa hạ tầng công nghệ dưới dạng mã nguồn (IaC).
 
-\textbf{Google Cloud và GKE.} GKE Autopilot cung cấp cluster Kubernetes managed, còn Google Cloud cung cấp Gateway, Cloud Armor, Cloud SQL, GCS và các dịch vụ quan sát mà hệ thống cần khi triển khai thật.
+\textbf{Google Cloud và GKE.} GKE Autopilot cung cấp cluster Kubernetes managed, còn Google Cloud cung cấp các dịch vụ cloud để deploy hệ thống vào hoạt động.
 
-\textbf{Docker.} Docker tạo image riêng cho frontend, backend, recommendation và các job huấn luyện để pipeline có thể kiểm tra và phát hành cùng một artifact.
+\textbf{Docker.} tạo image cho các thành phần của hệ thống như frontend, backend, mô hình gợi ý,... để có thể deploy lên các môi trường khác như cloud.
 
-\textbf{Helm.} Helm gom Deployment, Service, ConfigMap, Secret và policy thành chart có tham số, giúp một release được triển khai nhất quán trên cluster.
+\textbf{Helm.} giúp người dùng dễ dàng định nghĩa, cài đặt, nâng cấp và quản lý các cấu hình phức tạp trên cụm Kubernetes thông qua các gói đóng gói sẵn gọi là Chart.
 
-\textbf{GitHub Actions.} GitHub Actions thực thi các bước test, lint, scan, build, ký image và gọi quy trình triển khai khi mã nguồn thay đổi.
+\textbf{GitHub Actions.} là nền tảng tự động hóa và CI/CD tích hợp trực tiếp ngay trên GitHub.
 
-\textbf{DVC.} DVC liên kết snapshot dữ liệu với các stage prepare, train và evaluate để kết quả huấn luyện có thể tái hiện \cite{dvc}.
+\textbf{DVC.} (Data Version Control) là công cụ quản lý phiên bản dữ liệu và quy trình xử lý dữ liệu, hoạt động cùng với Git. \cite{dvc}.
 
-\textbf{MLflow.} MLflow lưu run, metric, parameter, artifact và model version, tạo điểm kiểm soát cho quyết định promotion hoặc rollback \cite{mlflow}.
+\textbf{MLflow.} MLflow là nền tảng theo dõi thí nghiệm và quản lý vòng đời mô hình học máy. Công cụ lưu thông tin về run, parameter, metric, artifact và model version \cite{mlflow}.
 
-\textbf{Cloud SQL và Redis.} Cloud SQL lưu dữ liệu nghiệp vụ bền vững, còn Redis đảm nhiệm cache catalog và rate limit để giảm tải cho database.
+\textbf{Cloud SQL.} Cloud SQL là dịch vụ của Google Cloud dùng để lưu trữ dữ liệu theo bảng và quan hệ giữa các bảng.
 
-\textbf{Cloud Monitoring và Managed Service for Prometheus.} Hai dịch vụ này tiếp nhận metric, log và cảnh báo từ workload GKE để theo dõi request rate, latency, lỗi và mức sử dụng tài nguyên \cite{prometheus}.
+\textbf{Redis.} Redis là hệ thống lưu trữ dữ liệu tạm thời trong bộ nhớ, cho phép đọc và ghi nhanh hơn so với việc truy vấn lại cơ sở dữ liệu chính.
+
+\textbf{Cloud Monitoring.} Cloud Monitoring là dịch vụ của Google Cloud dùng để thu thập, hiển thị và cảnh báo dựa trên các chỉ số vận hành của tài nguyên.
+
+\textbf{Managed Service for Prometheus.} Managed Service for Prometheus là dịch vụ quản lý Prometheus trên Google Cloud, dùng để thu thập và truy vấn metric do các workload Kubernetes xuất ra. \cite{prometheus}.
 
 \reportsubsection{Các thuật toán sử dụng}
 \textbf{TF-IDF.} TF-IDF biến metadata sách thành vector thưa, trong đó các từ xuất hiện nhiều trong một sách nhưng ít xuất hiện trong catalog có trọng số cao \cite{sklearn}.
@@ -44,22 +48,22 @@ Phần này chỉ giới thiệu những khái niệm trực tiếp chi phối c
 
 \textbf{Snapshot hash và quality gate.} Hệ thống băm nội dung logic của snapshot, đối chiếu schema và mức suy giảm catalog trước khi cho phép candidate thay champion.
 
-\reportsection{b. Cách giải quyết của sinh viên}
+\reportsection{b. Quá trình triển khai}
 Em xây dựng frontend React, backend FastAPI và cơ sở dữ liệu PostgreSQL. Hệ thống cung cấp đăng ký, đăng nhập, hồ sơ, thư viện cá nhân, tiến độ đọc, nhận xét, chia sẻ và gợi ý sách.
 
 \reportsubsection{Kiến trúc tổng thể và ranh giới trách nhiệm}
-React xử lý giao diện; FastAPI kiểm tra token, quyền sở hữu và nghiệp vụ; PostgreSQL lưu dữ liệu quan hệ. Frontend chỉ gọi API và không truy cập trực tiếp database hoặc model artifact.
+React được phát hành dưới dạng trang tĩnh trên GitHub Pages; FastAPI kiểm tra token, quyền sở hữu và nghiệp vụ; PostgreSQL lưu dữ liệu quan hệ. Frontend chỉ gọi API và không truy cập trực tiếp database hoặc model artifact.
 
-Trên GKE, Gateway và HTTPRoute chỉ công khai tiền tố /api. Cloud Armor bảo vệ tầng biên; Service chuyển request tới backend Pod; NetworkPolicy giới hạn traffic giữa backend, Redis, recommendation và hệ thống thu metric.
+Từ GitHub Pages, request API HTTPS đi qua Cloud Run proxy rồi tới GKE Gateway. Proxy tách endpoint /health cho liveness probe của Cloud Run và chuyển tiếp /api tới Gateway. Gateway cùng HTTPRoute chỉ công khai tiền tố /api; Cloud Armor bảo vệ tầng biên, Service chuyển request tới backend Pod, còn NetworkPolicy giới hạn traffic giữa backend, Redis, recommendation và hệ thống thu metric.
 
 \clearpage
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.94\textwidth]{system-architecture.png}
-\caption{Kiến trúc triển khai và luồng phụ thuộc chính của Philobiblus}
+\input{chapters/system-architecture}
+\caption{Kiến trúc triển khai thực tế và luồng phụ thuộc chính của Philobiblus}
 \label{fig:1}
 \end{figure}
-Backend kết nối Cloud SQL qua Cloud SQL Auth Proxy. Redis lưu cache catalog và trạng thái rate limit dùng chung. Recommendation service nạp artifact đã kiểm tra, trả danh sách xếp hạng và có cơ chế lỗi không làm gián đoạn catalog chính.
+Backend kết nối Cloud SQL qua Cloud SQL Auth Proxy. Redis lưu cache catalog, trạng thái rate limit và circuit breaker dùng chung. Khi traffic recommendation vượt 12 request trong 10 giây, backend không gọi recommendation service, trả trạng thái unavailable trong 30 giây rồi tự mở lại circuit. Nếu Redis lỗi, cơ chế này fail-open để không làm gián đoạn catalog chính. Recommendation service nạp artifact đã kiểm tra và trả danh sách xếp hạng khi circuit đang đóng.
 
 \reportsubsection{Mô hình dữ liệu và kiểm soát quyền truy cập}
 User và UserSettings lưu định danh, trạng thái và thiết lập. Book gắn với chủ sở hữu, tiến độ, metadata và mức public, private hoặc restricted. BookReadingProgress, ReadingHistory, Review, Follow và Friendship ghi nhận tiến độ riêng và tương tác xã hội mà không sửa dữ liệu của người khác.

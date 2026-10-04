@@ -1,20 +1,20 @@
 \clearpage
-\reportchapter{IV. Mô tả phần mềm cài đặt (nếu có)}
+\reportchapter{IV. CÁC CÔNG CỤ ĐƯỢC ỨNG DỤNG}
 \reportsection{a. Không cần mô tả cách cài đặt các ứng dụng phụ}
 Người dùng truy cập Philobiblus bằng trình duyệt và không phải cài phần mềm desktop. GKE, Helm, Terraform, Cloud SQL và các dịch vụ quan sát chỉ phục vụ triển khai, vận hành.
 
 \reportsection{b. Mô tả ngắn gọn cách cài đặt phần mềm được phát triển}
-Phiên bản được mô tả trong báo cáo chạy trên GKE Autopilot. Frontend tĩnh gọi API qua Gateway; backend và recommendation chạy trong namespace philobiblus, Redis cung cấp cache, còn dữ liệu nghiệp vụ nằm trên Cloud SQL.
+Frontend tĩnh được phát hành trên GitHub Pages. Origin HTTPS của Pages được khai báo trong CORS của backend; request API đi qua Cloud Run HTTPS proxy rồi mới tới GKE Gateway. Backend và recommendation chạy trong namespace philobiblus, Redis cung cấp cache và điều tiết tải, còn dữ liệu nghiệp vụ nằm trên Cloud SQL.
 
 \reportsection{Quy trình triển khai trên GKE}
-Hạ tầng được tách thành các Terraform state gke-platform, gke-app, gke-mlops và gke-observability. gke-platform quản lý GKE Autopilot, mạng, Gateway và Cloud Armor; gke-app quản lý namespace, Workload Identity, Cloud SQL, Helm release và cấu hình ứng dụng; gke-mlops quản lý bucket versioned, IAM theo prefix, MLflow và pipeline retrain; gke-observability quản lý Cloud Monitoring dashboard cùng alert policy. Tách state riêng giúp việc thay đổi dashboard hoặc model pipeline mà không lập kế hoạch lại toàn bộ cluster.
+Hạ tầng được tách thành các Terraform state foundation, gke-platform, gke-app, gke-mlops, gke-observability và https-proxy. foundation quản lý VPC, Artifact Registry, Secret Manager, Cloud SQL và các quyền nền; gke-platform quản lý GKE Autopilot, Gateway và Cloud Armor; gke-app quản lý namespace, Workload Identity, Helm release và cấu hình ứng dụng; gke-mlops quản lý bucket versioned, IAM theo prefix, MLflow và pipeline retrain; gke-observability quản lý Cloud Monitoring dashboard cùng alert policy; https-proxy quản lý Cloud Run proxy. Tách state riêng giúp thay đổi dashboard, proxy hoặc model pipeline mà không lập kế hoạch lại toàn bộ cluster.
 
-Image được tham chiếu bằng digest bất biến để cùng một release luôn trỏ tới cùng nội dung. Helm tạo Deployment, Service, Redis, HTTPRoute, GCPBackendPolicy, NetworkPolicy, PodMonitoring, readiness/liveness probe và HPA. Backend dùng tối thiểu 2, tối đa 6 Pod trong đợt đo tải; probe chỉ đưa Pod vào Service khi sẵn sàng. Workload nhận quyền Google Cloud qua Workload Identity, trong khi secret được cung cấp ngoài chart thay vì ghi trực tiếp trong repository.
+Image được tham chiếu bằng digest bất biến để cùng một release luôn trỏ tới cùng nội dung. Helm tạo Deployment, Service, Redis, HTTPRoute, GCPBackendPolicy, NetworkPolicy, \mbox{PodMonitoring}, readiness/liveness probe và HPA. Backend dùng tối thiểu 2, tối đa 6 Pod trong đợt đo tải; probe chỉ đưa Pod vào Service khi sẵn sàng. Workload nhận quyền Google Cloud qua Workload Identity, trong khi secret được cung cấp ngoài chart thay vì ghi trực tiếp trong repository.
 
 Release đi qua kiểm thử, build image, lấy digest, validate Terraform, render Helm và chờ rollout. Metric nội bộ được PodMonitoring thu vào Google Managed Service for Prometheus; Cloud Monitoring và Cloud Logging là giao diện quan sát của GKE.
 
 \reportsection{Quan sát hệ thống và xử lý sự cố}
-FastAPI xuất /metrics trong mạng nội bộ. PodMonitoring thu request rate, latency, mã phản hồi, rate limit và cache operation; Cloud Monitoring kết hợp chúng với CPU, memory, restart và số replica. Log stdout/stderr được Cloud Logging thu theo cluster, namespace và container.
+FastAPI xuất /metrics trong mạng nội bộ. PodMonitoring thu request rate, latency, mã phản hồi, rate limit, cache operation và quyết định load shedding của recommendation; Cloud Monitoring kết hợp chúng với CPU, memory, restart và số replica. Log stdout/stderr được Cloud Logging thu theo cluster, namespace và container.
 
 \clearpage
 \begin{figure}[H]
@@ -35,4 +35,4 @@ CI sử dụng Gitleaks, Semgrep, pip-audit, npm audit và Trivy; bước phát 
 \caption{Các lớp kiểm soát từ thay đổi mã nguồn đến workload GKE}
 \label{fig:5}
 \end{figure}
-Sau khi workload hoạt động, Cloud Armor, Gateway, NetworkPolicy, securityContext và Redis rate limiter bảo vệ các ranh giới khác nhau. HTTPRoute chỉ công khai /api; /metrics, /docs, /openapi.json và /health trả 404 qua Gateway nhưng vẫn dùng được cho probe và thu metric nội bộ. Request thử SQL injection và XSS khớp rule CRS 4.22 của Cloud Armor ở chế độ preview. Chuỗi đăng nhập sai vượt ngưỡng bị rate limiter ứng dụng trả 429, cho thấy lớp bảo vệ trong backend vẫn hoạt động khi rule biên chưa chuyển sang Enforce.
+Sau khi workload hoạt động, Cloud Armor, Gateway, NetworkPolicy, securityContext, Redis rate limiter và circuit breaker của recommendation bảo vệ các ranh giới khác nhau. HTTPRoute chỉ công khai /api; /metrics, /docs, /openapi.json và /health trả 404 khi gọi trực tiếp qua Gateway nhưng vẫn dùng được cho probe và thu metric nội bộ. Riêng Cloud Run proxy trả 200 tại /health để liveness probe của chính proxy không phụ thuộc vào HTTPRoute. Request thử SQL injection và XSS khớp rule CRS 4.22 của Cloud Armor ở chế độ preview. Chuỗi đăng nhập sai vượt ngưỡng bị rate limiter ứng dụng trả 429, cho thấy lớp bảo vệ trong backend vẫn hoạt động khi rule biên chưa chuyển sang Enforce.

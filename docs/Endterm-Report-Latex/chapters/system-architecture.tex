@@ -1,0 +1,49 @@
+\definecolor{diagramink}{HTML}{334155}
+\definecolor{externalfill}{HTML}{E0F2FE}
+\definecolor{externalstroke}{HTML}{0369A1}
+\definecolor{edgefill}{HTML}{FEF3C7}
+\definecolor{edgestroke}{HTML}{B45309}
+\definecolor{servicefill}{HTML}{DCFCE7}
+\definecolor{servicestroke}{HTML}{15803D}
+\definecolor{statefill}{HTML}{EDE9FE}
+\definecolor{statestroke}{HTML}{6D28D9}
+\definecolor{storefill}{HTML}{F1F5F9}
+\definecolor{storestroke}{HTML}{475569}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  >=latex,
+  font=\scriptsize\sffamily,
+  box/.style={draw=diagramink, line width=0.8pt, rounded corners=4pt, align=center, minimum height=12mm, inner sep=3.5pt},
+  external/.style={box, fill=externalfill, draw=externalstroke},
+  edge/.style={box, fill=edgefill, draw=edgestroke},
+  service/.style={box, fill=servicefill, draw=servicestroke},
+  state/.style={box, fill=statefill, draw=statestroke},
+  store/.style={box, fill=storefill, draw=storestroke},
+  flow/.style={->, line width=0.8pt, draw=diagramink},
+  metric/.style={->, line width=0.75pt, dashed, draw=storestroke}
+]
+  \node[external, minimum width=22mm] (browser) at (0,0) {\textbf{Trình duyệt}\\React SPA};
+  \node[external, minimum width=23mm] (pages) at (3,0) {\textbf{GitHub Pages}\\Frontend tĩnh};
+  \node[edge, minimum width=26mm] (proxy) at (6,0) {\textbf{Cloud Run proxy}\\HTTPS, CORS, /health};
+  \node[edge, minimum width=23mm] (gateway) at (9.3,0) {\textbf{GKE Gateway}\\/api, Cloud Armor};
+  \node[service, minimum width=28mm] (backend) at (12.9,0) {\textbf{FastAPI backend}\\JWT, nghiệp vụ, metrics};
+  \node[font=\bfseries\small\sffamily, text=diagramink] at (12.1,1.1) {GKE Autopilot, namespace philobiblus};
+
+  \node[state, minimum width=28mm] (redis) at (10.35,-2.15) {\textbf{Redis}\\Cache, rate limit, circuit breaker};
+  \node[state, minimum width=28mm] (recommendation) at (14.0,-2.15) {\textbf{Recommendation}\\TF-IDF model};
+  \node[store, minimum width=34mm] (monitoring) at (3.7,-4.9) {\textbf{Cloud Monitoring}\\Cloud Logging, Managed Prometheus};
+  \node[store, minimum width=30mm] (sql) at (11.15,-4.9) {\textbf{Cloud SQL PostgreSQL}\\Cloud SQL Auth Proxy};
+  \node[store, minimum width=27mm] (mlflow) at (15.3,-4.9) {\textbf{GCS và MLflow}\\Artifact, release, run};
+
+  \draw[flow] (browser.east) -- (pages.west);
+  \draw[flow] (pages.east) -- (proxy.west);
+  \draw[flow] (proxy.east) -- node[above, font=\scriptsize] {/api} (gateway.west);
+  \draw[flow] (gateway.east) -- (backend.west);
+
+  \draw[flow] (backend.south west) -- (12.1,-1.12) -| (redis.north);
+  \draw[flow] (backend.south east) -- (13.7,-1.12) -| (recommendation.north);
+  \draw[flow] (backend.south) -- (12.9,-3.62) -| (sql.north);
+  \draw[flow] (recommendation.south) -- (14.0,-3.62) -| (mlflow.north);
+  \draw[metric] (backend.east) -- (16.7,0) -- (16.7,-3.62) -| (monitoring.east);
+\end{tikzpicture}%
+}

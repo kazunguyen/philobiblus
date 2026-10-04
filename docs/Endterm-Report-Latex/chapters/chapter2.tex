@@ -1,6 +1,8 @@
 \reportchapter{II. YÊU CẦU BÀI TOÁN}
 \reportsection{a. Bối cảnh và mô tả bài toán}
-Trong phạm vi báo cáo này, Philobiblus là hệ thống mẫu dùng để kiểm chứng quy trình phát triển và vận hành một ứng dụng web nhiều thành phần. Về nghiệp vụ, hệ thống cung cấp các chức năng quản lý thư viện, cập nhật tiến độ đọc, nhận xét, chia sẻ và gợi ý sách. Về kỹ thuật, bài toán tập trung vào việc tách frontend, backend, cơ sở dữ liệu và recommendation service, sau đó triển khai chúng trên Kubernetes với các yêu cầu về bảo mật, khả năng phục hồi và autoscale.
+Hoạt động đọc thường tạo ra nhiều loại dữ liệu như thư viện cá nhân, tiến độ, nhận xét và lịch sử tương tác. Khi các dữ liệu này được ghi chép hoặc lưu trữ ở nhiều công cụ riêng lẻ, người dùng khó theo dõi quá trình đọc và kiểm soát nội dung đã chia sẻ. Vì vậy, Philobiblus được xây dựng như một hệ thống mẫu tập trung các thao tác quản lý thư viện, cập nhật tiến độ, nhận xét, chia sẻ và gợi ý sách.
+
+Nếu mở rộng cho nhiều người dùng, hệ thống không chỉ cần đáp ứng các chức năng nghiệp vụ mà còn phải xử lý đồng thời nhiều request, phân tách dữ liệu theo tài khoản và kiểm soát phạm vi truy cập. Các thành phần frontend, backend, cơ sở dữ liệu và recommendation service được tách riêng để giới hạn ảnh hưởng khi có lỗi, triển khai độc lập và mở rộng theo tải. Đây là cơ sở để bài toán được triển khai trên Kubernetes với các yêu cầu về bảo mật, khả năng phục hồi, autoscale và theo dõi vận hành.
 
 \reportsection{b. Mục tiêu của hệ thống}
 Mục tiêu nghiệp vụ của Philobiblus là hoàn thiện các chức năng cơ bản để quản lý thư viện, tiến độ đọc, nhận xét, chia sẻ và gợi ý sách; dữ liệu phải được gắn với đúng tài khoản và phạm vi truy cập.
@@ -34,7 +36,9 @@ Mục tiêu kỹ thuật là triển khai hệ thống nhiều thành phần tr�
 
 \textbf{Khả năng kiểm thử và bảo trì.} Backend, recommendation service, Helm chart và Terraform module phải được kiểm thử độc lập; cấu trúc module, schema và hợp đồng API cần đủ rõ để thay đổi một thành phần không làm hỏng các thành phần còn lại.
 
-\reportsection{d. Phạm vi bài toán và trách nhiệm thực hiện}
+\reportsection{d. Phạm vi bài toán và trách nhiệm pháp lý liên quan}
 Philobiblus là dự án độc lập do em thực hiện từ phân tích yêu cầu, phát triển giao diện, API và cơ sở dữ liệu đến MLOps, kiểm thử, đóng gói và triển khai. Sản phẩm được đánh giá qua các luồng quản lý thư viện, tiến độ, nhận xét, chia sẻ, gợi ý và khả năng duy trì ranh giới quyền hạn.
 
-Dự án không xử lý thanh toán, giao nhận, bản quyền nội dung số hoặc kho sách vật lý. Hệ gợi ý phục vụ catalog hiện có, chưa hướng tới huấn luyện quy mô thương mại.
+Dự án không xử lý thanh toán, giao nhận hoặc phân phối nội dung số. Hệ thống chỉ lưu trữ và hiển thị các bản ghi mô tả sách do người dùng cung cấp hoặc lấy từ nguồn phù hợp, gồm tên sách, tác giả, thể loại, thẻ, số trang và thông tin hoặc đường dẫn ảnh bìa. Hệ thống không lưu trữ, sao chép hoặc cung cấp toàn văn, ebook, audiobook hay bản scan của sách. Việc sử dụng ảnh bìa trong môi trường thực tế phải tuân theo quyền và điều khoản của nguồn cung cấp; báo cáo này chỉ mô tả phạm vi kỹ thuật của hệ thống.
+
+Hệ thống gợi ý sách sử dụng thông tin mô tả của từng cuốn sách trong cơ sở dữ liệu, chẳng hạn như tên sách, tác giả, thể loại và thẻ. Dữ liệu này được lưu thành snapshot để huấn luyện và đánh giá mô hình. Sau đó, mô hình xác định mức độ tương đồng giữa các cuốn sách và đề xuất những cuốn gần với sách người dùng đang xem hoặc đã chọn, trong phạm vi danh sách sách hiện có. Hệ thống gợi ý sách chỉ phục vụ mục đích kiểm chứng pipeline MLOps, chưa hướng tới xây dựng dịch vụ thương mại hoặc mô hình cá nhân hóa ở quy mô lớn.
