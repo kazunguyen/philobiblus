@@ -61,9 +61,6 @@ const BookListPage = () => {
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-3xl font-semibold">My Library</h1>
-                        <p className="text-sm text-muted-foreground">
-                            Manage your personal reading collection.
-                        </p>
                     </div>
 
                     <div className="flex items-center gap-2">

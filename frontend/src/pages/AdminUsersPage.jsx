@@ -33,9 +33,6 @@ const AdminUsersPage = () => {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-3xl font-semibold">User resources</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Inspect accounts and open their dedicated management pages.
-            </p>
           </div>
           <div className="relative w-full sm:max-w-sm">
             <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />

@@ -305,18 +305,12 @@ const ReadOnlyBookDetail = () => {
 
             {!isAuthenticated ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">
-                  Sign in to start reading and track your own progress.
-                </p>
                 <Button onClick={() => navigate('/login')}>
                   Sign in to start reading
                 </Button>
               </div>
             ) : !progressDraft ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">
-                  This creates progress for your account without changing the owner's data.
-                </p>
                 <Button onClick={handleStartReading} disabled={isStarting}>
                   <Play />
                   {isStarting ? 'Starting...' : 'Start reading'}
@@ -401,11 +395,6 @@ const ReadOnlyBookDetail = () => {
                   Recommended for this book
                 </h2>
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {recommendationSource === "model"
-                  ? "Matched from title, author, genre, and tags."
-                  : "More public books from the same genre."}
-              </p>
             </div>
 
             {recommendationSource && (

@@ -207,9 +207,6 @@ const SocialPage = () => {
                     <h1 className="text-3xl font-semibold">
                         Social connections
                     </h1>
-                    <p className="text-sm text-muted-foreground">
-                        Manage friend requests, followers and following users.
-                    </p>
                 </div>
 
                 {error && (

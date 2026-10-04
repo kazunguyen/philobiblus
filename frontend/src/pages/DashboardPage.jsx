@@ -120,9 +120,6 @@ const DashboardPage = () => {
                         <h1 className="text-3xl font-semibold">
                             Statistics
                         </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Track your reading activity and personal library.
-                        </p>
                     </div>
 
                     <Button onClick={() => navigate('/books/add')}>

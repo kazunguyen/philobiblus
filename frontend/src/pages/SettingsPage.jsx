@@ -6,13 +6,11 @@ const settingsItems = [
     {
         to: 'appearance',
         label: 'Appearance',
-        description: 'Theme and visual preferences',
         icon: Palette,
     },
     {
         to: 'preferences',
         label: 'Preferences',
-        description: 'Default reading and book views',
         icon: SlidersHorizontal,
     },
 ];
@@ -22,15 +20,12 @@ const SettingsPage = () => (
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <div className="mb-8">
                 <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-                <p className="mt-2 text-muted-foreground">
-                    Personalize how Philobiblus looks and behaves.
-                </p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
                 <aside className="h-fit rounded-xl border bg-card p-2">
                     <nav aria-label="Settings sections" className="space-y-1">
-                        {settingsItems.map(({ to, label, description, icon: Icon }) => (
+                        {settingsItems.map(({ to, label, icon: Icon }) => (
                             <NavLink
                                 key={to}
                                 to={to}
@@ -43,12 +38,7 @@ const SettingsPage = () => (
                                 }
                             >
                                 <Icon className="mt-0.5 size-4 shrink-0" />
-                                <span className="min-w-0">
-                                    <span className="block text-sm font-medium">{label}</span>
-                                    <span className="mt-0.5 block text-xs opacity-75">
-                                        {description}
-                                    </span>
-                                </span>
+                                <span className="block text-sm font-medium">{label}</span>
                             </NavLink>
                         ))}
                     </nav>

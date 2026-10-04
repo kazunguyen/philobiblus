@@ -22,14 +22,6 @@ const NotFoundPage = () => {
           <p className="-ml-1 text-[clamp(8rem,27vw,17rem)] leading-[0.72] font-semibold tracking-[-0.1em] text-foreground" aria-hidden="true">
             404
           </p>
-          <div className="mt-10 max-w-md border-l-2 border-foreground pl-5 sm:mt-12">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-              This chapter is missing.
-            </h1>
-            <p className="mt-3 text-muted-foreground">
-              The page you are looking for is not in this library.
-            </p>
-          </div>
         </div>
 
         <Button size="lg" className="w-fit" onClick={() => navigate('/dashboard')}>

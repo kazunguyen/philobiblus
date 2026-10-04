@@ -83,11 +83,8 @@ const PublicDashboardPage = () => {
         <div className="min-h-screen bg-muted/30">
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-6 flex items-start justify-between gap-4">
-                    <div className="space-y-2">
+                    <div>
                         <h1 className="text-3xl font-semibold tracking-tight">Public Dashboard</h1>
-                        <p className="text-muted-foreground">
-                            Explore books shared by readers across Philobiblus.
-                        </p>
                     </div>
                     <BookViewToggle view={bookView} onViewChange={setBookView} />
                 </div>

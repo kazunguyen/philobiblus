@@ -28,9 +28,6 @@ const AdminHomePage = () => {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold">Administration</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Inspect resources and manage user accounts.
-          </p>
         </div>
 
         {error && <p className="mb-6 text-sm text-destructive" role="alert">{error}</p>}

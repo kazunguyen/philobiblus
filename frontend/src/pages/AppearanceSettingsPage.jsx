@@ -1,19 +1,17 @@
 import React from 'react';
 import { Check, Moon, Sun } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSettings } from '../context/SettingsContext';
 
 const themes = [
     {
         value: 'light',
         label: 'Light',
-        description: 'Use a bright interface for daytime reading.',
         icon: Sun,
     },
     {
         value: 'dark',
         label: 'Dark',
-        description: 'Use a darker interface for low-light reading.',
         icon: Moon,
     },
 ];
@@ -25,12 +23,9 @@ const AppearanceSettingsPage = () => {
         <Card>
             <CardHeader>
                 <CardTitle>Appearance</CardTitle>
-                <CardDescription>
-                    Choose the color theme used throughout the application.
-                </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-                {themes.map(({ value, label, description, icon: Icon }) => {
+                {themes.map(({ value, label, icon: Icon }) => {
                     const isSelected = theme === value;
 
                     return (
@@ -50,9 +45,6 @@ const AppearanceSettingsPage = () => {
                             </span>
                             <span>
                                 <span className="block font-medium">{label}</span>
-                                <span className="mt-1 block text-sm text-muted-foreground">
-                                    {description}
-                                </span>
                             </span>
                             {isSelected && (
                                 <span className="absolute right-4 top-4 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">

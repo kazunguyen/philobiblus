@@ -35,9 +35,6 @@ const AdminBooksPage = () => {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-3xl font-semibold">Book resources</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              All public, restricted, private, and retained books are visible here.
-            </p>
           </div>
           <div className="relative w-full sm:max-w-sm">
             <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
