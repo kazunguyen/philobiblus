@@ -1,15 +1,13 @@
 \reportchapter{II. YÊU CẦU BÀI TOÁN}
-\reportsectionplain{a. Bối cảnh và mô tả bài toán}
-Thông tin về quá trình đọc thường bị phân tán giữa ghi chú, mạng xã hội và nhiều công cụ riêng lẻ. Người dùng vì thế khó theo dõi sách đang đọc, lịch sử hoàn thành và mục tiêu cá nhân.
+\reportsection{a. Bối cảnh và mô tả bài toán}
+Trong phạm vi báo cáo này, Philobiblus là hệ thống mẫu dùng để kiểm chứng quy trình phát triển và vận hành một ứng dụng web nhiều thành phần. Về nghiệp vụ, hệ thống cung cấp các chức năng quản lý thư viện, cập nhật tiến độ đọc, nhận xét, chia sẻ và gợi ý sách. Về kỹ thuật, bài toán tập trung vào việc tách frontend, backend, cơ sở dữ liệu và recommendation service, sau đó triển khai chúng trên Kubernetes với các yêu cầu về bảo mật, khả năng phục hồi và autoscale.
 
-Philobiblus tập trung các thao tác đăng ký, quản lý thư viện, cập nhật tiến độ, viết nhận xét, chia sẻ theo phạm vi và nhận gợi ý sách. Người dùng thông thường quản lý dữ liệu đọc và tương tác với nội dung công khai; quản trị viên xử lý dữ liệu cần kiểm soát.
+\reportsection{b. Mục tiêu của hệ thống}
+Mục tiêu nghiệp vụ của Philobiblus là hoàn thiện các chức năng cơ bản để quản lý thư viện, tiến độ đọc, nhận xét, chia sẻ và gợi ý sách; dữ liệu phải được gắn với đúng tài khoản và phạm vi truy cập.
 
-\reportsectionplain{b. Mục tiêu của hệ thống}
-Mục tiêu nghiệp vụ của Philobiblus là cung cấp một không gian thống nhất để người dùng quản lý việc đọc, ghi nhận đánh giá, chia sẻ có kiểm soát và khám phá sách mới. Các thao tác từ thêm sách, cập nhật tiến độ đến xem lại lịch sử phải được thực hiện trong cùng một tài khoản, với dữ liệu được gắn đúng chủ sở hữu.
+Mục tiêu kỹ thuật là triển khai hệ thống nhiều thành phần trên GKE Autopilot bằng Terraform và Helm; xây dựng CI/CD để kiểm thử, quét bảo mật, build và phát hành image; quản lý snapshot, run, artifact và model version bằng DVC và MLflow. Phần vận hành cần kiểm chứng khả năng cô lập và khôi phục dịch vụ, autoscale theo tải và quan sát workload qua metric, log và trạng thái rollout.
 
-Mục tiêu kỹ thuật là xây dựng một sản phẩm có thể triển khai lặp lại trên Google Kubernetes Engine (GKE), tách rõ giao diện, API, dữ liệu và dịch vụ gợi ý. Hệ thống phải cho phép tự động kiểm thử và phát hành, theo dõi được trạng thái workload, đồng thời quản lý model theo phiên bản thay vì chép thủ công artifact vào máy chủ.
-
-\reportsectionplain{c. Yêu cầu của hệ thống}
+\reportsection{c. Yêu cầu của hệ thống}
 \reportsubsection{Yêu cầu chức năng}
 \textbf{Quản lý tài khoản và quyền truy cập.} Người dùng có thể đăng ký, đăng nhập, cập nhật hồ sơ và đăng xuất; backend phải xác thực token, kiểm tra chủ sở hữu tài nguyên và áp dụng quyền quản trị ở phía máy chủ.
 
@@ -36,7 +34,7 @@ Mục tiêu kỹ thuật là xây dựng một sản phẩm có thể triển kh
 
 \textbf{Khả năng kiểm thử và bảo trì.} Backend, recommendation service, Helm chart và Terraform module phải được kiểm thử độc lập; cấu trúc module, schema và hợp đồng API cần đủ rõ để thay đổi một thành phần không làm hỏng các thành phần còn lại.
 
-\reportsectionplain{d. Phạm vi bài toán và trách nhiệm thực hiện}
+\reportsection{d. Phạm vi bài toán và trách nhiệm thực hiện}
 Philobiblus là dự án độc lập do em thực hiện từ phân tích yêu cầu, phát triển giao diện, API và cơ sở dữ liệu đến MLOps, kiểm thử, đóng gói và triển khai. Sản phẩm được đánh giá qua các luồng quản lý thư viện, tiến độ, nhận xét, chia sẻ, gợi ý và khả năng duy trì ranh giới quyền hạn.
 
 Dự án không xử lý thanh toán, giao nhận, bản quyền nội dung số hoặc kho sách vật lý. Hệ gợi ý phục vụ catalog hiện có, chưa hướng tới huấn luyện quy mô thương mại.
