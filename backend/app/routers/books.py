@@ -2,11 +2,12 @@ import secrets
 from datetime import date
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import and_, func, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.auth import get_current_user, get_optional_current_user
+from app.catalog_cache import catalog_cache
 from app.database import get_db
 from app.models import (
     Book,
@@ -16,6 +17,7 @@ from app.models import (
     ReadingHistory,
     User,
 )
+from app.rate_limit import enforce_rate_limit
 from app.schemas import (
     BookCreate,
     BookOwnerOut,
@@ -160,6 +162,7 @@ def create_book(
     db.add(new_book)
     db.commit()
     db.refresh(new_book)
+    catalog_cache.invalidate()
     return new_book
 
 @router.get(
@@ -176,7 +179,22 @@ def get_public_books(
     db: Session = Depends(get_db),
 ):
     """Query books from all users for the public dashboard."""
-    query = db.query(Book).filter(Book.visibility == BookVisibility.PUBLIC)
+    cache_parameters = {
+        "genre": genre,
+        "search": search,
+        "skip": skip,
+        "limit": limit,
+    }
+    if current_user is None:
+        cached_books = catalog_cache.get(cache_parameters)
+        if cached_books is not None:
+            return cached_books
+
+    query = (
+        db.query(Book)
+        .options(joinedload(Book.owner))
+        .filter(Book.visibility == BookVisibility.PUBLIC)
+    )
 
     if genre:
         query = query.filter(Book.genre.ilike(f"%{genre}%"))
@@ -191,7 +209,15 @@ def get_public_books(
         )
 
     books = query.order_by(Book.created_at.desc()).offset(skip).limit(limit).all()
-    return _enrich_public_books(db, books, current_user)
+    enriched_books = _enrich_public_books(db, books, current_user)
+    if current_user is None:
+        response = [
+            BookPublicOut.model_validate(book).model_dump(mode="json")
+            for book in enriched_books
+        ]
+        catalog_cache.set(cache_parameters, response)
+        return response
+    return enriched_books
 
 
 @router.get(
@@ -207,6 +233,7 @@ def get_shared_book(
     """Retrieve a restricted book only when its unguessable share token is supplied."""
     book = (
         db.query(Book)
+        .options(joinedload(Book.owner))
         .filter(
             Book.share_token == share_token,
             Book.visibility == BookVisibility.RESTRICTED,
@@ -231,6 +258,7 @@ def get_public_book(
     """Retrieve details only for books explicitly marked public."""
     book = (
         db.query(Book)
+        .options(joinedload(Book.owner))
         .filter(Book.id == book_id, Book.visibility == BookVisibility.PUBLIC)
         .first()
     )
@@ -281,6 +309,7 @@ def start_public_book_reading(
 
     db.commit()
     db.refresh(progress)
+    catalog_cache.invalidate()
     return progress
 
 
@@ -351,6 +380,7 @@ def update_public_book_reading_progress(
 
     db.commit()
     db.refresh(progress)
+    catalog_cache.invalidate()
     return progress
 
 
@@ -421,11 +451,19 @@ def get_book_stats(
     summary="Get personalized recommendations",
 )
 def get_personal_recommendations(
+    request: Request,
     limit: int = Query(5, ge=1, le=5),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> BookRecommendationsOut:
     """Return personalized recommendations based on reading progress."""
+    enforce_rate_limit(
+        request=request,
+        scope="recommendation",
+        limit=30,
+        window_seconds=60,
+        identity=f"user:{current_user.id}",
+    )
     owned_ids = {
         row[0]
         for row in db.query(Book.id).filter(
@@ -589,6 +627,7 @@ def update_book(
 
     db.commit()
     db.refresh(book)
+    catalog_cache.invalidate()
     return book
 
 
@@ -616,6 +655,7 @@ def delete_book(
 
     db.delete(book)
     db.commit()
+    catalog_cache.invalidate()
     return None
 
 @router.get(
@@ -624,12 +664,20 @@ def delete_book(
     summary="Get recommendations for a public book",
 )
 def get_public_book_recommendations(
+    request: Request,
     book_id: int,
     limit: int = Query(5, ge=1, le=5),
     current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ) -> BookRecommendationsOut:
     """Return only public recommendations for one public source book."""
+    enforce_rate_limit(
+        request=request,
+        scope="public_recommendation",
+        limit=60,
+        window_seconds=60,
+        identity=f"user:{current_user.id}" if current_user else None,
+    )
     source_book = (
         db.query(Book)
         .filter(

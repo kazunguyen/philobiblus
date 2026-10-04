@@ -30,6 +30,27 @@ backend:
       memory: 512Mi
   accessTokenExpireMinutes: 1440
   allowedOrigins: ""
+  apiDocs:
+    enabled: true
+  rateLimit:
+    enabled: false
+    trustProxyHeaders: false
+    fallbackPodCount: 6
+  uploads:
+    imgbbTimeoutSeconds: 15
+    maxConcurrency: 2
+  databasePool:
+    size: 3
+    maxOverflow: 2
+    timeoutSeconds: 10
+    recycleSeconds: 1800
+  catalogCache:
+    ttlSeconds: 30
+  observability:
+    tracing:
+      enabled: false
+      endpoint: ""
+      serviceName: philobiblus-backend
   probe:
     startupFailureThreshold: 12
     startupPeriodSeconds: 5
@@ -149,6 +170,23 @@ recommendation:
     initialDelaySeconds: 5
     periodSeconds: 10
 
+redis:
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: redis
+    tag: 7.4-alpine
+    pullPolicy: IfNotPresent
+  service:
+    port: 6379
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
 serviceAccounts:
   backend:
     create: true
@@ -194,6 +232,20 @@ gateway:
     enabled: false
     certificateMapName: ""
   httpToHttpsRedirect: false
+  backendPolicy:
+    enabled: false
+    securityPolicy: ""
+    timeoutSeconds: 30
+    logging:
+      enabled: true
+      sampleRate: 1000000
+
+networkPolicy:
+  enabled: false
+  defaultDenyIngress: true
+  defaultDenyEgress: false
+  managedPrometheusNamespace: gmp-system
+  recommendationTrainerNamespace: philobiblus-mlops
 
 monitoring:
   serviceMonitor:
@@ -206,3 +258,19 @@ monitoring:
   podMonitoring:
     enabled: false
     interval: 30s
+  tracing:
+    enabled: false
+    exporter: debug
+    collector:
+      image: otel/opentelemetry-collector-contrib:0.110.0
+      serviceAccount:
+        create: true
+        name: ""
+        annotations: {}
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 250m
+          memory: 256Mi

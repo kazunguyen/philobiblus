@@ -1,0 +1,199 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    autopilot.gke.io/resource-adjustment: '{"input":{"initContainers":[{"limits":{"cpu":"250m","memory":"256Mi"},"requests":{"cpu":"100m","memory":"128Mi"},"name":"cloud-sql-proxy"}],"containers":[{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"128Mi"},"name":"backend"}]},"output":{"initContainers":[{"limits":{"cpu":"250m","ephemeral-storage":"1Gi","memory":"256Mi"},"requests":{"cpu":"100m","ephemeral-storage":"1Gi","memory":"128Mi"},"name":"cloud-sql-proxy"}],"containers":[{"limits":{"cpu":"500m","ephemeral-storage":"1Gi","memory":"512Mi"},"requests":{"cpu":"100m","ephemeral-storage":"1Gi","memory":"128Mi"},"name":"backend"}]},"computeClassAtAdmission":"Default","modified":true}'
+    autopilot.gke.io/warden-version: 35.26.6-gke.0
+    deployment.kubernetes.io/revision: "3"
+    meta.helm.sh/release-name: philobiblus
+    meta.helm.sh/release-namespace: philobiblus
+  creationTimestamp: "2026-09-21T09:03:10Z"
+  generation: 47
+  labels:
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/instance: philobiblus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: philobiblus
+    app.kubernetes.io/version: local
+    helm.sh/chart: philobiblus-0.1.0
+  name: philobiblus-backend
+  namespace: philobiblus
+  resourceVersion: "1790180201499455006"
+  uid: f2ba0e08-254e-4a93-80e3-1a101ce99af7
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: philobiblus
+      app.kubernetes.io/name: philobiblus
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/instance: philobiblus
+        app.kubernetes.io/name: philobiblus
+    spec:
+      containers:
+      - env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              key: DATABASE_URL
+              name: philobiblus-secrets
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: SECRET_KEY
+              name: philobiblus-secrets
+        - name: IMGBB_API
+          valueFrom:
+            secretKeyRef:
+              key: IMGBB_API
+              name: philobiblus-secrets
+              optional: true
+        - name: APP_HOST
+          value: 0.0.0.0
+        - name: APP_PORT
+          value: "8000"
+        - name: ACCESS_TOKEN_EXPIRE_MINUTES
+          value: "1440"
+        - name: ALLOWED_ORIGINS
+          value: https://kazunguyen.github.io
+        - name: RECOMMENDATION_SERVICE_URL
+          value: http://philobiblus-recommendation:8080
+        - name: RECOMMENDATION_TIMEOUT_SECONDS
+          value: "2"
+        image: kazu912/philobiblus-backend@sha256:9f28118c0d8309e7fbe61a8a571c4d88bb6e2ad67e690cdea3e629d8d761b5be
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: backend
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            ephemeral-storage: 1Gi
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 1Gi
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        startupProbe:
+          failureThreshold: 12
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /cloudsql
+          name: cloudsql
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - --structured-logs
+        - --private-ip
+        - --unix-socket=/cloudsql
+        - grace-enhanced:asia-southeast1:philobiblus-dev-postgres
+        image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.25.4
+        imagePullPolicy: IfNotPresent
+        name: cloud-sql-proxy
+        resources:
+          limits:
+            cpu: 250m
+            ephemeral-storage: 1Gi
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 1Gi
+            memory: 128Mi
+        restartPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /cloudsql
+          name: cloudsql
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 2000
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccount: philobiblus-backend
+      serviceAccountName: philobiblus-backend
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - effect: NoSchedule
+        key: kubernetes.io/arch
+        operator: Equal
+        value: amd64
+      volumes:
+      - emptyDir: {}
+        name: cloudsql
+status:
+  availableReplicas: 2
+  conditions:
+  - lastTransitionTime: "2026-09-21T09:03:11Z"
+    lastUpdateTime: "2026-09-23T03:59:39Z"
+    message: ReplicaSet "philobiblus-backend-58dcfd66bb" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2026-09-23T16:16:41Z"
+    lastUpdateTime: "2026-09-23T16:16:41Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  observedGeneration: 47
+  readyReplicas: 2
+  replicas: 2
+  terminatingReplicas: 0
+  updatedReplicas: 2

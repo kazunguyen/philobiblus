@@ -1,0 +1,19 @@
+{{- if and .Values.gateway.enabled .Values.gateway.backendPolicy.enabled }}
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: {{ include "philobiblus.fullname" . }}-backend
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+spec:
+  default:
+    securityPolicy: {{ required "gateway.backendPolicy.securityPolicy is required when backendPolicy is enabled" .Values.gateway.backendPolicy.securityPolicy | quote }}
+    timeoutSec: {{ .Values.gateway.backendPolicy.timeoutSeconds }}
+    logging:
+      enabled: {{ .Values.gateway.backendPolicy.logging.enabled }}
+      sampleRate: {{ .Values.gateway.backendPolicy.logging.sampleRate }}
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ include "philobiblus.fullname" . }}-backend
+{{- end }}

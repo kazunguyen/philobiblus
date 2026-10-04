@@ -6,7 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.database import Base, engine
+from app.observability import configure_observability
 from app.routers import admin, auth, books, reviews, social, users, reading_history, settings, uploads
+
+api_docs_enabled = os.environ.get("ENABLE_API_DOCS", "false").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+}
 
 
 @asynccontextmanager
@@ -25,7 +32,13 @@ app = FastAPI(
     description="A full-stack personal book tracking and reading progress management API.",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs" if api_docs_enabled else None,
+    redoc_url="/redoc" if api_docs_enabled else None,
+    openapi_url="/openapi.json" if api_docs_enabled else None,
 )
+
+# Configure correlation and traces before routers are registered.
+configure_observability(app, engine)
 
 # Configure CORS for Frontend integration (React / Vite). The allowed origins
 # vary by deployment and must be provided by the environment.
@@ -35,13 +48,12 @@ if not allowed_origins:
 origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
 if not origins:
     raise RuntimeError("ALLOWED_ORIGINS must contain at least one origin")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Metrics remain reachable only through the backend ClusterIP Service. The
@@ -72,11 +84,11 @@ def root():
         "name": "Philobiblus API",
         "version": "1.0.0",
         "status": "healthy",
-        "docs_url": "/docs",
+        "docs_url": "/docs" if api_docs_enabled else None,
     }
 
 
 @app.get("/health", tags=["Health"])
-def health_check():
+async def health_check():
     """Health check endpoint for Kubernetes liveness and readiness probes."""
     return {"status": "ok"}

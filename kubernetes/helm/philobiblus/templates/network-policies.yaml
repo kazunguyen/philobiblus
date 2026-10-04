@@ -1,0 +1,116 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- if .Values.networkPolicy.defaultDenyIngress }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "philobiblus.fullname" . }}-default-deny-ingress
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+{{- end }}
+{{- if .Values.networkPolicy.defaultDenyEgress }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "philobiblus.fullname" . }}-default-deny-egress
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+---
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "philobiblus.fullname" . }}-backend-ingress
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "philobiblus.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  policyTypes: [Ingress]
+  ingress:
+    # Dataplane V2 does not treat Pod traffic as matching this external IP block.
+    # It keeps the Gateway and Google health-check path reachable on port 8000.
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.port }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.managedPrometheusNamespace | quote }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.port }}
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: load-test
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.port }}
+---
+{{- if .Values.redis.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "philobiblus.fullname" . }}-redis-ingress
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "philobiblus.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: redis
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "philobiblus.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: backend
+      ports:
+        - protocol: TCP
+          port: {{ .Values.redis.service.port }}
+---
+{{- end }}
+{{- if .Values.recommendation.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "philobiblus.fullname" . }}-recommendation-ingress
+  labels:
+    {{- include "philobiblus.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "philobiblus.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: recommendation
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "philobiblus.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: backend
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.recommendationTrainerNamespace | quote }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: philobiblus-trainer
+      ports:
+        - protocol: TCP
+          port: {{ .Values.recommendation.service.port }}
+{{- end }}
+{{- end }}

@@ -37,7 +37,7 @@ spec:
               {{- if .Values.secretSync.enabled }}
               export MLFLOW_BACKEND_STORE_URI="$(cat /mnt/secrets-store/database_url)"
               {{- end }}
-              exec mlflow server --host 0.0.0.0 --port 5000 --workers 1 --allowed-hosts "mlflow,mlflow:5000,mlflow.{{ .Values.namespace }}.svc,mlflow.{{ .Values.namespace }}.svc:5000,mlflow.{{ .Values.namespace }}.svc.cluster.local,mlflow.{{ .Values.namespace }}.svc.cluster.local:5000" --backend-store-uri "$MLFLOW_BACKEND_STORE_URI" --artifacts-destination "$MLFLOW_ARTIFACT_ROOT"
+              exec mlflow server --host 0.0.0.0 --port 5000 --workers 1 --allowed-hosts "mlflow,mlflow:5000,mlflow.{{ .Values.namespace }}.svc,mlflow.{{ .Values.namespace }}.svc:5000,mlflow.{{ .Values.namespace }}.svc.cluster.local,mlflow.{{ .Values.namespace }}.svc.cluster.local:5000,localhost:*,127.0.0.1:*" --backend-store-uri "$MLFLOW_BACKEND_STORE_URI" --artifacts-destination "$MLFLOW_ARTIFACT_ROOT"
           env:
             {{- if not .Values.secretSync.enabled }}
             - name: MLFLOW_BACKEND_STORE_URI

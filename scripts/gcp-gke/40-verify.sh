@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
 "$SCRIPT_DIR/25-kubeconfig.sh" >/dev/null
+export PATH="$LOCAL_DIR/tools:$PATH"
 export KUBECONFIG="$LOCAL_DIR/kubeconfig"
 
 log "Waiting for Philobiblus deployments."
@@ -14,15 +15,24 @@ kubectl rollout status deployment/philobiblus-recommendation -n philobiblus --ti
 kubectl get pods,services,hpa,jobs -n philobiblus -o wide
 kubectl get secretproviderclass,secretsync -n philobiblus
 kubectl get podmonitoring -n philobiblus
-kubectl get gateway,httproute -n philobiblus
+kubectl get gateway,httproute,gcpbackendpolicy,networkpolicy -n philobiblus
 
 GATEWAY_IP="$(terraform -chdir="$GKE_PLATFORM_DIR" output -raw gateway_ip_address)"
+API_HOSTNAME="$(terraform -chdir="$GKE_PLATFORM_DIR" output -raw api_hostname)"
 
-log "Waiting for the external Gateway health path at http://$GATEWAY_IP/health"
+if [[ -n "$API_HOSTNAME" ]]; then
+  API_CHECK_URL="https://$API_HOSTNAME/api/books/public?limit=1"
+  CURL_API_CHECK=(curl -fsS --max-time 10 --resolve "$API_HOSTNAME:443:$GATEWAY_IP" "$API_CHECK_URL")
+else
+  API_CHECK_URL="http://$GATEWAY_IP/api/books/public?limit=1"
+  CURL_API_CHECK=(curl -fsS --max-time 10 "$API_CHECK_URL")
+fi
+
+log "Waiting for the public catalogue route at $API_CHECK_URL"
 for attempt in $(seq 1 40); do
-  if curl -fsS --max-time 10 "http://$GATEWAY_IP/health"; then
+  if "${CURL_API_CHECK[@]}"; then
     printf '\n'
-    log "GKE backend health check passed."
+    log "GKE public API check passed. The internal /health endpoint is deliberately not routed by Gateway."
     exit 0
   fi
 

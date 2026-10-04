@@ -30,6 +30,11 @@ output "gateway_ip_address" {
   value       = google_compute_global_address.gateway.address
 }
 
+output "cloud_armor_security_policy_name" {
+  description = "Cloud Armor policy name to attach to the GKE backend Service."
+  value       = var.enable_cloud_armor ? google_compute_security_policy.backend[0].name : ""
+}
+
 output "api_hostname" {
   description = "Public API hostname configured for HTTPS."
   value       = var.api_hostname

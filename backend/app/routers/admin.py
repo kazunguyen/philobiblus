@@ -7,6 +7,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.auth import get_current_admin, get_password_hash
+from app.catalog_cache import catalog_cache
 from app.database import get_db
 from app.models import (
     Book,
@@ -283,6 +284,7 @@ def delete_user(
     db.flush()
     db.delete(user)
     db.commit()
+    catalog_cache.invalidate()
     return AdminUserDeletionOut(
         deleted_username=username,
         retained_book_count=len(retained_book_ids),

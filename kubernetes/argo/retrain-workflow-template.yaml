@@ -1,0 +1,86 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: philobiblus-retrain-and-promote
+  namespace: philobiblus-mlops
+  labels:
+    app.kubernetes.io/name: philobiblus
+    app.kubernetes.io/component: trainer
+spec:
+  serviceAccountName: philobiblus-trainer
+  entrypoint: retrain-and-promote
+  arguments:
+    parameters:
+      - name: trainer-image
+      - name: artifact-bucket
+      - name: app-namespace
+        value: philobiblus
+      - name: sql-connection-name
+      - name: allow-bootstrap
+        value: "false"
+  templates:
+    - name: retrain-and-promote
+      activeDeadlineSeconds: 1800
+      retryStrategy:
+        limit: 1
+        retryPolicy: OnError
+      metadata:
+        labels:
+          app.kubernetes.io/name: philobiblus
+          app.kubernetes.io/component: trainer
+      sidecars:
+        - name: cloud-sql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.25.4
+          restartPolicy: Always
+          args:
+            - --structured-logs
+            - --private-ip
+            - --address=127.0.0.1
+            - --port=5432
+            - "{{workflow.parameters.sql-connection-name}}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: 250m, memory: 256Mi }
+      container:
+        image: "{{workflow.parameters.trainer-image}}"
+        command: ["/bin/sh", "-ec"]
+        args:
+          - |
+            mkdir -p /workspace/tmp
+            export TMPDIR=/workspace/tmp
+            exec python src/pipeline.py \
+              --db-uri "$DB_URI" \
+              --mlops-bucket "$MLOPS_BUCKET" \
+              --workspace-dir /workspace \
+              --namespace "{{workflow.parameters.app-namespace}}" \
+              --recommendation-service-url "http://philobiblus-recommendation.{{workflow.parameters.app-namespace}}.svc.cluster.local:8080" \
+              $( [ "{{workflow.parameters.allow-bootstrap}}" = "true" ] && printf '%s' --allow-bootstrap )
+        env:
+          - name: DB_URI
+            valueFrom:
+              secretKeyRef:
+                name: philobiblus-trainer-db
+                key: database_url
+          - name: MLOPS_BUCKET
+            value: "{{workflow.parameters.artifact-bucket}}"
+          - name: MLFLOW_TRACKING_URI
+            value: http://mlflow.philobiblus-mlops.svc.cluster.local:5000
+          - name: GIT_PYTHON_REFRESH
+            value: quiet
+        volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: { drop: ["ALL"] }
+        resources:
+          requests: { cpu: "1", memory: 2Gi, ephemeral-storage: 2Gi }
+          limits: { cpu: "2", memory: 4Gi, ephemeral-storage: 4Gi }
+      volumes:
+        - name: workspace
+          emptyDir: {}

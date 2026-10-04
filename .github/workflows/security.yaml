@@ -1,0 +1,115 @@
+name: Security gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  secrets:
+    name: Detect committed secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  static-and-dependency-analysis:
+    name: SAST and dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Scan Python source for high-confidence security findings
+        run: |
+          python -m pip install --upgrade pip semgrep
+          semgrep scan --config p/owasp-top-ten --error backend ml
+      - name: Audit Python dependency manifests
+        run: |
+          python -m pip install pip-audit
+          pip-audit -r backend/requirements.txt --strict
+          pip-audit -r ml/requirements-training.txt --strict
+          pip-audit -r ml/recommendation-service/requirements.txt --strict
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Audit frontend production dependencies
+        working-directory: frontend
+        run: |
+          npm ci --ignore-scripts
+          npm audit --omit=dev --audit-level=high
+
+  container-and-iac:
+    name: Scan containers and manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the backend image to scan the exact Dockerfile
+        run: docker build -t philobiblus-backend:security-ci -f backend/Dockerfile backend
+      - name: Fail on high or critical backend image vulnerabilities
+        uses: aquasecurity/trivy-action@0.31.0
+        with:
+          image-ref: philobiblus-backend:security-ci
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+      - name: Scan Helm, Terraform and Kubernetes configuration
+        uses: aquasecurity/trivy-action@0.31.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: sarif
+          output: trivy-config.sarif
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+      - name: Publish configuration findings
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-config.sarif
+
+  sbom:
+    name: Produce SBOMs for review
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: backend
+            dockerfile: backend/Dockerfile
+            context: backend
+          - name: trainer
+            dockerfile: ml/training/Dockerfile
+            context: ml
+          - name: recommendation
+            dockerfile: ml/recommendation-service/Dockerfile
+            context: ml/recommendation-service
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t philobiblus-${{ matrix.name }}:sbom -f ${{ matrix.dockerfile }} ${{ matrix.context }}
+      - uses: anchore/sbom-action@v0
+        with:
+          image: philobiblus-${{ matrix.name }}:sbom
+          format: spdx-json
+          output-file: ${{ matrix.name }}.spdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-sbom
+          path: ${{ matrix.name }}.spdx.json
+          if-no-files-found: error

@@ -75,7 +75,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /
+            value: /api
       backendRefs:
         - name: {{ include "philobiblus.fullname" . }}-backend
           port: {{ required "backend.service.port is required" .Values.backend.service.port }}

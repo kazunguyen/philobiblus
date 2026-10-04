@@ -36,6 +36,7 @@ jobs:
           workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.GCP_DEPLOYER_SERVICE_ACCOUNT }}
       - uses: google-github-actions/setup-gcloud@v2
+      - uses: sigstore/cosign-installer@v3.8.1
       - run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
       - name: Build and push immutable MLOps images
         env:
@@ -57,6 +58,16 @@ jobs:
           echo "trainer_digest=$(gcloud artifacts docker images describe "${IMAGE_BASE}/philobiblus-trainer:${IMAGE_TAG}" --format='value(image_summary.digest)')" >> "$GITHUB_OUTPUT"
           echo "fetcher_digest=$(gcloud artifacts docker images describe "${IMAGE_BASE}/philobiblus-model-fetcher:${IMAGE_TAG}" --format='value(image_summary.digest)')" >> "$GITHUB_OUTPUT"
           echo "mlflow_digest=$(gcloud artifacts docker images describe "${IMAGE_BASE}/philobiblus-mlflow:${IMAGE_TAG}" --format='value(image_summary.digest)')" >> "$GITHUB_OUTPUT"
+      - name: Sign immutable images with GitHub OIDC
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_BASE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPOSITORY}"
+          for image in philobiblus-trainer philobiblus-model-fetcher philobiblus-mlflow; do
+            digest="$(gcloud artifacts docker images describe "${IMAGE_BASE}/${image}:${IMAGE_TAG}" --format='value(image_summary.digest)')"
+            test -n "$digest"
+            cosign sign --yes "${IMAGE_BASE}/${image}@${digest}"
+          done
 
   deploy:
     if: ${{ inputs.apply }}

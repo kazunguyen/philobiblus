@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: philobiblus-retrain
+  namespace: philobiblus-mlops
+spec:
+  schedule: "0 20 * * *"
+  timezone: Asia/Ho_Chi_Minh
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 1800
+  suspend: true
+  workflowSpec:
+    workflowTemplateRef:
+      name: philobiblus-retrain-and-promote
+    arguments:
+      parameters:
+        - name: trainer-image
+          value: REPLACE_WITH_IMMUTABLE_TRAINER_IMAGE_DIGEST
+        - name: artifact-bucket
+          value: REPLACE_WITH_MLOPS_BUCKET
+        - name: app-namespace
+          value: philobiblus
+        - name: sql-connection-name
+          value: REPLACE_WITH_CLOUD_SQL_CONNECTION_NAME
+        - name: allow-bootstrap
+          value: "false"

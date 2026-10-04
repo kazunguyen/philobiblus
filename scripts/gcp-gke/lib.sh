@@ -15,6 +15,7 @@ RUNTIME_DIR="$PROJECT_ROOT/infrastructure/terraform/runtime"
 BOOTSTRAP_DIR="$PROJECT_ROOT/infrastructure/terraform/bootstrap"
 GKE_PLATFORM_DIR="$PROJECT_ROOT/infrastructure/terraform/gke-platform"
 GKE_APP_DIR="$PROJECT_ROOT/infrastructure/terraform/gke-app"
+GKE_OBSERVABILITY_DIR="$PROJECT_ROOT/infrastructure/terraform/gke-observability"
 LOCAL_DIR="$K8S_TERRAFORM_SCRIPT_DIR/.local"
 
 REGION="${REGION:-asia-southeast1}"

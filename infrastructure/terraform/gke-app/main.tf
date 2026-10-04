@@ -59,7 +59,7 @@ resource "kubernetes_resource_quota_v1" "app" {
     hard = {
       "requests.cpu"    = "2"
       "requests.memory" = "4Gi"
-      "limits.cpu"      = "4"
+      "limits.cpu"      = "6"
       "limits.memory"   = "8Gi"
       "pods"            = "20"
       "services"        = "10"
@@ -141,7 +141,6 @@ resource "google_service_account_iam_member" "recommendation_workload_identity" 
   member             = "serviceAccount:${var.project_id}.svc.id.goog[${var.namespace}/${local.recommendation_ksa}]"
 }
 
-
 resource "helm_release" "philobiblus" {
   name      = local.name
   namespace = kubernetes_namespace_v1.app.metadata[0].name
@@ -156,12 +155,12 @@ resource "helm_release" "philobiblus" {
   values = [
     yamlencode({
       backend = {
-        replicaCount = 1
+        replicaCount = 2
         autoscaling = {
           enabled                        = true
-          minReplicas                    = 1
-          maxReplicas                    = 3
-          targetCPUUtilizationPercentage = 70
+          minReplicas                    = 2
+          maxReplicas                    = 6
+          targetCPUUtilizationPercentage = 50
         }
         image = {
           repository = local.backend_image_parts[0]
@@ -175,6 +174,27 @@ resource "helm_release" "philobiblus" {
         }
         bindHost       = "0.0.0.0"
         allowedOrigins = var.frontend_origin
+        apiDocs = {
+          enabled = false
+        }
+        rateLimit = {
+          enabled           = true
+          trustProxyHeaders = true
+          fallbackPodCount  = 6
+        }
+        uploads = {
+          imgbbTimeoutSeconds = 15
+          maxConcurrency      = 2
+        }
+        databasePool = {
+          size           = 3
+          maxOverflow    = 2
+          timeoutSeconds = 10
+          recycleSeconds = 1800
+        }
+        catalogCache = {
+          ttlSeconds = 30
+        }
       }
       frontend = {
         enabled = false
@@ -198,6 +218,28 @@ resource "helm_release" "philobiblus" {
           repository = local.model_fetcher_image_parts[0]
           tag        = ""
           digest     = local.model_fetcher_image_parts[1]
+        }
+      }
+      redis = {
+        enabled      = true
+        replicaCount = 1
+        image = {
+          repository = "redis"
+          tag        = "7.4-alpine"
+          pullPolicy = "IfNotPresent"
+        }
+        service = {
+          port = 6379
+        }
+        resources = {
+          requests = {
+            cpu    = "50m"
+            memory = "64Mi"
+          }
+          limits = {
+            cpu    = "200m"
+            memory = "128Mi"
+          }
         }
       }
       serviceAccounts = {
@@ -243,6 +285,21 @@ resource "helm_release" "philobiblus" {
           certificateMapName = var.gateway_certificate_map_name != "" ? var.gateway_certificate_map_name : try(data.terraform_remote_state.platform.outputs.api_certificate_map_name, "")
         }
         httpToHttpsRedirect = var.gateway_http_to_https_redirect
+        backendPolicy = {
+          enabled        = try(data.terraform_remote_state.platform.outputs.cloud_armor_security_policy_name, "") != ""
+          securityPolicy = try(data.terraform_remote_state.platform.outputs.cloud_armor_security_policy_name, "")
+          timeoutSeconds = 30
+          logging = {
+            enabled    = true
+            sampleRate = 1000000
+          }
+        }
+      }
+      networkPolicy = {
+        enabled                    = true
+        defaultDenyIngress         = true
+        defaultDenyEgress          = false
+        managedPrometheusNamespace = "gmp-system"
       }
       monitoring = {
         serviceMonitor = {

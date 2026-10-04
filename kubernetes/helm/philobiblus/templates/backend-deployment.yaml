@@ -112,24 +112,68 @@ spec:
               value: {{ .Values.backend.accessTokenExpireMinutes | quote }}
             - name: ALLOWED_ORIGINS
               value: {{ required "backend.allowedOrigins is required" .Values.backend.allowedOrigins | quote }}
+            - name: ENABLE_API_DOCS
+              value: {{ .Values.backend.apiDocs.enabled | quote }}
+            - name: RATE_LIMIT_ENABLED
+              value: {{ .Values.backend.rateLimit.enabled | quote }}
+            - name: RATE_LIMIT_TRUST_PROXY_HEADERS
+              value: {{ .Values.backend.rateLimit.trustProxyHeaders | quote }}
+            - name: RATE_LIMIT_FALLBACK_POD_COUNT
+              value: {{ .Values.backend.rateLimit.fallbackPodCount | quote }}
+            - name: IMGBB_TIMEOUT_SECONDS
+              value: {{ .Values.backend.uploads.imgbbTimeoutSeconds | quote }}
+            - name: UPLOAD_MAX_CONCURRENCY
+              value: {{ .Values.backend.uploads.maxConcurrency | quote }}
+            - name: DATABASE_POOL_SIZE
+              value: {{ .Values.backend.databasePool.size | quote }}
+            - name: DATABASE_MAX_OVERFLOW
+              value: {{ .Values.backend.databasePool.maxOverflow | quote }}
+            - name: DATABASE_POOL_TIMEOUT_SECONDS
+              value: {{ .Values.backend.databasePool.timeoutSeconds | quote }}
+            - name: DATABASE_POOL_RECYCLE_SECONDS
+              value: {{ .Values.backend.databasePool.recycleSeconds | quote }}
+            - name: CATALOG_CACHE_TTL_SECONDS
+              value: {{ .Values.backend.catalogCache.ttlSeconds | quote }}
+            - name: OTEL_TRACING_ENABLED
+              value: {{ .Values.backend.observability.tracing.enabled | quote }}
+            {{- if .Values.backend.observability.tracing.enabled }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ required "backend.observability.tracing.endpoint is required when tracing is enabled" .Values.backend.observability.tracing.endpoint | quote }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ .Values.backend.observability.tracing.serviceName | quote }}
+            {{- end }}
+            {{- if .Values.redis.enabled }}
+            - name: REDIS_URL
+              value: redis://{{ include "philobiblus.fullname" . }}-redis:{{ .Values.redis.service.port }}/0
+            {{- end }}
             {{ if .Values.recommendation.enabled }}
             - name: RECOMMENDATION_SERVICE_URL
               value: "http://{{ include "philobiblus.fullname" . }}-recommendation:{{ .Values.recommendation.service.port }}"
             - name: RECOMMENDATION_TIMEOUT_SECONDS
               value: {{ .Values.recommendation.timeoutSeconds | quote }}
             {{ end }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: {{ .Values.backend.probe.startupPeriodSeconds }}
+            failureThreshold: {{ .Values.backend.probe.startupFailureThreshold }}
           readinessProbe:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: {{ .Values.backend.probe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.backend.probe.periodSeconds }}
+            initialDelaySeconds: {{ .Values.backend.probe.readinessInitialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.probe.readinessPeriodSeconds }}
+            timeoutSeconds: {{ .Values.backend.probe.readinessTimeoutSeconds }}
+            failureThreshold: {{ .Values.backend.probe.readinessFailureThreshold }}
           livenessProbe:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: {{ add .Values.backend.probe.initialDelaySeconds 10 }}
-            periodSeconds: {{ .Values.backend.probe.periodSeconds }}
+            initialDelaySeconds: {{ .Values.backend.probe.livenessInitialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.probe.livenessPeriodSeconds }}
+            timeoutSeconds: {{ .Values.backend.probe.livenessTimeoutSeconds }}
+            failureThreshold: {{ .Values.backend.probe.livenessFailureThreshold }}
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
           securityContext:

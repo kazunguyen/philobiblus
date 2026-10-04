@@ -12,6 +12,24 @@ spec:
   groups:
     - name: philobiblus.backend
       rules:
+        - record: philobiblus:http_5xx_ratio:rate5m
+          expr: |
+            sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}",service="{{ $fullname }}-backend",status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(http_requests_total{namespace="{{ .Release.Namespace }}",service="{{ $fullname }}-backend"}[5m])), 0.001)
+
+        - alert: PhilobiblusBackendSLOBurnRate
+          expr: philobiblus:http_5xx_ratio:rate5m > 0.005
+          for: 10m
+          labels:
+            severity: critical
+            component: backend
+            slo: availability-99.5
+          annotations:
+            summary: Backend is consuming the 99.5 percent availability error budget.
+            description: The five-minute 5xx ratio has been above 0.5 percent for ten minutes.
+            runbook_url: docs/operations/production-readiness.md#slo-and-alerting
+
         - alert: PhilobiblusBackendTargetsBelowMinimum
           expr: |
             (sum(up{namespace="{{ .Release.Namespace }}",service="{{ $fullname }}-backend"} == 1) < {{ .Values.backend.autoscaling.minReplicas }})

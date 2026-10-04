@@ -14,5 +14,7 @@ if [[ -x "$SCRIPT_DIR/30-app-apply.sh" ]]; then
   "$SCRIPT_DIR/30-app-apply.sh"
 fi
 
+"$SCRIPT_DIR/45-observability-apply.sh"
 "$SCRIPT_DIR/40-verify.sh"
+"$SCRIPT_DIR/46-observability-verify.sh"
 "$SCRIPT_DIR/status.sh"

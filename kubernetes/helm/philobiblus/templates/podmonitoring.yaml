@@ -6,6 +6,10 @@ metadata:
   labels:
     {{- include "philobiblus.labels" . | nindent 4 }}
 spec:
+  targetLabels:
+    fromPod:
+      - from: app.kubernetes.io/component
+        to: component
   selector:
     matchLabels:
       {{- include "philobiblus.selectorLabels" . | nindent 6 }}
@@ -23,6 +27,10 @@ metadata:
   labels:
     {{- include "philobiblus.labels" . | nindent 4 }}
 spec:
+  targetLabels:
+    fromPod:
+      - from: app.kubernetes.io/component
+        to: component
   selector:
     matchLabels:
       {{- include "philobiblus.selectorLabels" . | nindent 6 }}

@@ -7,6 +7,23 @@ rendered.yaml
 dist/
 ml/.venv
 ml/tracking/
+.venv-cache-pool/
+artifacts/load-tests/
+monitor.log
+backend-netpol.yaml
+load-test-pod.yaml
+rec-netpol.yaml
+run-test.sh
+
+# LaTeX build outputs
+*.aux
+*.bbl
+*.blg
+*.lof
+*.log
+*.out
+*.toc
+
 # Terraform local state and provider cache
 **/.terraform/
 *.tfstate

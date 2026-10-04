@@ -1,0 +1,78 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  annotations:
+    meta.helm.sh/release-name: philobiblus
+    meta.helm.sh/release-namespace: philobiblus
+  creationTimestamp: "2026-09-21T09:03:11Z"
+  labels:
+    app.kubernetes.io/instance: philobiblus
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: philobiblus
+    app.kubernetes.io/version: local
+    helm.sh/chart: philobiblus-0.1.0
+  name: philobiblus-backend-hpa
+  namespace: philobiblus
+  resourceVersion: "1790212640085839018"
+  uid: 242e29fe-4cea-4197-84ee-025fdbe44085
+spec:
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 60
+        type: Percent
+        value: 25
+      selectPolicy: Max
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      policies:
+      - periodSeconds: 60
+        type: Pods
+        value: 2
+      - periodSeconds: 60
+        type: Percent
+        value: 100
+      selectPolicy: Max
+      stabilizationWindowSeconds: 0
+  maxReplicas: 6
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 50
+        type: Utilization
+    type: Resource
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: philobiblus-backend
+status:
+  conditions:
+  - lastTransitionTime: "2026-09-23T16:21:48Z"
+    message: recommended size matches current size
+    reason: ReadyForNewScale
+    status: "True"
+    type: AbleToScale
+  - lastTransitionTime: "2026-09-23T03:59:50Z"
+    message: the HPA was able to successfully calculate a replica count from cpu resource
+      utilization (percentage of request)
+    reason: ValidMetricFound
+    status: "True"
+    type: ScalingActive
+  - lastTransitionTime: "2026-09-23T16:21:48Z"
+    message: the desired replica count is less than the minimum replica count
+    reason: TooFewReplicas
+    status: "True"
+    type: ScalingLimited
+  currentMetrics:
+  - resource:
+      current:
+        averageUtilization: 7
+        averageValue: 15m
+        value: 30m
+      name: cpu
+    type: Resource
+  currentReplicas: 2
+  desiredReplicas: 2
+  lastScaleTime: "2026-09-23T15:28:12Z"

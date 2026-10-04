@@ -1,0 +1,65 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: philobiblus-production-baseline
+  annotations:
+    policies.kyverno.io/title: Philobiblus production baseline
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod, Deployment, Job, CronJob
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: require-non-root-and-no-privilege-escalation
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [philobiblus, philobiblus-mlops]
+      validate:
+        message: Pods must run as non-root and containers must disable privilege escalation.
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
+    - name: require-resource-requests-and-limits
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [philobiblus, philobiblus-mlops]
+      validate:
+        message: Every container must declare CPU and memory requests and limits.
+        foreach:
+          - list: request.object.spec.containers
+            pattern:
+              resources:
+                requests:
+                  cpu: "?*"
+                  memory: "?*"
+                limits:
+                  cpu: "?*"
+                  memory: "?*"
+    - name: audit-images-without-a-digest
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [philobiblus, philobiblus-mlops]
+      validate:
+        message: Production images should use immutable sha256 digests.
+        foreach:
+          - list: request.object.spec.containers
+            deny:
+              conditions:
+                all:
+                  - key: "{{ contains(element.image, '@sha256:') }}"
+                    operator: Equals
+                    value: false

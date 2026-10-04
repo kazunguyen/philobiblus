@@ -6,4 +6,7 @@ protect_cluster      = true
 release_channel      = "REGULAR"
 api_hostname         = "api.example.com"
 enable_gateway_https = false
-
+enable_cloud_armor   = true
+cloud_armor_waf_rules_preview            = true
+cloud_armor_sensitive_rate_limit_preview = true
+cloud_armor_general_rate_limit_preview   = true

@@ -59,3 +59,136 @@ variable "enable_gateway_https" {
   default     = false
 }
 
+variable "enable_cloud_armor" {
+  description = "Create the Cloud Armor policy that protects the GKE backend Service."
+  type        = bool
+  default     = true
+}
+
+variable "cloud_armor_waf_rules_preview" {
+  description = "Keep Cloud Armor WAF rules in preview until reviewed."
+  type        = bool
+  default     = true
+}
+
+variable "cloud_armor_sensitive_rate_limit_preview" {
+  description = "Keep login, registration, upload, and recommendation limits in preview until reviewed."
+  type        = bool
+  default     = true
+}
+
+variable "cloud_armor_general_rate_limit_preview" {
+  description = "Keep the general API rate limit in preview until reviewed."
+  type        = bool
+  default     = true
+}
+
+variable "cloud_armor_login_count" {
+  type        = number
+  description = "Login requests allowed per Cloud Armor interval and client IP."
+  default     = 20
+
+  validation {
+    condition     = var.cloud_armor_login_count >= 1 && var.cloud_armor_login_count <= 10000
+    error_message = "cloud_armor_login_count must be between 1 and 10000."
+  }
+}
+
+variable "cloud_armor_login_interval_seconds" {
+  type        = number
+  description = "Cloud Armor login rate-limit interval in seconds."
+  default     = 300
+
+  validation {
+    condition     = contains([10, 30, 60, 120, 180, 240, 300, 600, 900, 1200, 1800, 2700, 3600], var.cloud_armor_login_interval_seconds)
+    error_message = "cloud_armor_login_interval_seconds must be a Cloud Armor supported interval."
+  }
+}
+
+variable "cloud_armor_register_count" {
+  type        = number
+  description = "Registration requests allowed per Cloud Armor interval and client IP."
+  default     = 10
+
+  validation {
+    condition     = var.cloud_armor_register_count >= 1 && var.cloud_armor_register_count <= 10000
+    error_message = "cloud_armor_register_count must be between 1 and 10000."
+  }
+}
+
+variable "cloud_armor_register_interval_seconds" {
+  type        = number
+  description = "Cloud Armor registration rate-limit interval in seconds."
+  default     = 600
+
+  validation {
+    condition     = contains([10, 30, 60, 120, 180, 240, 300, 600, 900, 1200, 1800, 2700, 3600], var.cloud_armor_register_interval_seconds)
+    error_message = "cloud_armor_register_interval_seconds must be a Cloud Armor supported interval."
+  }
+}
+
+variable "cloud_armor_upload_count" {
+  type        = number
+  description = "Cover uploads allowed per Cloud Armor interval and client IP."
+  default     = 10
+
+  validation {
+    condition     = var.cloud_armor_upload_count >= 1 && var.cloud_armor_upload_count <= 10000
+    error_message = "cloud_armor_upload_count must be between 1 and 10000."
+  }
+}
+
+variable "cloud_armor_upload_interval_seconds" {
+  type        = number
+  description = "Cloud Armor upload rate-limit interval in seconds."
+  default     = 600
+
+  validation {
+    condition     = contains([10, 30, 60, 120, 180, 240, 300, 600, 900, 1200, 1800, 2700, 3600], var.cloud_armor_upload_interval_seconds)
+    error_message = "cloud_armor_upload_interval_seconds must be a Cloud Armor supported interval."
+  }
+}
+
+variable "cloud_armor_recommendation_count" {
+  type        = number
+  description = "Recommendation requests allowed per Cloud Armor interval and client IP."
+  default     = 60
+
+  validation {
+    condition     = var.cloud_armor_recommendation_count >= 1 && var.cloud_armor_recommendation_count <= 10000
+    error_message = "cloud_armor_recommendation_count must be between 1 and 10000."
+  }
+}
+
+variable "cloud_armor_recommendation_interval_seconds" {
+  type        = number
+  description = "Cloud Armor recommendation rate-limit interval in seconds."
+  default     = 60
+
+  validation {
+    condition     = contains([10, 30, 60, 120, 180, 240, 300, 600, 900, 1200, 1800, 2700, 3600], var.cloud_armor_recommendation_interval_seconds)
+    error_message = "cloud_armor_recommendation_interval_seconds must be a Cloud Armor supported interval."
+  }
+}
+
+variable "cloud_armor_general_count" {
+  type        = number
+  description = "General API requests allowed per Cloud Armor interval and client IP."
+  default     = 300
+
+  validation {
+    condition     = var.cloud_armor_general_count >= 1 && var.cloud_armor_general_count <= 10000
+    error_message = "cloud_armor_general_count must be between 1 and 10000."
+  }
+}
+
+variable "cloud_armor_general_interval_seconds" {
+  type        = number
+  description = "Cloud Armor general API rate-limit interval in seconds."
+  default     = 60
+
+  validation {
+    condition     = contains([10, 30, 60, 120, 180, 240, 300, 600, 900, 1200, 1800, 2700, 3600], var.cloud_armor_general_interval_seconds)
+    error_message = "cloud_armor_general_interval_seconds must be a Cloud Armor supported interval."
+  }
+}

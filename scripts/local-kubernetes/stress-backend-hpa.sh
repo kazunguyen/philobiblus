@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-# Generate in-cluster HTTP load and demonstrate HPA scale-up one replica at a time.
+# Generate in-cluster HTTP load and verify the HPA can scale the backend.
 #
 # Usage:
 #   bash scripts/local-kubernetes/stress-backend-hpa.sh
 #   NAMESPACE=demo HPA=my-backend-hpa SERVICE=my-backend bash scripts/local-kubernetes/stress-backend-hpa.sh
 #
-# The script expects a Metrics Server and an HPA configured with minReplicas=3,
-# maxReplicas>=6, and a CPU resource metric. It creates only a temporary load pod.
+# By default, the script expects a Metrics Server and an HPA configured with
+# minReplicas=2 and maxReplicas=6. Set EXPECTED_MIN_REPLICAS and
+# EXPECTED_MAX_REPLICAS for a cluster that uses another fixed range. It creates
+# only a temporary load pod. The default path reads the public catalogue so
+# each request exercises the backend and PostgreSQL without mutating data.
+# Set STEPWISE_DEMO=true only when a one-Pod-per-period demonstration is needed;
+# normal verification leaves the production HPA scale-up policy unchanged.
 
 set -Eeuo pipefail
 
@@ -15,13 +20,16 @@ HPA="${HPA:-philobiblus-backend-hpa}"
 DEPLOYMENT="${DEPLOYMENT:-philobiblus-backend}"
 SERVICE="${SERVICE:-philobiblus-backend}"
 SERVICE_PORT="${SERVICE_PORT:-8000}"
-TARGET_PATH="${TARGET_PATH:-/health}"
+TARGET_PATH="${TARGET_PATH:-/api/books/public?limit=100}"
 LOAD_IMAGE="${LOAD_IMAGE:-busybox:1.36.1}"
 WORKERS="${WORKERS:-100}"
 STEP_PERIOD_SECONDS="${STEP_PERIOD_SECONDS:-60}"
 POLL_SECONDS="${POLL_SECONDS:-10}"
 MAX_WAIT_SECONDS="${MAX_WAIT_SECONDS:-480}"
 OBSERVE_SECONDS="${OBSERVE_SECONDS:-20}"
+EXPECTED_MIN_REPLICAS="${EXPECTED_MIN_REPLICAS:-2}"
+EXPECTED_MAX_REPLICAS="${EXPECTED_MAX_REPLICAS:-6}"
+STEPWISE_DEMO="${STEPWISE_DEMO:-false}"
 STRESS_POD="${STRESS_POD:-backend-hpa-load-${RANDOM}}"
 
 LOAD_STARTED=false
@@ -165,16 +173,15 @@ wait_for_replicas() {
 
     printf '  HPA replicas: %s; ready backend pods: %s\n' "${current}" "${ready}"
 
-    if (( current == expected && ready >= expected )); then
-      printf 'Reached %s replicas.\n' "${expected}"
+    if (( current >= expected && ready >= expected )); then
+      if (( current > expected )); then
+        printf 'HPA has already advanced to %s replicas while waiting for %s ready pods.\n' \
+          "${current}" "${expected}"
+      else
+        printf 'Reached %s replicas.\n' "${expected}"
+      fi
       print_status
       return 0
-    fi
-
-    if (( current > expected )); then
-      printf 'HPA reached %s replicas before the expected %s. Check whether another process changed the HPA.\n' \
-        "${current}" "${expected}" >&2
-      return 1
     fi
 
     if (( SECONDS >= deadline )); then
@@ -194,6 +201,21 @@ require_positive_integer STEP_PERIOD_SECONDS "${STEP_PERIOD_SECONDS}"
 require_positive_integer POLL_SECONDS "${POLL_SECONDS}"
 require_positive_integer MAX_WAIT_SECONDS "${MAX_WAIT_SECONDS}"
 require_positive_integer OBSERVE_SECONDS "${OBSERVE_SECONDS}"
+require_positive_integer EXPECTED_MIN_REPLICAS "${EXPECTED_MIN_REPLICAS}"
+require_positive_integer EXPECTED_MAX_REPLICAS "${EXPECTED_MAX_REPLICAS}"
+
+case "${STEPWISE_DEMO}" in
+  true|false) ;;
+  *)
+    printf 'STEPWISE_DEMO must be true or false; got %s.\n' "${STEPWISE_DEMO}" >&2
+    exit 1
+    ;;
+esac
+
+if (( EXPECTED_MAX_REPLICAS < EXPECTED_MIN_REPLICAS )); then
+  printf 'EXPECTED_MAX_REPLICAS must be greater than or equal to EXPECTED_MIN_REPLICAS.\n' >&2
+  exit 1
+fi
 
 if [[ "${TARGET_PATH}" != /* ]]; then
   TARGET_PATH="/${TARGET_PATH}"
@@ -209,9 +231,9 @@ SCALING_ACTIVE="$(kubectl -n "${NAMESPACE}" get hpa "${HPA}" -o jsonpath='{.stat
 CURRENT_REPLICAS="$(kubectl -n "${NAMESPACE}" get hpa "${HPA}" -o jsonpath='{.status.currentReplicas}')"
 READY_REPLICAS="$(kubectl -n "${NAMESPACE}" get deployment "${DEPLOYMENT}" -o jsonpath='{.status.readyReplicas}')"
 
-if [[ "${MIN_REPLICAS}" != "3" || "${MAX_REPLICAS}" -lt 6 ]]; then
-  printf 'HPA %s must use minReplicas=3 and maxReplicas>=6; found min=%s, max=%s.\n' \
-    "${HPA}" "${MIN_REPLICAS}" "${MAX_REPLICAS}" >&2
+if [[ "${MIN_REPLICAS}" != "${EXPECTED_MIN_REPLICAS}" || "${MAX_REPLICAS}" != "${EXPECTED_MAX_REPLICAS}" ]]; then
+  printf 'HPA %s must use minReplicas=%s and maxReplicas=%s; found min=%s, max=%s.\n' \
+    "${HPA}" "${EXPECTED_MIN_REPLICAS}" "${EXPECTED_MAX_REPLICAS}" "${MIN_REPLICAS}" "${MAX_REPLICAS}" >&2
   exit 1
 fi
 
@@ -221,26 +243,30 @@ if [[ "${SCALING_ACTIVE}" != "True" ]]; then
   exit 1
 fi
 
-if [[ "${CURRENT_REPLICAS:-0}" != "3" || "${READY_REPLICAS:-0}" != "3" ]]; then
-  printf 'The test must start with exactly 3 ready backend replicas; current HPA=%s, ready=%s. Wait for scale-down before rerunning.\n' \
-    "${CURRENT_REPLICAS:-0}" "${READY_REPLICAS:-0}" >&2
-  exit 1
-fi
-
-# JSONPath is supported by older kubectl clients, unlike the optional toJson helper.
-ORIGINAL_SCALE_UP="$(capture_original_scale_up)"
-if [[ "${ORIGINAL_SCALE_UP}" != \{* ]]; then
-  printf 'Could not read the existing HPA scale-up behavior as JSON.\n' >&2
+if [[ "${CURRENT_REPLICAS:-0}" != "${EXPECTED_MIN_REPLICAS}" || "${READY_REPLICAS:-0}" != "${EXPECTED_MIN_REPLICAS}" ]]; then
+  printf 'The test must start with exactly %s ready backend replicas; current HPA=%s, ready=%s. Wait for scale-down before rerunning.\n' \
+    "${EXPECTED_MIN_REPLICAS}" "${CURRENT_REPLICAS:-0}" "${READY_REPLICAS:-0}" >&2
   exit 1
 fi
 
 trap cleanup EXIT
 trap 'exit 130' INT TERM
 
-STEPWISE_SCALE_UP_PATCH="$(printf '{\"spec\":{\"behavior\":{\"scaleUp\":{\"stabilizationWindowSeconds\":0,\"selectPolicy\":\"Max\",\"policies\":[{\"type\":\"Pods\",\"value\":1,\"periodSeconds\":%s}]}}}}' "${STEP_PERIOD_SECONDS}")"
+if [[ "${STEPWISE_DEMO}" == "true" ]]; then
+  # JSONPath is supported by older kubectl clients, unlike the optional toJson helper.
+  ORIGINAL_SCALE_UP="$(capture_original_scale_up)"
+  if [[ "${ORIGINAL_SCALE_UP}" != \{* ]]; then
+    printf 'Could not read the existing HPA scale-up behavior as JSON.\n' >&2
+    exit 1
+  fi
 
-printf 'Applying a temporary HPA scale-up limit: one pod every %s seconds.\n' "${STEP_PERIOD_SECONDS}"
-kubectl -n "${NAMESPACE}" patch hpa "${HPA}" --type=merge --patch "${STEPWISE_SCALE_UP_PATCH}" >/dev/null
+  STEPWISE_SCALE_UP_PATCH="$(printf '{\"spec\":{\"behavior\":{\"scaleUp\":{\"stabilizationWindowSeconds\":0,\"selectPolicy\":\"Max\",\"policies\":[{\"type\":\"Pods\",\"value\":1,\"periodSeconds\":%s}]}}}}' "${STEP_PERIOD_SECONDS}")"
+
+  printf 'Applying a temporary HPA scale-up limit: one pod every %s seconds.\n' "${STEP_PERIOD_SECONDS}"
+  kubectl -n "${NAMESPACE}" patch hpa "${HPA}" --type=merge --patch "${STEPWISE_SCALE_UP_PATCH}" >/dev/null
+else
+  printf 'Keeping the production HPA scale-up policy unchanged.\n'
+fi
 
 SERVICE_URL="http://${SERVICE}:${SERVICE_PORT}${TARGET_PATH}"
 printf 'Starting %s HTTP workers against %s from temporary pod %s.\n' \
@@ -270,11 +296,18 @@ kubectl -n "${NAMESPACE}" wait --for=condition=Ready "pod/${STRESS_POD}" --timeo
 printf '\nInitial state:\n'
 print_status
 
-for expected in 4 5 6; do
+for ((expected = EXPECTED_MIN_REPLICAS + 1; expected <= EXPECTED_MAX_REPLICAS; expected++)); do
   wait_for_replicas "${expected}"
   printf 'Keeping the load for %s more seconds so this level is observable.\n' "${OBSERVE_SECONDS}"
   sleep "${OBSERVE_SECONDS}"
 done
 
-printf '\nCompleted: HPA scaled 3 -> 4 -> 5 -> 6 without a direct jump.\n'
-printf 'Load generation will now stop; the existing HPA scale-down policy controls the return to 3 replicas.\n'
+if [[ "${STEPWISE_DEMO}" == "true" ]]; then
+  printf '\nCompleted: HPA scaled %s -> %s one replica at a time.\n' \
+    "${EXPECTED_MIN_REPLICAS}" "${EXPECTED_MAX_REPLICAS}"
+else
+  printf '\nCompleted: HPA scaled from %s to at least %s using its production policy.\n' \
+    "${EXPECTED_MIN_REPLICAS}" "${EXPECTED_MAX_REPLICAS}"
+fi
+printf 'Load generation will now stop; the existing HPA scale-down policy controls the return to %s replicas.\n' \
+  "${EXPECTED_MIN_REPLICAS}"

@@ -8,6 +8,10 @@ require_commands terraform gcloud
 
 PROJECT_ID="$(project_id)"
 STATE_BUCKET_NAME="$(state_bucket_name)"
+CLOUD_ARMOR_ENABLED="${CLOUD_ARMOR_ENABLED:-true}"
+CLOUD_ARMOR_WAF_RULES_PREVIEW="${CLOUD_ARMOR_WAF_RULES_PREVIEW:-true}"
+CLOUD_ARMOR_SENSITIVE_RATE_LIMIT_PREVIEW="${CLOUD_ARMOR_SENSITIVE_RATE_LIMIT_PREVIEW:-true}"
+CLOUD_ARMOR_GENERAL_RATE_LIMIT_PREVIEW="${CLOUD_ARMOR_GENERAL_RATE_LIMIT_PREVIEW:-true}"
 
 cat >"$GKE_PLATFORM_DIR/terraform.tfvars" <<EOF
 project_id        = "$PROJECT_ID"
@@ -16,9 +20,14 @@ environment       = "$ENVIRONMENT"
 state_bucket_name = "$STATE_BUCKET_NAME"
 protect_cluster   = true
 release_channel   = "REGULAR"
+enable_cloud_armor = $CLOUD_ARMOR_ENABLED
+cloud_armor_waf_rules_preview            = $CLOUD_ARMOR_WAF_RULES_PREVIEW
+cloud_armor_sensitive_rate_limit_preview = $CLOUD_ARMOR_SENSITIVE_RATE_LIMIT_PREVIEW
+cloud_armor_general_rate_limit_preview   = $CLOUD_ARMOR_GENERAL_RATE_LIMIT_PREVIEW
 EOF
 
 chmod 600 "$GKE_PLATFORM_DIR/terraform.tfvars"
+terraform fmt "$GKE_PLATFORM_DIR/terraform.tfvars" >/dev/null
 log "Wrote ignored GKE platform configuration."
 
 if [[ -d "$GKE_APP_DIR" ]]; then

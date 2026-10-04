@@ -1,0 +1,8 @@
+project_id        = "your-gcp-project-id"
+region            = "asia-southeast1"
+environment       = "dev"
+state_bucket_name = "your-terraform-state-bucket"
+cluster_name      = "your-gke-cluster-name"
+namespace         = "philobiblus"
+alert_email       = "operations@example.com"
+enable_alerting   = true

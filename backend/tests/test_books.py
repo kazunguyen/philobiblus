@@ -253,6 +253,46 @@ def test_get_public_books_with_filters_and_search(
     assert search_response.json()[0]["author"] == "Frank Herbert"
 
 
+def test_public_catalogue_cache_is_used_only_for_anonymous_requests(
+    client,
+    auth_headers,
+    monkeypatch,
+):
+    from app.routers.books import catalog_cache
+
+    client.post(
+        "/api/books",
+        json={"title": "Cacheable Book", "author": "Author", "genre": "Tech"},
+        headers=auth_headers,
+    )
+    cache_reads = []
+    cache_writes = []
+
+    monkeypatch.setattr(
+        catalog_cache,
+        "get",
+        lambda parameters: cache_reads.append(parameters.copy()) or None,
+    )
+    monkeypatch.setattr(
+        catalog_cache,
+        "set",
+        lambda parameters, value: cache_writes.append((parameters.copy(), value)),
+    )
+
+    anonymous_response = client.get("/api/books/public?limit=20")
+    authenticated_response = client.get(
+        "/api/books/public?limit=20",
+        headers=auth_headers,
+    )
+
+    assert anonymous_response.status_code == 200
+    assert authenticated_response.status_code == 200
+    assert len(cache_reads) == 1
+    assert len(cache_writes) == 1
+    assert cache_writes[0][0]["limit"] == 20
+    assert cache_writes[0][1][0]["title"] == "Cacheable Book"
+
+
 def test_book_visibility_controls_public_and_shared_access(client, auth_headers):
     """Test public, restricted, and private visibility boundaries."""
     public_response = client.post(

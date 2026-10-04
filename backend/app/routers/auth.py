@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -10,6 +10,7 @@ from app.auth import (
 )
 from app.database import get_db
 from app.models import User
+from app.rate_limit import enforce_rate_limit, rate_limiter
 from app.schemas import Token, UserCreate, UserOut
 
 router = APIRouter(
@@ -24,8 +25,18 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user account",
 )
-def register(user_in: UserCreate, db: Session = Depends(get_db)):
+def register(
+    user_in: UserCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """Check duplicate username/email, hash password, and create a new user."""
+    enforce_rate_limit(
+        request=request,
+        scope="register",
+        limit=3,
+        window_seconds=600,
+    )
     # Check duplicate username
     if db.query(User).filter(User.username == user_in.username).first():
         raise HTTPException(
@@ -58,10 +69,19 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     summary="Login to obtain JWT access token",
 )
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
     """Authenticate user credentials and return Bearer token."""
+    client_identity = rate_limiter.client_identity(request)
+    enforce_rate_limit(
+        request=request,
+        scope="login",
+        limit=5,
+        window_seconds=300,
+        identity=f"{client_identity}:{form_data.username.casefold()}",
+    )
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(

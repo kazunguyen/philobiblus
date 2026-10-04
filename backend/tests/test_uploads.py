@@ -18,14 +18,14 @@ def test_upload_cover_returns_imgbb_url(client, auth_headers, monkeypatch):
         assert url == "https://api.imgbb.com/1/upload"
         assert data["key"] == "test-imgbb-key"
         assert data["image"]
-        assert timeout == 30.0
+        assert timeout == 15.0
         return FakeResponse()
 
     monkeypatch.setattr(httpx, "post", fake_post)
 
     response = client.post(
         "/api/uploads/cover",
-        files={"file": ("cover.jpg", b"fake-image", "image/jpeg")},
+        files={"file": ("cover.jpg", b"\xff\xd8\xffvalid-jpeg", "image/jpeg")},
         headers=auth_headers,
     )
 
@@ -41,3 +41,16 @@ def test_upload_cover_rejects_unsupported_type(client, auth_headers):
     )
 
     assert response.status_code == 415
+
+
+def test_upload_cover_rejects_mismatched_image_signature(client, auth_headers, monkeypatch):
+    monkeypatch.setenv("IMGBB_API", "test-imgbb-key")
+
+    response = client.post(
+        "/api/uploads/cover",
+        files={"file": ("cover.jpg", b"not-a-jpeg", "image/jpeg")},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 415
+    assert response.json()["detail"] == "Image content does not match its declared type"

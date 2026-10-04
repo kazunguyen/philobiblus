@@ -1,0 +1,845 @@
+[
+  {
+    "httpRequest": {
+      "latency": "0.093500s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "GET",
+      "requestSize": "134",
+      "requestUrl": "http://136.68.162.254/api/books/public?search=%3Cscript%3Ealert(1)%3C/script%3E",
+      "responseSize": "157",
+      "serverIp": "10.168.224.214",
+      "status": 200,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "qy2uesf83nwff",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "DENY",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "DENY",
+        "preconfiguredExprIds": [
+          "owasp-crs-v042200-id941390-xss"
+        ],
+        "preview": true,
+        "priority": 110
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:57.329606409Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "INFO",
+    "spanId": "5a5a1b879451c88b",
+    "timestamp": "2026-09-24T07:59:56.400073Z",
+    "trace": "projects/grace-enhanced/traces/bdf7811fccaf3ef83cd7c2bb967737d7"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.077747s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "GET",
+      "requestSize": "124",
+      "requestUrl": "http://136.68.162.254/api/books/public?title=1%27%20OR%20%271%27=%271",
+      "responseSize": "42095",
+      "serverIp": "10.168.224.213",
+      "status": 200,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "pt8qq1fhosfks",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "DENY",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "DENY",
+        "preconfiguredExprIds": [
+          "owasp-crs-v042200-id942100-sqli"
+        ],
+        "preview": true,
+        "priority": 100
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:44.886843764Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "INFO",
+    "spanId": "46c59f8fe330734c",
+    "timestamp": "2026-09-24T07:59:44.597297Z",
+    "trace": "projects/grace-enhanced/traces/1dfed5746998337a5f93a0c2d539c35d"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.134787s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "267",
+      "serverIp": "10.168.224.213",
+      "status": 429,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "1cm2o0kfoly1jm",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:16.681140698Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "01fd546a095a8d41",
+    "timestamp": "2026-09-24T07:59:15.851997Z",
+    "trace": "projects/grace-enhanced/traces/fd2bede257db5c5ab55945c126f3c3da"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.049842s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "267",
+      "serverIp": "10.168.224.213",
+      "status": 429,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "1amtxm0fbowayx",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:16.240083189Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "ed70e60248790835",
+    "timestamp": "2026-09-24T07:59:15.727986Z",
+    "trace": "projects/grace-enhanced/traces/9323e23a1847ecc1ef8578ad25220e4e"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.042853s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "267",
+      "serverIp": "10.168.224.214",
+      "status": 429,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "bz41ucfk6dgzc",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:17.024639279Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "5e4836a5b9ee0872",
+    "timestamp": "2026-09-24T07:59:15.612262Z",
+    "trace": "projects/grace-enhanced/traces/f10f68d51051ec07eab2c3e36ef468f6"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.042679s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "267",
+      "serverIp": "10.168.224.214",
+      "status": 429,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "ms29fnfhv04jo",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:16.206987809Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "97232d7fbbbee570",
+    "timestamp": "2026-09-24T07:59:15.499570Z",
+    "trace": "projects/grace-enhanced/traces/4e50d30f18fc8ab242fc2418641fe47b"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.047729s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "267",
+      "serverIp": "10.168.224.214",
+      "status": 429,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "o6wrmufokhypm",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:16.002830221Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "34dbfa9b763bdab4",
+    "timestamp": "2026-09-24T07:59:15.379746Z",
+    "trace": "projects/grace-enhanced/traces/ad9e5553556ee9feb7e67f058057e271"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.045507s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "267",
+      "serverIp": "10.168.224.214",
+      "status": 429,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "1rado9efsj6m5h",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:16.395476998Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "65e05db7ed4cdd95",
+    "timestamp": "2026-09-24T07:59:15.264444Z",
+    "trace": "projects/grace-enhanced/traces/c3b57ac88856f051a11eb6335c27bbba"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.052201s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "235",
+      "serverIp": "10.168.224.214",
+      "status": 401,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "1x42iwpfojj7ga",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:16.126300505Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "1f94f30185e4e295",
+    "timestamp": "2026-09-24T07:59:15.140668Z",
+    "trace": "projects/grace-enhanced/traces/9a5f1d371e042f45e46ee23edf7dab14"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.054840s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "235",
+      "serverIp": "10.168.224.214",
+      "status": 401,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "fl7l1rfoi89ar",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:16.478155211Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "b3406c29211488a9",
+    "timestamp": "2026-09-24T07:59:15.011774Z",
+    "trace": "projects/grace-enhanced/traces/a5333b221d19b00c601615a2a2ffae3c"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.051689s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "235",
+      "serverIp": "10.168.224.214",
+      "status": 401,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "1j8i77nfbhqbhf",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:15.291787966Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "088e363f4ec44d88",
+    "timestamp": "2026-09-24T07:59:14.891783Z",
+    "trace": "projects/grace-enhanced/traces/9f75984c45241b3d6ca91c79865557bf"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.092502s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "235",
+      "serverIp": "10.168.224.214",
+      "status": 401,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "a1lop1fbiqmt8",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:59:16.014099395Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "9c1f250fe8e8346a",
+    "timestamp": "2026-09-24T07:59:14.728227Z",
+    "trace": "projects/grace-enhanced/traces/c5bc659a99ea5c5a788df67eaf0e296c"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.122956s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "171.224.177.43",
+      "requestMethod": "POST",
+      "requestSize": "197",
+      "requestUrl": "http://136.68.162.254/api/auth/login",
+      "responseSize": "235",
+      "serverIp": "10.168.224.214",
+      "status": 401,
+      "userAgent": "curl/8.5.0"
+    },
+    "insertId": "e5vzedfbnb93l",
+    "jsonPayload": {
+      "@type": "type.googleapis.com/google.cloud.loadbalancing.type.LoadBalancerLogEntry",
+      "backendTargetProjectNumber": "projects/6515597414",
+      "cacheDecision": [
+        "RESPONSE_HAS_CONTENT_TYPE",
+        "CACHE_MODE_USE_ORIGIN_HEADERS"
+      ],
+      "enforcedSecurityPolicy": {
+        "configuredAction": "ALLOW",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "priority": 2147483647
+      },
+      "previewSecurityPolicy": {
+        "configuredAction": "THROTTLE",
+        "name": "philobiblus-dev-backend-security",
+        "outcome": "ACCEPT",
+        "preview": true,
+        "priority": 1000,
+        "rateLimitAction": {
+          "key": "171.224.177.43",
+          "outcome": "RATE_LIMIT_THRESHOLD_CONFORM"
+        }
+      },
+      "remoteIp": "171.224.177.43",
+      "securityPolicyRequestData": {
+        "remoteIpInfo": {
+          "asn": 7552,
+          "regionCode": "VN"
+        }
+      },
+      "statusDetails": "response_sent_by_backend"
+    },
+    "logName": "projects/grace-enhanced/logs/requests",
+    "receiveTimestamp": "2026-09-24T07:58:49.530238065Z",
+    "resource": {
+      "labels": {
+        "backend_service_name": "gkegw1-kme0-philobiblus-philobiblus-backend-8000-f9eanl4z8h7k",
+        "forwarding_rule_name": "gkegw1-kme0-philobiblus-philobiblus-ps60sf5ikema",
+        "project_id": "grace-enhanced",
+        "target_proxy_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "url_map_name": "gkegw1-kme0-philobiblus-philobiblus-nwadsm8vk0ph",
+        "zone": "global"
+      },
+      "type": "http_load_balancer"
+    },
+    "severity": "WARNING",
+    "spanId": "4099ef5fdd1380dc",
+    "timestamp": "2026-09-24T07:58:48.344366Z",
+    "trace": "projects/grace-enhanced/traces/3916fb01ce7862170606d319f7cf7c08"
+  }
+]

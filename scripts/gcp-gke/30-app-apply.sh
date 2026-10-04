@@ -10,6 +10,7 @@ PROJECT_ID="$(project_id)"
 STATE_BUCKET_NAME="$(state_bucket_name)"
 BACKEND_IMAGE="$(read_tfvar_string "$RUNTIME_DIR/images.auto.tfvars" backend_image)"
 RECOMMENDATION_IMAGE="$(read_tfvar_string "$RUNTIME_DIR/images.auto.tfvars" recommendation_image)"
+MODEL_FETCHER_IMAGE="$(read_tfvar_string "$RUNTIME_DIR/images.auto.tfvars" model_fetcher_image)"
 FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-$(read_tfvar_list_first_string "$RUNTIME_DIR/terraform.tfvars" allowed_origins)}"
 GATEWAY_HOST="${GKE_HOSTNAME:-}"
 GATEWAY_HTTPS_ENABLED="${GATEWAY_HTTPS_ENABLED:-false}"
@@ -25,6 +26,7 @@ state_bucket_name              = "$STATE_BUCKET_NAME"
 namespace                      = "philobiblus"
 backend_image                  = "$BACKEND_IMAGE"
 recommendation_image           = "$RECOMMENDATION_IMAGE"
+model_fetcher_image          = "$MODEL_FETCHER_IMAGE"
 frontend_origin                = "$FRONTEND_ORIGIN"
 gateway_host                   = "$GATEWAY_HOST"
 gateway_https_enabled          = $GATEWAY_HTTPS_ENABLED
@@ -33,6 +35,7 @@ gateway_http_to_https_redirect = $GATEWAY_HTTP_TO_HTTPS_REDIRECT
 include_imgbb_secret           = $INCLUDE_IMGBB_SECRET
 EOF
 chmod 600 "$GKE_APP_DIR/terraform.tfvars"
+terraform fmt "$GKE_APP_DIR/terraform.tfvars"
 
 log "Rendering the GKE Helm release before Terraform apply."
 helm lint "$PROJECT_ROOT/kubernetes/helm/philobiblus" \
@@ -42,6 +45,8 @@ helm lint "$PROJECT_ROOT/kubernetes/helm/philobiblus" \
   --set backend.service.port=8000 \
   --set backend.bindHost=0.0.0.0 \
   --set backend.allowedOrigins="$FRONTEND_ORIGIN" \
+  --set recommendation.enabled=true \
+  --set redis.enabled=true \
   --set externalDatabase.enabled=true \
   --set externalDatabase.connectionName=placeholder:region:instance \
   --set gcpSecrets.enabled=true \
@@ -54,6 +59,9 @@ helm lint "$PROJECT_ROOT/kubernetes/helm/philobiblus" \
   --set gateway.https.enabled="$GATEWAY_HTTPS_ENABLED" \
   --set gateway.https.certificateMapName="$GATEWAY_CERTIFICATE_MAP_NAME" \
   --set gateway.httpToHttpsRedirect="$GATEWAY_HTTP_TO_HTTPS_REDIRECT" \
+  --set gateway.backendPolicy.enabled=true \
+  --set gateway.backendPolicy.securityPolicy=placeholder-security-policy \
+  --set networkPolicy.enabled=true \
   --set monitoring.podMonitoring.enabled=true
 
 terraform_init "$GKE_APP_DIR" "$STATE_BUCKET_NAME"

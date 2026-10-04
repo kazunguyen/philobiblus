@@ -11,6 +11,8 @@ from sqlalchemy.pool import StaticPool
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["SECRET_KEY"] = "test-only-secret-key"
 os.environ["ALLOWED_ORIGINS"] = "http://testserver"
+os.environ["ENABLE_API_DOCS"] = "false"
+os.environ["RATE_LIMIT_ENABLED"] = "false"
 
 from app.auth import get_password_hash
 from app.database import Base, get_db
