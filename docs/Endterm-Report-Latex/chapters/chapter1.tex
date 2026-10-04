@@ -1,0 +1,21 @@
+\reportchapter{I. GIỚI THIỆU CHUNG}
+\reportsection{a. Giới thiệu Công ty TNHH JITS Innovation Labs}
+Công ty TNHH JITS Innovation Labs là doanh nghiệp hoạt động trong lĩnh vực phát triển phần mềm và cung cấp dịch vụ công nghệ thông tin tại Hà Nội. Công ty bắt đầu hoạt động từ tháng 6 năm 2016, có quy mô từ 11 đến 50 nhân sự, đặt trụ sở tại Hà Nội. Quy mô này tạo điều kiện để các nhóm kỹ thuật phối hợp trực tiếp, đồng thời yêu cầu mỗi thành viên chủ động trong quá trình nghiên cứu, phát triển và triển khai sản phẩm.
+
+Lĩnh vực chuyên môn của JITS Innovation Labs là các giải pháp công nghệ cho ngân hàng và tổ chức tài chính, bao gồm nền tảng ngân hàng số, hệ thống điểm bán hàng, xử lý dữ liệu theo luồng và tích hợp hệ thống. Đội ngũ của công ty có kinh nghiệm triển khai, tùy biến hệ thống ngân hàng lõi cho khách hàng doanh nghiệp, hỗ trợ các ngân hàng và tổ chức tài chính vi mô cải tiến sản phẩm và thực hiện chuyển đổi số. Đặc thù của các hệ thống tài chính đòi hỏi phần mềm có tính ổn định, khả năng mở rộng, bảo mật và giám sát tốt; vì vậy, các phương pháp DevOps và DevSecOps có vai trò thiết thực trong hoạt động phát triển và vận hành sản phẩm.
+
+Bên cạnh hoạt động phát triển sản phẩm, doanh nghiệp tổ chức chương trình thực tập theo hướng đào tạo gắn với thực hành. Tham gia vào kỳ thực tập năm nay, sinh viên chúng em được tiếp cận kiến thức theo lộ trình, hoàn thành các bài tập nhỏ cho từng chủ đề, lưu trữ sản phẩm trên hệ thống quản lý mã nguồn và trình bày kết quả định kỳ. Hình thức này giúp chúng em hình thành thói quen tự học, viết tài liệu, kiểm chứng kết quả và chịu trách nhiệm đối với sản phẩm đã thực hiện. Trong kỳ thực tập, em tham gia chương trình đào tạo DevOps và lựa chọn hướng chuyên sâu MLOps và Security để vận dụng kiến thức vào dự án tổng hợp.
+
+Thông tin doanh nghiệp được đối chiếu từ trang chủ, trang LinkedIn và thông tin đăng ký doanh nghiệp công khai \cite{jits-home,jits-linkedin,business-registry}.
+
+\reportsection{b. Giới thiệu công việc thực tập}
+Trong thời gian thực tập tại JITS Innovation Labs, em đảm nhiệm vị trí DevOps Intern. Em vận dụng kiến thức về Linux, Git, Docker, CI/CD, Kubernetes, Terraform, MLOps và DevSecOps để hoàn thành các bài thực hành và dự án tổng hợp. Quá trình này giúp em hình thành cách tiếp cận công việc từ tổ chức mã nguồn, xây dựng môi trường chạy đến kiểm tra và vận hành sản phẩm.
+
+Từ các kiến thức nền tảng, em xây dựng và đóng gói các ứng dụng web nhiều thành phần, triển khai chúng trên Kubernetes, đồng thời áp dụng hạ tầng dưới dạng mã, tự động kiểm thử và cơ chế đồng bộ triển khai. Kết quả là các ứng dụng có thể chạy trên môi trường Kubernetes local, còn thay đổi mã nguồn được đưa qua quy trình tự động trước khi sử dụng.
+
+Trên cơ sở đó, em tiếp tục mở rộng sang MLOps và bảo mật. Em xây dựng luồng phục vụ mô hình giả lập, áp dụng kiểm soát an toàn cho image và workload, đồng thời mô phỏng pipeline xử lý dữ liệu, huấn luyện, đánh giá và triển khai theo sự kiện. Các trường hợp không đáp ứng yêu cầu bảo mật được phát hiện trong quá trình kiểm thử; kết quả thực thi workflow và báo cáo phân tích rủi ro là những đầu ra trực tiếp của quá trình thực hành.
+
+Những kinh nghiệm trên được tổng hợp trong sản phẩm cuối kỳ Philobiblus, một ứng dụng web hỗ trợ quản lý tiến độ đọc, nhận xét, chia sẻ và gợi ý sách. Sản phẩm kết hợp các nội dung đã thực hành để tổ chức mã nguồn, đóng gói ứng dụng, tự động kiểm thử và triển khai thử nghiệm. Qua đó, em có thể hoàn thiện một sản phẩm từ giai đoạn phát triển đến môi trường vận hành và đánh giá được các yêu cầu về tính ổn định, khả năng mở rộng và bảo mật.
+
+\reportsectionplain{c. Giới thiệu qua bài toán}
+Philobiblus không dừng ở các màn hình quản lý sách. Hệ thống phải giữ đúng quyền sở hữu dữ liệu, cho phép chia sẻ có kiểm soát và tích hợp gợi ý mà không làm gián đoạn chức năng chính. Vì vậy, giải pháp tách giao diện, backend nghiệp vụ và dịch vụ gợi ý để từng phần có thể được kiểm thử và vận hành độc lập.

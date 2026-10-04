@@ -1,0 +1,42 @@
+\reportchapter{II. YÊU CẦU BÀI TOÁN}
+\reportsectionplain{a. Bối cảnh và mô tả bài toán}
+Thông tin về quá trình đọc thường bị phân tán giữa ghi chú, mạng xã hội và nhiều công cụ riêng lẻ. Người dùng vì thế khó theo dõi sách đang đọc, lịch sử hoàn thành và mục tiêu cá nhân.
+
+Philobiblus tập trung các thao tác đăng ký, quản lý thư viện, cập nhật tiến độ, viết nhận xét, chia sẻ theo phạm vi và nhận gợi ý sách. Người dùng thông thường quản lý dữ liệu đọc và tương tác với nội dung công khai; quản trị viên xử lý dữ liệu cần kiểm soát.
+
+\reportsectionplain{b. Mục tiêu của hệ thống}
+Mục tiêu nghiệp vụ của Philobiblus là cung cấp một không gian thống nhất để người dùng quản lý việc đọc, ghi nhận đánh giá, chia sẻ có kiểm soát và khám phá sách mới. Các thao tác từ thêm sách, cập nhật tiến độ đến xem lại lịch sử phải được thực hiện trong cùng một tài khoản, với dữ liệu được gắn đúng chủ sở hữu.
+
+Mục tiêu kỹ thuật là xây dựng một sản phẩm có thể triển khai lặp lại trên Google Kubernetes Engine (GKE), tách rõ giao diện, API, dữ liệu và dịch vụ gợi ý. Hệ thống phải cho phép tự động kiểm thử và phát hành, theo dõi được trạng thái workload, đồng thời quản lý model theo phiên bản thay vì chép thủ công artifact vào máy chủ.
+
+\reportsectionplain{c. Yêu cầu của hệ thống}
+\reportsubsection{Yêu cầu chức năng}
+\textbf{Quản lý tài khoản và quyền truy cập.} Người dùng có thể đăng ký, đăng nhập, cập nhật hồ sơ và đăng xuất; backend phải xác thực token, kiểm tra chủ sở hữu tài nguyên và áp dụng quyền quản trị ở phía máy chủ.
+
+\textbf{Quản lý thư viện và tiến độ đọc.} Người dùng có thể tạo, tìm kiếm, chỉnh sửa và xóa sách thuộc quyền sở hữu; mỗi sách phải lưu được trạng thái dự định đọc, đang đọc hoặc đã hoàn thành, cùng tiến độ và lịch sử thay đổi.
+
+\textbf{Tương tác và chia sẻ.} Người dùng có thể viết nhận xét, chấm điểm, theo dõi tài khoản khác và chia sẻ sách theo các mức public, private hoặc restricted; dữ liệu không được hiển thị vượt quá visibility đã chọn.
+
+\textbf{Gợi ý nội dung.} Hệ thống phải trả về danh sách sách liên quan từ catalog hợp lệ, loại bỏ sách nguồn và các bản ghi không đủ metadata, đồng thời vẫn phục vụ được thư viện khi dịch vụ gợi ý tạm thời không sẵn sàng.
+
+\textbf{Quản trị vòng đời model.} Hệ thống phải tạo snapshot dữ liệu, ghi nhận run và metric, kiểm tra chất lượng candidate rồi chỉ phát hành model đạt điều kiện; model đang phục vụ phải truy nguyên được về snapshot, mã nguồn và artifact tương ứng.
+
+\reportsubsection{Yêu cầu phi chức năng}
+\textbf{Bảo mật và phân quyền.} Mật khẩu phải được băm, API phải kiểm tra JWT và quyền sở hữu, secret không đặt trong mã nguồn; các lớp Gateway, Cloud Armor, NetworkPolicy và securityContext phải hạn chế truy cập từ ngoài vào trong cluster.
+
+\textbf{Khả năng triển khai lặp lại.} Hạ tầng GKE, Cloud SQL, mạng và quyền truy cập phải được mô tả bằng Terraform để có thể kiểm tra thay đổi, tái tạo môi trường và tránh cấu hình thủ công không truy vết được. Đây là lý do dự án áp dụng Infrastructure as Code.
+
+\textbf{Khả năng mở rộng và tự phục hồi.} Các thành phần chạy dạng container phải được đóng gói thành Deployment hoặc Job trên Kubernetes, có readiness/liveness probe, giới hạn tài nguyên và cơ chế rollout; nhờ đó workload có thể tự khởi động lại và mở rộng theo nhu cầu.
+
+\textbf{Tính lặp lại của phát hành.} Mỗi thay đổi phải đi qua CI/CD gồm kiểm thử, kiểm tra dependency, quét bảo mật, build image và triển khai bằng Helm với image digest xác định; việc phát hành không phụ thuộc vào thao tác thủ công trên cluster.
+
+\textbf{Quản lý vòng đời dữ liệu và model.} Snapshot, pipeline, metric, artifact và model version phải được lưu vết bằng DVC và MLflow, cho phép tái hiện một lần huấn luyện và rollback khi candidate không đạt quality gate. Đây là yêu cầu cốt lõi dẫn đến việc áp dụng MLOps.
+
+\textbf{Quan sát và xử lý sự cố.} Hệ thống phải xuất metric, log và trạng thái rollout để Cloud Monitoring, Cloud Logging và Managed Service for Prometheus có thể phát hiện lỗi, theo dõi tải và hỗ trợ đối chiếu nguyên nhân.
+
+\textbf{Khả năng kiểm thử và bảo trì.} Backend, recommendation service, Helm chart và Terraform module phải được kiểm thử độc lập; cấu trúc module, schema và hợp đồng API cần đủ rõ để thay đổi một thành phần không làm hỏng các thành phần còn lại.
+
+\reportsectionplain{d. Phạm vi bài toán và trách nhiệm thực hiện}
+Philobiblus là dự án độc lập do em thực hiện từ phân tích yêu cầu, phát triển giao diện, API và cơ sở dữ liệu đến MLOps, kiểm thử, đóng gói và triển khai. Sản phẩm được đánh giá qua các luồng quản lý thư viện, tiến độ, nhận xét, chia sẻ, gợi ý và khả năng duy trì ranh giới quyền hạn.
+
+Dự án không xử lý thanh toán, giao nhận, bản quyền nội dung số hoặc kho sách vật lý. Hệ gợi ý phục vụ catalog hiện có, chưa hướng tới huấn luyện quy mô thương mại.

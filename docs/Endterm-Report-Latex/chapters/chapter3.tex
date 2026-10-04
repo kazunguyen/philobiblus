@@ -1,0 +1,105 @@
+\clearpage
+\reportchapter{III. TÓM TẮT LÝ THUYẾT, GIẢI PHÁP, THUẬT TOÁN}
+\reportsectionplain{a. Các lý thuyết, giải pháp và thuật toán liên quan}
+Phần này chỉ giới thiệu những khái niệm trực tiếp chi phối cách thiết kế Philobiblus; chi tiết cấu hình được trình bày ở phần triển khai.
+
+\reportsubsection{Các lý thuyết nền tảng}
+\textbf{CI/CD.} CI/CD tự động hóa chuỗi kiểm thử, đóng gói và phát hành, giúp mỗi thay đổi được kiểm tra trước khi đi vào môi trường chạy.
+
+\textbf{Infrastructure as Code.} Infrastructure as Code biểu diễn hạ tầng bằng mã có phiên bản, từ đó tạo môi trường nhất quán và cho phép xem xét thay đổi trước khi áp dụng.
+
+\textbf{Containerization.} Container đóng gói ứng dụng cùng dependency trong image bất biến, giảm khác biệt giữa môi trường phát triển, kiểm thử và production \cite{docker}.
+
+\textbf{Điều phối workload.} Kubernetes quản lý Pod, Deployment, Service, probe, rollout và autoscaling để workload có thể tự phục hồi và mở rộng theo chính sách đã khai báo \cite{kubernetes}.
+
+\textbf{MLOps.} MLOps mở rộng quy trình DevOps cho dữ liệu và model, bao gồm versioning snapshot, tracking run, đánh giá candidate, promotion và rollback.
+
+\textbf{DevSecOps.} DevSecOps đưa kiểm tra bảo mật vào cùng pipeline phát triển, thay vì chờ đến cuối chu kỳ mới quét image, dependency hoặc cấu hình.
+
+\textbf{Observability.} Observability kết hợp metric, log và trạng thái trace để suy luận nguyên nhân sự cố từ dữ liệu vận hành thay vì chỉ dựa vào mã phản hồi.
+
+\reportsubsection{Các giải pháp và công cụ áp dụng}
+\textbf{Terraform.} Terraform quản lý GKE, mạng, IAM và các tài nguyên Cloud SQL theo mô hình khai báo, giúp tái tạo hạ tầng mà không phải cấu hình từng bước trên giao diện.
+
+\textbf{Google Cloud và GKE.} GKE Autopilot cung cấp cluster Kubernetes managed, còn Google Cloud cung cấp Gateway, Cloud Armor, Cloud SQL, GCS và các dịch vụ quan sát mà hệ thống cần khi triển khai thật.
+
+\textbf{Docker.} Docker tạo image riêng cho frontend, backend, recommendation và các job huấn luyện để pipeline có thể kiểm tra và phát hành cùng một artifact.
+
+\textbf{Helm.} Helm gom Deployment, Service, ConfigMap, Secret và policy thành chart có tham số, giúp một release được triển khai nhất quán trên cluster.
+
+\textbf{GitHub Actions.} GitHub Actions thực thi các bước test, lint, scan, build, ký image và gọi quy trình triển khai khi mã nguồn thay đổi.
+
+\textbf{DVC.} DVC liên kết snapshot dữ liệu với các stage prepare, train và evaluate để kết quả huấn luyện có thể tái hiện \cite{dvc}.
+
+\textbf{MLflow.} MLflow lưu run, metric, parameter, artifact và model version, tạo điểm kiểm soát cho quyết định promotion hoặc rollback \cite{mlflow}.
+
+\textbf{Cloud SQL và Redis.} Cloud SQL lưu dữ liệu nghiệp vụ bền vững, còn Redis đảm nhiệm cache catalog và rate limit để giảm tải cho database.
+
+\textbf{Cloud Monitoring và Managed Service for Prometheus.} Hai dịch vụ này tiếp nhận metric, log và cảnh báo từ workload GKE để theo dõi request rate, latency, lỗi và mức sử dụng tài nguyên \cite{prometheus}.
+
+\reportsubsection{Các thuật toán sử dụng}
+\textbf{TF-IDF.} TF-IDF biến metadata sách thành vector thưa, trong đó các từ xuất hiện nhiều trong một sách nhưng ít xuất hiện trong catalog có trọng số cao \cite{sklearn}.
+
+\textbf{Cosine similarity.} Cosine similarity đo góc giữa hai vector TF-IDF để xếp hạng các sách có nội dung gần với sách nguồn mà không phụ thuộc độ dài tuyệt đối của chuỗi.
+
+\textbf{Snapshot hash và quality gate.} Hệ thống băm nội dung logic của snapshot, đối chiếu schema và mức suy giảm catalog trước khi cho phép candidate thay champion.
+
+\reportsectionplain{b. Cách giải quyết của sinh viên}
+Em xây dựng frontend React, backend FastAPI và cơ sở dữ liệu PostgreSQL. Hệ thống cung cấp đăng ký, đăng nhập, hồ sơ, thư viện cá nhân, tiến độ đọc, nhận xét, chia sẻ và gợi ý sách.
+
+\reportsubsection{Kiến trúc tổng thể và ranh giới trách nhiệm}
+React xử lý giao diện; FastAPI kiểm tra token, quyền sở hữu và nghiệp vụ; PostgreSQL lưu dữ liệu quan hệ. Frontend chỉ gọi API và không truy cập trực tiếp database hoặc model artifact.
+
+Trên GKE, Gateway và HTTPRoute chỉ công khai tiền tố /api. Cloud Armor bảo vệ tầng biên; Service chuyển request tới backend Pod; NetworkPolicy giới hạn traffic giữa backend, Redis, recommendation và hệ thống thu metric.
+
+\clearpage
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.94\textwidth]{system-architecture.png}
+\caption{Kiến trúc triển khai và luồng phụ thuộc chính của Philobiblus}
+\label{fig:1}
+\end{figure}
+Backend kết nối Cloud SQL qua Cloud SQL Auth Proxy. Redis lưu cache catalog và trạng thái rate limit dùng chung. Recommendation service nạp artifact đã kiểm tra, trả danh sách xếp hạng và có cơ chế lỗi không làm gián đoạn catalog chính.
+
+\reportsubsection{Mô hình dữ liệu và kiểm soát quyền truy cập}
+User và UserSettings lưu định danh, trạng thái và thiết lập. Book gắn với chủ sở hữu, tiến độ, metadata và mức public, private hoặc restricted. BookReadingProgress, ReadingHistory, Review, Follow và Friendship ghi nhận tiến độ riêng và tương tác xã hội mà không sửa dữ liệu của người khác.
+
+Backend kiểm tra token cùng user\_id của tài nguyên trước thao tác đọc, sửa hoặc xóa. Endpoint quản trị yêu cầu is\_admin; truy vấn công khai lọc visibility trước khi trả dữ liệu. Việc ẩn nút ở frontend không được xem là biện pháp phân quyền.
+
+Pipeline kết hợp tên, tác giả, thể loại và nhãn của sách public thành đặc trưng TF-IDF. Dịch vụ gợi ý xếp hạng tối đa năm sách theo cosine similarity, loại sách nguồn và các mục không hợp lệ trước khi trả kết quả.
+
+\reportsectionplain{Giao diện và luồng xác thực}
+Frontend tách route công khai, route cần đăng nhập và route quản trị. AuthContext lưu access token; ProtectedRoute và AdminRoute kiểm soát trải nghiệm, còn backend đưa ra quyết định phân quyền cuối cùng.
+
+\clearpage
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.94\textwidth]{ui-login.png}
+\caption{Trang đăng nhập được chụp từ frontend Philobiblus chạy cục bộ}
+\label{fig:2}
+\end{figure}
+Form đăng nhập gửi username và password tới /api/auth/login, khóa nút khi chờ phản hồi và hiển thị lỗi tại chỗ. Sau xác thực, người dùng truy cập thư viện, thống kê, trang xã hội và cài đặt; quản trị viên có thêm các màn hình quản lý.
+
+Hệ thống hiện được triển khai trên GKE bằng Terraform và Helm. Pipeline DVC tạo dữ liệu huấn luyện; MLflow trên cluster ghi run và model version; artifact bất biến được lưu trên GCS. PodMonitoring gửi metric tới Google Managed Service for Prometheus, còn Cloud Monitoring và Cloud Logging phục vụ quan sát.
+
+\reportsectionplain{Vòng đời dữ liệu và mô hình gợi ý}
+Pipeline không đọc trực tiếp một tập dữ liệu đang thay đổi trong suốt quá trình huấn luyện. snapshot\_catalog.py mở transaction repeatable-read, chọn sách public, xuất Parquet và tính snapshot\_id từ dữ liệu logic. validate\_snapshot.py kiểm tra schema, ID, metadata và mức suy giảm catalog so với champion. DVC liên kết snapshot với bước prepare, train và evaluation. Lần xác minh dùng 100 sách và tạo 2.030 đặc trưng; candidate thiếu cohort tương tác được ghi nhận là insufficient\_data nên không được phép thay model đang phục vụ.
+
+\clearpage
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.94\textwidth]{mlops-pipeline.png}
+\caption{Pipeline snapshot, huấn luyện, đánh giá và phát hành model}
+\label{fig:3}
+\end{figure}
+MLflow lưu tham số, metric, run và model version; GCS giữ snapshot, model cùng release manifest bất biến. Trước khi recommendation service khởi động, model-fetcher tải đúng release, kiểm tra SHA-256 và schema rồi mới công bố file trong volume dùng chung. Promotion cập nhật release pointer bằng resource version, chờ Deployment rollout và gọi health endpoint để đối chiếu model\_version. Nếu rollout hoặc health check thất bại, pipeline khôi phục pointer và annotation trước đó. Nhờ vậy, artifact sai định dạng hoặc sai phiên bản không được đưa vào hệ thống.
+
+\reportsectionplain{c. Liên hệ và so sánh với các cách đã nêu}
+TF-IDF không cần ma trận tương tác dày và xử lý tốt catalog mới, đổi lại phụ thuộc chất lượng metadata. Khi lịch sử đọc đủ lớn, hệ thống có thể kết hợp điểm nội dung với hành vi cộng đồng.
+
+\reportsection{Các đánh đổi kỹ thuật trong giải pháp}
+Redis cache catalog trong 30 giây và được invalidation khi dữ liệu thay đổi. Nếu Redis lỗi, backend bỏ qua cache để tiếp tục phục vụ, chấp nhận tăng tải tạm thời cho Cloud SQL.
+
+Mỗi backend Pod dùng pool 3 kết nối và tối đa 2 kết nối vượt mức, timeout 10 giây. Giới hạn này được tính cùng HPA để tránh tổng số connection vượt khả năng của Cloud SQL db-f1-micro.
+
+TF-IDF dễ giải thích nhưng chưa khai thác sâu hành vi cộng đồng. GKE chuẩn hóa rollout, probe và autoscaling, đổi lại yêu cầu quản lý chặt tài nguyên, quyền cloud và chi phí.

@@ -1,0 +1,56 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[a4paper,left=2.0cm,right=2.0cm,top=2.0cm,bottom=2.0cm]{geometry}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\graphicspath{{images/}}
+
+\definecolor{coverbg}{HTML}{FFFFFF}
+\definecolor{coverfg}{HTML}{000000}
+\definecolor{coveraccent}{HTML}{FF4B4B}
+
+\hypersetup{colorlinks=false,hidelinks}
+\urlstyle{same}
+\setlength{\parindent}{1cm}
+\setlength{\parskip}{0.35em}
+\emergencystretch=2em
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\contentsname}{MỤC LỤC}
+\renewcommand{\listfigurename}{DANH MỤC HÌNH}
+\renewcommand{\bibname}{TÀI LIỆU THAM KHẢO}
+
+\newcommand{\reportchapter}[1]{\par\bigskip\noindent{\bfseries\fontsize{14}{17}\selectfont #1}\par\medskip}
+\newcommand{\reportfrontchapter}[1]{\par\bigskip\begin{center}{\bfseries\fontsize{13}{16}\selectfont #1}\end{center}\medskip}
+\newcommand{\reportsection}[1]{\par\medskip\noindent{\bfseries #1}\par\smallskip}
+\newcommand{\reportsectionplain}[1]{\par\medskip\noindent #1\par\smallskip}
+\newcommand{\reportsubsection}[1]{\par\medskip\noindent{\bfseries #1}\par\smallskip}
+
+\begin{document}
+\input{chapters/cover}
+\pagenumbering{roman}
+\input{chapters/contents}
+\input{chapters/acknowledgements}
+\input{chapters/figures-list}
+
+\pagenumbering{arabic}
+\setcounter{page}{5}
+\input{chapters/chapter1}
+\input{chapters/chapter2}
+\input{chapters/chapter3}
+\input{chapters/chapter4}
+\input{chapters/chapter5}
+\input{chapters/references}
+\input{chapters/signatures}
+\end{document}

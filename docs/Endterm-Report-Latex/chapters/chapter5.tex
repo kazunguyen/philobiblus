@@ -1,0 +1,29 @@
+\reportchapter{V. Kết quả đạt được, hướng phát triển}
+\reportsectionplain{a. Kỹ năng và kiến thức thu thập được}
+Trong kỳ thực tập, em theo dõi toàn bộ hệ thống từ mã nguồn, kiểm thử và image đến Terraform, Helm, GKE và quan sát vận hành. Em hiểu rõ hơn cách Service, probe, resource, secret, policy mạng và rollout phối hợp trong một workload thực tế.
+
+Với MLOps và DevSecOps, em thực hành quản lý snapshot, artifact, quality gate, JWT, quyền sở hữu, Cloud Armor, NetworkPolicy và kiểm tra chuỗi cung ứng phần mềm.
+
+\reportsectionplain{Kết quả kỹ thuật đã kiểm chứng}
+Đợt này có tổng cộng 61 test backend, 8 test recommendation, frontend production build, lint/render hai Helm chart và terraform validate cho các module GKE. Các kiểm tra này bao phủ logic và cấu hình, chưa thay thế kiểm thử người dùng cuối.
+
+Ngày 24 tháng 9 năm 2026, pipeline trên project grace-enhanced và cluster philobiblus-dev-gke tạo snapshot từ 100 sách, ghi MLflow run và đăng ký model version 1. Candidate insufficient\_data không được promote vì thiếu hồ sơ tương tác.
+
+Release hardening triển khai 2 backend Pod, Redis, GCPBackendPolicy và ba NetworkPolicy. Các endpoint vận hành vẫn dùng nội bộ nhưng bị chặn qua Gateway; không ghi nhận OOMKilled, redis\_error hoặc cạn connection trong lần xác minh.
+
+\reportsectionplain{b. Hướng phát triển tiếp theo để hoàn thiện giải pháp}
+Lần kiểm tra đầu đạt 120 người dùng đồng thời với 23,4 request/giây, p95 322,5 ms và 0,94 phần trăm lỗi; tại 125 người dùng, lỗi tăng lên 1,48 phần trăm. Sau khi thêm Redis cache TTL 30 giây và giới hạn pool 3 + overflow 2 cho mỗi Pod, mốc 150 người dùng đạt 29,6 request/giây, p95 138,6 ms và không có request lỗi.
+
+\clearpage
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.94\textwidth]{capacity-comparison.png}
+\caption{Độ trễ và tỷ lệ lỗi tại các mốc tải chung trước và sau tối ưu}
+\label{fig:6}
+\end{figure}
+150 người dùng là mốc cao nhất đã kiểm tra và recommendation service được tắt để cô lập backend cùng database. Mức vận hành đề xuất là 120 đến 130 người dùng đồng thời, khoảng 24 request/giây, trước khi thực hiện lần đo đầy đủ hơn.
+
+Cloud Armor vẫn ở chế độ preview để theo dõi false positive. Bước tiếp theo là xác minh chữ ký image, trace, PolicyReport và notification trước khi chuyển từng rule sang Enforce.
+
+Hướng phát triển ưu tiên thu thập đủ hồ sơ đọc cho holdout evaluation, sau đó thử mô hình lai và canary với hai release stable, candidate độc lập.
+
