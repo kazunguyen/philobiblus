@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker><style>.title{font:700 34px Arial;fill:#0f172a}.box{fill:#fff;stroke:#334155;stroke-width:2}.data{fill:#e0f2fe;stroke:#0369a1}.proc{fill:#dcfce7;stroke:#15803d}.gate{fill:#fef3c7;stroke:#b45309}.store{fill:#ede9fe;stroke:#6d28d9}.txt{font:600 20px Arial;fill:#0f172a}.small{font:17px Arial;fill:#334155}.line{stroke:#334155;stroke-width:3;fill:none;marker-end:url(#a)}.fail{stroke:#b91c1c;stroke-width:3;fill:none;marker-end:url(#a)}.label{font:600 17px Arial;fill:#475569}</style></defs>
+  <rect width="1400" height="760" fill="#fff"/>
+  <text x="700" y="48" text-anchor="middle" class="title">Vòng đời dữ liệu và mô hình gợi ý</text>
+  <rect x="40" y="115" rx="16" width="190" height="105" class="box data"/><text x="135" y="155" text-anchor="middle" class="txt">Catalog công khai</text><text x="135" y="187" text-anchor="middle" class="small">PostgreSQL</text>
+  <rect x="285" y="115" rx="16" width="205" height="105" class="box proc"/><text x="388" y="151" text-anchor="middle" class="txt">Snapshot</text><text x="388" y="181" text-anchor="middle" class="small">Parquet, hash logic</text>
+  <rect x="545" y="115" rx="16" width="205" height="105" class="box proc"/><text x="648" y="151" text-anchor="middle" class="txt">Kiểm tra dữ liệu</text><text x="648" y="181" text-anchor="middle" class="small">Schema và catalog delta</text>
+  <rect x="805" y="115" rx="16" width="205" height="105" class="box proc"/><text x="908" y="151" text-anchor="middle" class="txt">Chuẩn bị đặc trưng</text><text x="908" y="181" text-anchor="middle" class="small">Title, author, tags</text>
+  <rect x="1065" y="115" rx="16" width="245" height="105" class="box proc"/><text x="1188" y="151" text-anchor="middle" class="txt">Huấn luyện TF-IDF</text><text x="1188" y="181" text-anchor="middle" class="small">Sparse feature matrix</text>
+
+  <rect x="1040" y="330" rx="16" width="270" height="115" class="box gate"/><text x="1175" y="370" text-anchor="middle" class="txt">Quality gate</text><text x="1175" y="401" text-anchor="middle" class="small">Hit-rate, coverage, regression</text>
+  <rect x="690" y="330" rx="16" width="270" height="115" class="box store"/><text x="825" y="370" text-anchor="middle" class="txt">MLflow Registry</text><text x="825" y="401" text-anchor="middle" class="small">Run, metric, candidate</text>
+  <rect x="340" y="330" rx="16" width="270" height="115" class="box store"/><text x="475" y="370" text-anchor="middle" class="txt">GCS artifact</text><text x="475" y="401" text-anchor="middle" class="small">Model và release manifest</text>
+  <rect x="40" y="330" rx="16" width="220" height="115" class="box proc"/><text x="150" y="370" text-anchor="middle" class="txt">Model fetcher</text><text x="150" y="401" text-anchor="middle" class="small">SHA-256 và schema</text>
+
+  <rect x="135" y="575" rx="16" width="310" height="115" class="box data"/><text x="290" y="615" text-anchor="middle" class="txt">Recommendation service</text><text x="290" y="646" text-anchor="middle" class="small">Nạp model release đã duyệt</text>
+  <rect x="855" y="575" rx="16" width="330" height="115" class="box"/><text x="1020" y="615" text-anchor="middle" class="txt">Giữ nguyên champion</text><text x="1020" y="646" text-anchor="middle" class="small">Candidate thiếu dữ liệu hoặc không đạt</text>
+
+  <path d="M230 168 H285" class="line"/><path d="M490 168 H545" class="line"/><path d="M750 168 H805" class="line"/><path d="M1010 168 H1065" class="line"/>
+  <path d="M1188 220 V330" class="line"/><path d="M1040 387 H960" class="line"/><path d="M690 387 H610" class="line"/><path d="M340 387 H260" class="line"/><path d="M150 445 L250 575" class="line"/>
+  <path d="M1175 445 C1160 505,1090 520,1040 575" class="fail"/>
+  <text x="992" y="368" class="label">Đạt</text><text x="1125" y="514" class="label" fill="#b91c1c">Không đạt</text>
+  <path d="M445 632 H690 C760 632,790 520,825 445" class="line"/>
+  <text x="655" y="615" class="label">Health check và rollback</text>
+</svg>

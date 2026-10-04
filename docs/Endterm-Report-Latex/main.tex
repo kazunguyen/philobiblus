@@ -31,8 +31,8 @@
 \renewcommand{\listfigurename}{DANH MỤC HÌNH}
 \renewcommand{\bibname}{TÀI LIỆU THAM KHẢO}
 
-\newcommand{\reportchapter}[1]{\par\bigskip\noindent{\bfseries\fontsize{14}{17}\selectfont #1}\par\medskip}
-\newcommand{\reportfrontchapter}[1]{\par\bigskip\begin{center}{\bfseries\fontsize{13}{16}\selectfont #1}\end{center}\medskip}
+\newcommand{\reportchapter}[1]{\par\bigskip\phantomsection\addcontentsline{toc}{chapter}{#1}\noindent{\bfseries\fontsize{14}{17}\selectfont #1}\par\medskip}
+\newcommand{\reportfrontchapter}[1]{\par\bigskip\phantomsection\addcontentsline{toc}{chapter}{#1}\begin{center}{\bfseries\fontsize{13}{16}\selectfont #1}\end{center}\medskip}
 \newcommand{\reportsection}[1]{\par\medskip\noindent{\bfseries #1}\par\smallskip}
 \newcommand{\reportsectionplain}[1]{\par\medskip\noindent #1\par\smallskip}
 \newcommand{\reportsubsection}[1]{\par\medskip\noindent{\bfseries #1}\par\smallskip}

@@ -202,11 +202,11 @@ postgres:
   enabled: false
 
 backend:
-  replicaCount: 1
+  replicaCount: 2
   autoscaling:
     enabled: true
-    minReplicas: 1
-    maxReplicas: 3
+    minReplicas: 2
+    maxReplicas: 6
 
 recommendation:
   enabled: true
@@ -354,6 +354,8 @@ Trong trường hợp chưa có custom domain đăng ký để gắn Certificate
 - Không rollback bằng cách restore database nếu chưa xác định migration nào đã chạy.
 
 ## 13. Giai đoạn 8 — Observability và SRE
+
+Runbook triển khai chi tiết: [GKE_OBSERVABILITY_RUNBOOK.md](GKE_OBSERVABILITY_RUNBOOK.md).
 
 ### Metrics và alert
 

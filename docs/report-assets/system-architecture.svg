@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
+    <style>
+      .title{font:700 34px Arial;fill:#0f172a}.group{fill:#f8fafc;stroke:#94a3b8;stroke-width:2}.box{fill:#fff;stroke:#334155;stroke-width:2}.blue{fill:#e0f2fe;stroke:#0369a1}.green{fill:#dcfce7;stroke:#15803d}.amber{fill:#fef3c7;stroke:#b45309}.violet{fill:#ede9fe;stroke:#6d28d9}.gray{fill:#f1f5f9;stroke:#475569}.txt{font:600 22px Arial;fill:#0f172a}.small{font:18px Arial;fill:#334155}.label{font:600 18px Arial;fill:#475569}.line{stroke:#334155;stroke-width:3;fill:none;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1400" height="820" fill="#ffffff"/>
+  <text x="700" y="50" text-anchor="middle" class="title">Kiến trúc triển khai Philobiblus trên GKE</text>
+
+  <rect x="35" y="115" rx="18" ry="18" width="210" height="115" class="box blue"/>
+  <text x="140" y="160" text-anchor="middle" class="txt">Trình duyệt</text>
+  <text x="140" y="192" text-anchor="middle" class="small">React SPA</text>
+
+  <rect x="305" y="95" rx="18" ry="18" width="245" height="155" class="box amber"/>
+  <text x="427" y="138" text-anchor="middle" class="txt">GKE Gateway</text>
+  <text x="427" y="170" text-anchor="middle" class="small">HTTPRoute chỉ mở /api</text>
+  <text x="427" y="202" text-anchor="middle" class="small">Cloud Armor preview</text>
+
+  <rect x="620" y="82" rx="22" ry="22" width="745" height="470" class="group"/>
+  <text x="650" y="120" class="label">Namespace philobiblus</text>
+
+  <rect x="670" y="155" rx="16" ry="16" width="240" height="120" class="box blue"/>
+  <text x="790" y="198" text-anchor="middle" class="txt">Frontend</text>
+  <text x="790" y="230" text-anchor="middle" class="small">Vite build và NGINX</text>
+
+  <rect x="980" y="155" rx="16" ry="16" width="300" height="120" class="box green"/>
+  <text x="1130" y="198" text-anchor="middle" class="txt">FastAPI backend</text>
+  <text x="1130" y="230" text-anchor="middle" class="small">JWT, nghiệp vụ, metrics</text>
+
+  <rect x="680" y="350" rx="16" ry="16" width="230" height="115" class="box violet"/>
+  <text x="795" y="394" text-anchor="middle" class="txt">Redis</text>
+  <text x="795" y="426" text-anchor="middle" class="small">Cache và rate limit</text>
+
+  <rect x="980" y="350" rx="16" ry="16" width="300" height="115" class="box violet"/>
+  <text x="1130" y="394" text-anchor="middle" class="txt">Recommendation service</text>
+  <text x="1130" y="426" text-anchor="middle" class="small">TF-IDF artifact</text>
+
+  <rect x="955" y="620" rx="16" ry="16" width="330" height="115" class="box amber"/>
+  <text x="1120" y="664" text-anchor="middle" class="txt">Cloud SQL PostgreSQL</text>
+  <text x="1120" y="696" text-anchor="middle" class="small">Cloud SQL Auth Proxy</text>
+
+  <rect x="555" y="620" rx="16" ry="16" width="300" height="115" class="box gray"/>
+  <text x="705" y="664" text-anchor="middle" class="txt">GCS và MLflow</text>
+  <text x="705" y="696" text-anchor="middle" class="small">Model, release, run metadata</text>
+
+  <rect x="45" y="605" rx="16" ry="16" width="380" height="135" class="box gray"/>
+  <text x="235" y="650" text-anchor="middle" class="txt">Quan sát hệ thống</text>
+  <text x="235" y="684" text-anchor="middle" class="small">Prometheus, Grafana</text>
+  <text x="235" y="715" text-anchor="middle" class="small">OpenTelemetry và Cloud Monitoring</text>
+
+  <path d="M245 172 H305" class="line"/><text x="275" y="155" text-anchor="middle" class="label">HTTPS</text>
+  <path d="M550 170 H670" class="line"/><text x="610" y="151" text-anchor="middle" class="label">/</text>
+  <path d="M550 215 H980" class="line"/><text x="610" y="235" text-anchor="middle" class="label">/api</text>
+  <path d="M910 215 H980" class="line"/>
+  <path d="M1080 275 V350" class="line"/>
+  <path d="M1005 275 L875 350" class="line"/>
+  <path d="M1140 275 V620" class="line"/>
+  <path d="M980 407 H910" class="line"/>
+  <path d="M1035 465 L820 620" class="line"/>
+  <path d="M680 677 H425" class="line"/>
+  <path d="M980 250 C760 520,520 500,425 650" class="line"/>
+
+  <text x="915" y="330" class="label">Cache</text>
+  <text x="1190" y="520" class="label">SQL</text>
+  <text x="870" y="565" class="label">Artifact</text>
+  <text x="510" y="575" class="label">Metrics và traces</text>
+</svg>
