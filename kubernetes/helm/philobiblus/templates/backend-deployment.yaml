@@ -120,6 +120,16 @@ spec:
               value: {{ .Values.backend.rateLimit.trustProxyHeaders | quote }}
             - name: RATE_LIMIT_FALLBACK_POD_COUNT
               value: {{ .Values.backend.rateLimit.fallbackPodCount | quote }}
+            - name: RECOMMENDATIONS_ENABLED
+              value: {{ .Values.backend.recommendationsEnabled | quote }}
+            - name: RECOMMENDATION_LOAD_SHEDDING_ENABLED
+              value: {{ .Values.backend.recommendationLoadShedding.enabled | quote }}
+            - name: RECOMMENDATION_LOAD_SHEDDING_MAX_REQUESTS
+              value: {{ .Values.backend.recommendationLoadShedding.maxRequests | quote }}
+            - name: RECOMMENDATION_LOAD_SHEDDING_WINDOW_SECONDS
+              value: {{ .Values.backend.recommendationLoadShedding.windowSeconds | quote }}
+            - name: RECOMMENDATION_LOAD_SHEDDING_COOLDOWN_SECONDS
+              value: {{ .Values.backend.recommendationLoadShedding.cooldownSeconds | quote }}
             - name: IMGBB_TIMEOUT_SECONDS
               value: {{ .Values.backend.uploads.imgbbTimeoutSeconds | quote }}
             - name: UPLOAD_MAX_CONCURRENCY

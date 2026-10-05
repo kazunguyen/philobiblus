@@ -1,5 +1,5 @@
-# All empty values below are intentional: production values are supplied by CI
-# from protected GitHub environment variables, never committed to this chart.
+# The defaults point to the public Docker Hub images used by this project.
+# Production deployments may override them with immutable digest references.
 namespace: philobiblus-mlops
 # Helm creates the release namespace with --create-namespace.  Keeping the
 # Namespace object disabled avoids a Helm ownership conflict on first install.
@@ -14,8 +14,8 @@ gcp:
 
 mlflow:
   image:
-    repository: ""
-    tag: ""
+    repository: kazu912/philobiblus-mlflow
+    tag: latest
     digest: ""
   replicaCount: 1
   serviceAccount:
@@ -31,8 +31,8 @@ mlflow:
 
 trainer:
   image:
-    repository: ""
-    tag: ""
+    repository: kazu912/philobiblus-trainer
+    tag: latest
     digest: ""
   serviceAccount:
     name: philobiblus-trainer

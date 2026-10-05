@@ -2,6 +2,8 @@
 
 Chart này chuyển toàn bộ workload Kubernetes của Philobiblus thành Helm templates: PostgreSQL + PVC, backend FastAPI, frontend React, Service, Ingress và seed Job. Chart không chứa credential thực.
 
+Các image mặc định của frontend, backend, recommendation service và model-fetcher được lấy từ Docker Hub của dự án (`kazu912`). Khi triển khai production, nên ghi đè `image.digest` hoặc dùng Terraform với image digest để cố định chính xác phiên bản image.
+
 ## Chuẩn bị secret và network configuration local
 
 Sao chép file mẫu thành `values.local.yaml`, thay placeholder bằng secret và các giá trị host/URL/port của môi trường, rồi giữ file này ngoài Git:

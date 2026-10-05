@@ -13,8 +13,8 @@ backend:
     maxReplicas: 6
     targetCPUUtilizationPercentage: 70
   image:
-    repository: philobiblus-backend
-    tag: local
+    repository: kazu912/philobiblus-backend
+    tag: latest
     digest: ""
     pullPolicy: IfNotPresent
   service:
@@ -36,6 +36,12 @@ backend:
     enabled: false
     trustProxyHeaders: false
     fallbackPodCount: 6
+  recommendationsEnabled: true
+  recommendationLoadShedding:
+    enabled: true
+    maxRequests: 12
+    windowSeconds: 10
+    cooldownSeconds: 30
   uploads:
     imgbbTimeoutSeconds: 15
     maxConcurrency: 2
@@ -67,8 +73,8 @@ frontend:
   enabled: true
   replicaCount: 1
   image:
-    repository: philobiblus-frontend
-    tag: local
+    repository: kazu912/philobiblus-frontend
+    tag: latest
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -147,13 +153,13 @@ recommendation:
   # promote.py. Bootstrap model-release before enabling the fetcher rollout.
   initialModelVersion: ""
   image:
-    repository: philobiblus-recommendation
-    tag: tfidf-with-tags-v1
+    repository: kazu912/philobiblus-recommendation
+    tag: latest
     digest: ""
     pullPolicy: IfNotPresent
   fetcherImage:
-    repository: ""
-    tag: ""
+    repository: kazu912/philobiblus-model-fetcher
+    tag: latest
     digest: ""
   service:
     port: 8080
@@ -244,7 +250,7 @@ networkPolicy:
   enabled: false
   defaultDenyIngress: true
   defaultDenyEgress: false
-  managedPrometheusNamespace: gmp-system
+  managedPrometheusNamespace: gke-gmp-system
   recommendationTrainerNamespace: philobiblus-mlops
 
 monitoring:
